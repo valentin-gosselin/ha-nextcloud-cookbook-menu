@@ -144,6 +144,9 @@
     },
     "dish_not_in_menu": {
       "message": "Aucun plat du menu ne correspond à {dish}"
+    },
+    "no_recipe_selected": {
+      "message": "Choisissez d'abord une recette"
     }
   },
   "entity": {
@@ -153,6 +156,36 @@
       },
       "shopping": {
         "name": "Liste de courses"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Recette à ajouter"
+      },
+      "day": {
+        "name": "Jour",
+        "state": {
+          "sans_date": "Sans date",
+          "aujourd_hui": "Aujourd'hui",
+          "demain": "Demain",
+          "lundi": "Lundi",
+          "mardi": "Mardi",
+          "mercredi": "Mercredi",
+          "jeudi": "Jeudi",
+          "vendredi": "Vendredi",
+          "samedi": "Samedi",
+          "dimanche": "Dimanche"
+        }
+      }
+    },
+    "number": {
+      "servings": {
+        "name": "Couverts"
+      }
+    },
+    "button": {
+      "add_to_menu": {
+        "name": "Ajouter au menu"
       }
     }
   },

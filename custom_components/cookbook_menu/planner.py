@@ -27,7 +27,7 @@ from .const import (
     DOMAIN,
 )
 from .ingredients.aisles import rayon
-from .ingredients.normalize import cle
+from .ingredients.normalize import cle, sans_accents
 from .ingredients.pantry import PLACARD_PAR_DEFAUT, cles_placard, est_au_placard, texte_rappel
 from .ingredients.shopping import (
     Contribution,
@@ -71,6 +71,21 @@ def lire_couverts(texte: str | None) -> int | None:
     return nombre if nombre > 0 else None
 
 
+JOURS_SELECTION: Final = (
+    "sans_date", "aujourd_hui", "demain",
+    "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche",
+)  # fmt: skip
+
+
+@dataclass(slots=True)
+class Selection:
+    """Choix en cours dans les entités de contrôle (non persisté)."""
+
+    recette: str | None = None
+    jour: str = "sans_date"
+    couverts: int | None = None
+
+
 @dataclass(slots=True)
 class LigneAffichee:
     """Ligne de la liste de courses telle qu'affichée (calculée ou manuelle)."""
@@ -106,6 +121,7 @@ class Planificateur:
         self.coordinateur = coordinateur
         self.stockage = stockage
         self._ecouteurs: list[Callable[[], None]] = []
+        self.selection = Selection()
 
     # --- Abonnements -----------------------------------------------------------------
 
@@ -169,6 +185,49 @@ class Planificateur:
                 translation_placeholders={"dish": texte},
             )
         return candidats[0][1]
+
+    def choix_recettes(self) -> dict[str, str]:
+        """Libellé affiché -> identifiant, triés sans tenir compte des accents. Homonymes précisés."""
+        recettes = sorted(self.recettes.values(), key=lambda r: sans_accents(r.name))
+        noms = [r.name for r in recettes]
+        choix: dict[str, str] = {}
+        for recette in recettes:
+            libelle = recette.name
+            if noms.count(recette.name) > 1:
+                libelle = f"{recette.name} ({recette.category or recette.id})"
+            choix[libelle] = recette.id
+        return choix
+
+    @callback
+    def async_modifier_selection(self, **valeurs: Any) -> None:
+        """Change la sélection en cours et prévient les entités (rien à sauvegarder)."""
+        for champ, valeur in valeurs.items():
+            setattr(self.selection, champ, valeur)
+        for rappel in list(self._ecouteurs):
+            rappel()
+
+    @callback
+    def async_ajouter_selection(self, aujourdhui: date) -> dict[str, Any]:
+        """Ajoute au menu la recette choisie dans les entités, puis vide le choix de recette."""
+        choix = self.choix_recettes()
+        if self.selection.recette not in choix:
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="no_recipe_selected")
+        jour: date | None = None
+        if self.selection.jour == "aujourd_hui":
+            jour = aujourdhui
+        elif self.selection.jour == "demain":
+            jour = aujourdhui + timedelta(days=1)
+        elif self.selection.jour in JOURS_SELECTION[3:]:
+            index = JOURS_SELECTION.index(self.selection.jour) - 3
+            jour = aujourdhui + timedelta(days=(index - aujourdhui.weekday()) % 7)
+        bilan = self.async_ajouter_au_menu(
+            self.selection.recette,
+            jour=jour,
+            couverts=self.selection.couverts,
+            recipe_id=choix[self.selection.recette],
+        )
+        self.async_modifier_selection(recette=None)
+        return bilan
 
     # --- Écriture --------------------------------------------------------------------
 

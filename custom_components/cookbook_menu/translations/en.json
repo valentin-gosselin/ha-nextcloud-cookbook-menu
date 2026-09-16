@@ -144,6 +144,9 @@
     },
     "dish_not_in_menu": {
       "message": "No dish matching {dish} in the menu"
+    },
+    "no_recipe_selected": {
+      "message": "Choose a recipe first"
     }
   },
   "entity": {
@@ -153,6 +156,36 @@
       },
       "shopping": {
         "name": "Shopping list"
+      }
+    },
+    "select": {
+      "recipe": {
+        "name": "Recipe to add"
+      },
+      "day": {
+        "name": "Day",
+        "state": {
+          "sans_date": "No date",
+          "aujourd_hui": "Today",
+          "demain": "Tomorrow",
+          "lundi": "Monday",
+          "mardi": "Tuesday",
+          "mercredi": "Wednesday",
+          "jeudi": "Thursday",
+          "vendredi": "Friday",
+          "samedi": "Saturday",
+          "dimanche": "Sunday"
+        }
+      }
+    },
+    "number": {
+      "servings": {
+        "name": "Servings"
+      }
+    },
+    "button": {
+      "add_to_menu": {
+        "name": "Add to menu"
       }
     }
   },

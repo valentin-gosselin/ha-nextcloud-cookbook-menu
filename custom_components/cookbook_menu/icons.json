@@ -7,6 +7,24 @@
       "shopping": {
         "default": "mdi:cart-outline"
       }
+    },
+    "select": {
+      "recipe": {
+        "default": "mdi:book-open-variant"
+      },
+      "day": {
+        "default": "mdi:calendar"
+      }
+    },
+    "number": {
+      "servings": {
+        "default": "mdi:account-multiple"
+      }
+    },
+    "button": {
+      "add_to_menu": {
+        "default": "mdi:silverware-variant"
+      }
     }
   },
   "services": {

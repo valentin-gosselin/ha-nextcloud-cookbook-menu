@@ -21,7 +21,7 @@ from .services import async_setup_services
 from .store import StockagePlanificateur
 from .sync import Synchroniseur
 
-PLATFORMS: list[Platform] = [Platform.TODO]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.NUMBER, Platform.SELECT, Platform.TODO]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
