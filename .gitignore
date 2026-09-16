@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+_bmad/**/__pycache__/
+_bmad/custom/*.user.toml
+.bmad-help-setup-modules.toml
