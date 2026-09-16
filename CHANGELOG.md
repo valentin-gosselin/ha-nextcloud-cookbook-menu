@@ -5,7 +5,11 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [
 
 ## [Unreleased]
 
+### Modifié
+- Home Assistant 2026.9.0 minimum.
+
 ### Ajouté
+- Outils pour les agents LLM (API Assist) : chercher une recette, ajouter au menu, retirer, lire le menu, consulter l'historique.
 - Voix avec l'agent Assist par défaut, en français et en anglais : ajouter un plat au menu (jour et couverts compris), demander ce qu'on mange, retirer un plat.
 - Synchronisation facultative du menu et de la liste de courses vers des listes todo existantes (celle ouverte au magasin), sans jamais toucher aux lignes ajoutées ailleurs. Les cochages faits dans la liste cible sont remontés.
 - Actions `add_to_menu`, `remove_from_menu`, `set_servings`, `new_week` et `search_recipes`, avec réponses exploitables par les scripts. Les jours s'écrivent en toutes lettres (« jeudi », « demain »).

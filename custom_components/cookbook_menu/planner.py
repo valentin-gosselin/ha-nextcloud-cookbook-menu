@@ -219,11 +219,18 @@ class Planificateur:
 
     @callback
     def async_ajouter_au_menu(
-        self, texte: str, *, jour: date | None = None, couverts: int | None = None
+        self,
+        texte: str,
+        *,
+        jour: date | None = None,
+        couverts: int | None = None,
+        recipe_id: str | None = None,
     ) -> dict[str, Any]:
         """Ajout « intelligent » (actions, voix, LLM) : meilleure recette, et bilan des courses."""
         avant = {ligne.uid: ligne.libelle for ligne in self.liste_de_courses()}
-        resultat = self.async_ajouter_plat(texte, jour=jour, couverts=couverts, choisir_meilleure=True)
+        resultat = self.async_ajouter_plat(
+            texte, jour=jour, couverts=couverts, recipe_id=recipe_id, choisir_meilleure=True
+        )
         modifiees = [
             ligne.libelle for ligne in self.liste_de_courses() if avant.get(ligne.uid) != ligne.libelle
         ]
@@ -310,6 +317,13 @@ class Planificateur:
         donnees.courses_manuelles = [m for m in donnees.courses_manuelles if not m.get("done")]
         self._signaler_changement()
         return archives
+
+    def historique(self, filtre: str | None = None, limite: int = 20) -> list[dict[str, Any]]:
+        """Plats archivés, du plus récent au plus ancien, éventuellement filtrés par nom."""
+        plats = sorted(self.stockage.donnees.historique, key=lambda p: p.get("day") or "", reverse=True)
+        if filtre:
+            plats = [p for p in plats if score(filtre, p.get("summary", "")) >= SEUIL_MEILLEURE]
+        return plats[:limite]
 
     # --- Liste de courses -----------------------------------------------------------
 
