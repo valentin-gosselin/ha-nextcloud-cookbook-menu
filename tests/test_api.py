@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import aiohttp
 import pytest
@@ -17,8 +17,12 @@ from custom_components.cookbook_menu.api import (
     CookbookClient,
     CookbookConnectionError,
     CookbookNotFoundError,
+    DemandeConnexion,
+    IdentifiantsNextcloud,
     Recipe,
     RecipeStub,
+    async_attendre_connexion,
+    async_demarrer_connexion,
     parse_recipe,
 )
 
@@ -153,3 +157,54 @@ def test_parse_recipe_champs() -> None:
     assert recette.date_modified is None
     assert recette.url is None
     assert parse_recipe({"id": 1, "name": "x", "recipeCategory": "  "}).category is None
+
+
+async def test_login_flow_v2(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    session = async_get_clientsession(hass)
+    aioclient_mock.post(
+        f"{BASE}/index.php/login/v2",
+        json={
+            "poll": {"token": "jeton", "endpoint": f"{BASE}/login/v2/poll"},
+            "login": f"{BASE}/login/v2/flow/x",
+        },
+    )
+    demande = await async_demarrer_connexion(session, f"{BASE}/")
+    assert demande == DemandeConnexion(f"{BASE}/login/v2/flow/x", f"{BASE}/login/v2/poll", "jeton")
+    assert aioclient_mock.mock_calls[0][3]["User-Agent"] == "Cookbook Menu (Home Assistant)"
+
+    aioclient_mock.post(
+        f"{BASE}/login/v2/poll",
+        json={"server": f"{BASE}/", "loginName": "valentin", "appPassword": "genere"},
+    )
+    with patch("custom_components.cookbook_menu.api.asyncio.sleep"):
+        identifiants = await async_attendre_connexion(session, demande, intervalle=0)
+    assert identifiants == IdentifiantsNextcloud(BASE, "valentin", "genere")
+
+
+async def test_login_flow_v2_attente_puis_expiration(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    session = async_get_clientsession(hass)
+    demande = DemandeConnexion("x", f"{BASE}/login/v2/poll", "jeton")
+    aioclient_mock.post(f"{BASE}/login/v2/poll", status=404)
+    assert await async_attendre_connexion(session, demande, intervalle=0.01, duree_max=0.05) is None
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(f"{BASE}/login/v2/poll", exc=aiohttp.ClientError())
+    assert await async_attendre_connexion(session, demande, intervalle=0.01, duree_max=0.02) is None
+
+
+@pytest.mark.parametrize(
+    ("reponse", "exception"),
+    [
+        ({"status": 404}, CookbookNotFoundError),
+        ({"status": 500}, CookbookConnectionError),
+        ({"exc": aiohttp.ClientError()}, CookbookConnectionError),
+        ({"json": {"inattendu": 1}}, CookbookConnectionError),
+    ],
+)
+async def test_login_flow_v2_erreurs(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, reponse, exception
+) -> None:
+    aioclient_mock.post(f"{BASE}/index.php/login/v2", **reponse)
+    with pytest.raises(exception):
+        await async_demarrer_connexion(async_get_clientsession(hass), BASE)

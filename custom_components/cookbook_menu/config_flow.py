@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
@@ -16,6 +18,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     BooleanSelector,
     EntitySelector,
@@ -32,7 +35,15 @@ from homeassistant.helpers.selector import (
 )
 
 from . import CookbookMenuConfigEntry, create_client
-from .api import CookbookAuthError, CookbookError, CookbookNotFoundError
+from .api import (
+    CookbookAuthError,
+    CookbookError,
+    CookbookNotFoundError,
+    DemandeConnexion,
+    IdentifiantsNextcloud,
+    async_attendre_connexion,
+    async_demarrer_connexion,
+)
 from .const import (
     CONF_EXCLUDED_CATEGORIES,
     CONF_HISTORY_MONTHS,
@@ -57,6 +68,17 @@ def _normaliser_url(url: str) -> str:
     if not url.startswith(("http://", "https://")):
         url = f"https://{url}"
     return url
+
+
+def _schema_url(defauts: Mapping[str, Any]) -> vol.Schema:
+    return vol.Schema(
+        {
+            vol.Required(CONF_URL, default=defauts.get(CONF_URL, "")): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.URL)
+            ),
+            vol.Optional(CONF_VERIFY_SSL, default=defauts.get(CONF_VERIFY_SSL, True)): bool,
+        }
+    )
 
 
 def _schema_connexion(defauts: Mapping[str, Any]) -> vol.Schema:
@@ -95,30 +117,122 @@ class CookbookMenuConfigFlow(ConfigFlow, domain=DOMAIN):
             await client.async_close()
         return {}
 
+    def __init__(self) -> None:
+        self._url: str = ""
+        self._verify_ssl: bool = True
+        self._demande: DemandeConnexion | None = None
+        self._attente: asyncio.Task[None] | None = None
+        self._identifiants: IdentifiantsNextcloud | None = None
+
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Ajout depuis l'UI."""
+        """Première étape : l'adresse du serveur, puis le choix du mode de connexion."""
+        if user_input is not None:
+            self._url = _normaliser_url(user_input[CONF_URL])
+            self._verify_ssl = user_input.get(CONF_VERIFY_SSL, True)
+            return await self.async_step_method()
+        return self.async_show_form(step_id="user", data_schema=_schema_url({}))
+
+    async def async_step_method(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Choix : connexion dans le navigateur (recommandée) ou mot de passe d'application saisi."""
+        return self.async_show_menu(step_id="method", menu_options=["login", "manual"])
+
+    async def async_step_login(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Connexion dans le navigateur (Login Flow v2) : Nextcloud crée le mot de passe d'application."""
+        if self._attente is None:
+            session = async_get_clientsession(self.hass, verify_ssl=self._verify_ssl)
+            try:
+                self._demande = await async_demarrer_connexion(session, self._url)
+            except CookbookNotFoundError:
+                return self.async_abort(reason="login_flow_unavailable")
+            except CookbookError:
+                return self.async_abort(reason="cannot_connect")
+            # Pas de démarrage immédiat : l'étape externe doit être affichée avant la reprise du flux.
+            self._attente = self.hass.async_create_task(self._async_attendre(session), eager_start=False)
+            return self.async_external_step(step_id="login", url=self._demande.url_connexion)
+        return self.async_external_step_done(next_step_id="login_done")
+
+    async def _async_attendre(self, session: Any) -> None:
+        assert self._demande is not None
+        self._identifiants = await async_attendre_connexion(session, self._demande)
+        self.hass.async_create_task(
+            self.hass.config_entries.flow.async_configure(flow_id=self.flow_id), eager_start=False
+        )
+
+    @callback
+    def async_remove(self) -> None:
+        """Flux abandonné (fenêtre fermée) : on arrête d'interroger Nextcloud."""
+        if self._attente is not None and not self._attente.done():
+            self._attente.cancel()
+
+    async def async_step_login_done(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Accès accordé (ou délai expiré) : on vérifie puis on enregistre."""
+        if self._identifiants is None:
+            return self.async_abort(reason="login_timeout")
+        donnees = {
+            CONF_URL: _normaliser_url(self._identifiants.url),
+            CONF_USERNAME: self._identifiants.utilisateur,
+            CONF_PASSWORD: self._identifiants.mot_de_passe,
+            CONF_VERIFY_SSL: self._verify_ssl,
+        }
+        if errors := await self._tester(donnees):
+            return self.async_abort(reason=errors["base"])
+        return await self._async_enregistrer(donnees)
+
+    async def async_step_manual(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Saisie manuelle d'un utilisateur et d'un mot de passe d'application."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            user_input[CONF_URL] = _normaliser_url(user_input[CONF_URL])
-            await self.async_set_unique_id(f"{user_input[CONF_URL]}|{user_input[CONF_USERNAME]}".casefold())
-            self._abort_if_unique_id_configured()
-            if not (errors := await self._tester(user_input)):
-                return self.async_create_entry(
-                    title=f"{user_input[CONF_USERNAME]} @ {user_input[CONF_URL].split('://', 1)[-1]}",
-                    data=user_input,
-                )
+            donnees = {**user_input, CONF_URL: self._url, CONF_VERIFY_SSL: self._verify_ssl}
+            if not (errors := await self._tester(donnees)):
+                return await self._async_enregistrer(donnees)
         return self.async_show_form(
-            step_id="user",
-            data_schema=self.add_suggested_values_to_schema(_schema_connexion({}), user_input),
+            step_id="manual",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_USERNAME): TextSelector(),
+                        vol.Required(CONF_PASSWORD): TextSelector(
+                            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                        ),
+                    }
+                ),
+                {CONF_USERNAME: user_input[CONF_USERNAME]} if user_input else {},
+            ),
+            description_placeholders={CONF_URL: self._url},
             errors=errors,
         )
 
+    async def _async_enregistrer(self, donnees: dict[str, Any]) -> ConfigFlowResult:
+        """Crée l'entrée, ou met à jour celle en cours de réauthentification (même compte exigé)."""
+        await self.async_set_unique_id(f"{donnees[CONF_URL]}|{donnees[CONF_USERNAME]}".casefold())
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            return self.async_update_reload_and_abort(self._get_reauth_entry(), data=donnees)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=f"{donnees[CONF_USERNAME]} @ {donnees[CONF_URL].split('://', 1)[-1]}", data=donnees
+        )
+
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
-        """Mot de passe d'application refusé : on en demande un nouveau."""
+        """Mot de passe d'application refusé : nouvelle connexion ou nouveau mot de passe."""
+        self._url = entry_data[CONF_URL]
+        self._verify_ssl = entry_data.get(CONF_VERIFY_SSL, True)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Saisie du nouveau mot de passe d'application."""
+        """Choix : se reconnecter avec Nextcloud ou saisir un nouveau mot de passe d'application."""
+        entree = self._get_reauth_entry()
+        return self.async_show_menu(
+            step_id="reauth_confirm",
+            menu_options=["login", "reauth_manual"],
+            description_placeholders={
+                CONF_USERNAME: entree.data[CONF_USERNAME],
+                CONF_URL: entree.data[CONF_URL],
+            },
+        )
+
+    async def async_step_reauth_manual(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Nouveau mot de passe d'application saisi à la main."""
         entree = self._get_reauth_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -126,7 +240,7 @@ class CookbookMenuConfigFlow(ConfigFlow, domain=DOMAIN):
             if not (errors := await self._tester(donnees)):
                 return self.async_update_reload_and_abort(entree, data=donnees)
         return self.async_show_form(
-            step_id="reauth_confirm",
+            step_id="reauth_manual",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_PASSWORD): TextSelector(

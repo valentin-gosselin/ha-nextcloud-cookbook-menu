@@ -3,28 +3,22 @@
     "step": {
       "user": {
         "title": "Nextcloud Cookbook",
-        "description": "Connect to the Cookbook app of your Nextcloud server. Use an app password (Nextcloud personal settings > Security).",
+        "description": "Address of your Nextcloud server with the Cookbook app.",
         "data": {
           "url": "Nextcloud URL",
-          "username": "Username",
-          "password": "App password",
           "verify_ssl": "Verify SSL certificate"
         },
         "data_description": {
           "url": "Address of your Nextcloud server, the same one you use in your browser",
-          "username": "Your Nextcloud login name",
-          "password": "Create a dedicated app password rather than using your account password",
           "verify_ssl": "Disable only for a self-signed certificate"
         }
       },
       "reauth_confirm": {
-        "title": "Nextcloud app password rejected",
-        "description": "The app password of {username} on {url} is no longer accepted. Enter a new one.",
-        "data": {
-          "password": "App password"
-        },
-        "data_description": {
-          "password": "Create a dedicated app password rather than using your account password"
+        "title": "Nextcloud access rejected",
+        "description": "The access of {username} on {url} is no longer accepted. Sign in again or enter a new app password.",
+        "menu_options": {
+          "login": "Sign in with Nextcloud (recommended)",
+          "reauth_manual": "Enter a new app password"
         }
       },
       "reconfigure": {
@@ -41,6 +35,40 @@
           "password": "Create a dedicated app password rather than using your account password",
           "verify_ssl": "Disable only for a self-signed certificate"
         }
+      },
+      "method": {
+        "title": "How do you want to connect?",
+        "description": "**Sign in with Nextcloud** opens your Nextcloud login page: grant access and Home Assistant receives its own app password. You can also enter an app password yourself.",
+        "menu_options": {
+          "login": "Sign in with Nextcloud (recommended)",
+          "manual": "Enter an app password"
+        }
+      },
+      "manual": {
+        "title": "App password",
+        "description": "Create an app password on {url} (Personal settings > Security), then enter it with your username.",
+        "data": {
+          "username": "Username",
+          "password": "App password"
+        },
+        "data_description": {
+          "username": "Your Nextcloud login name",
+          "password": "Create a dedicated app password rather than using your account password"
+        }
+      },
+      "reauth_manual": {
+        "title": "New app password",
+        "description": "Enter a new app password for {username} on {url}.",
+        "data": {
+          "password": "App password"
+        },
+        "data_description": {
+          "password": "Create a dedicated app password rather than using your account password"
+        }
+      },
+      "login": {
+        "title": "Nextcloud",
+        "description": "Sign in on the Nextcloud page that just opened and grant access. This window continues automatically."
       }
     },
     "error": {
@@ -52,7 +80,17 @@
     "abort": {
       "already_configured": "This Nextcloud account is already configured",
       "reauth_successful": "Re-authentication was successful",
-      "reconfigure_successful": "Reconfiguration was successful"
+      "reconfigure_successful": "Reconfiguration was successful",
+      "login_timeout": "Access was not granted in time, start again.",
+      "login_flow_unavailable": "This Nextcloud server does not offer sign-in from applications; use an app password.",
+      "wrong_account": "You signed in with a different Nextcloud account than the one configured.",
+      "invalid_auth": "Invalid username or app password",
+      "cannot_connect": "Cannot connect to the Nextcloud server",
+      "cookbook_not_found": "The Cookbook app was not found on this Nextcloud server",
+      "unknown": "Unexpected error"
+    },
+    "progress": {
+      "login": "Sign in on the Nextcloud page that just opened and grant access. This window continues automatically."
     }
   },
   "options": {

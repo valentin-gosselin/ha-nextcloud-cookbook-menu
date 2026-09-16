@@ -3,28 +3,22 @@
     "step": {
       "user": {
         "title": "Nextcloud Cookbook",
-        "description": "Connexion à l'application Cookbook de votre serveur Nextcloud. Utilisez un mot de passe d'application (paramètres personnels Nextcloud > Sécurité).",
+        "description": "Adresse de votre serveur Nextcloud où est installée l'application Cookbook.",
         "data": {
           "url": "URL de Nextcloud",
-          "username": "Nom d'utilisateur",
-          "password": "Mot de passe d'application",
           "verify_ssl": "Vérifier le certificat SSL"
         },
         "data_description": {
           "url": "Adresse de votre serveur Nextcloud, la même que dans votre navigateur",
-          "username": "Votre identifiant de connexion Nextcloud",
-          "password": "Créez un mot de passe d'application dédié plutôt que d'utiliser celui du compte",
           "verify_ssl": "À désactiver uniquement pour un certificat auto-signé"
         }
       },
       "reauth_confirm": {
-        "title": "Mot de passe d'application Nextcloud refusé",
-        "description": "Le mot de passe d'application de {username} sur {url} n'est plus accepté. Saisissez-en un nouveau.",
-        "data": {
-          "password": "Mot de passe d'application"
-        },
-        "data_description": {
-          "password": "Créez un mot de passe d'application dédié plutôt que d'utiliser celui du compte"
+        "title": "Accès Nextcloud refusé",
+        "description": "L'accès de {username} sur {url} n'est plus accepté. Reconnectez-vous ou saisissez un nouveau mot de passe d'application.",
+        "menu_options": {
+          "login": "Se connecter avec Nextcloud (recommandé)",
+          "reauth_manual": "Saisir un nouveau mot de passe d'application"
         }
       },
       "reconfigure": {
@@ -41,6 +35,40 @@
           "password": "Créez un mot de passe d'application dédié plutôt que d'utiliser celui du compte",
           "verify_ssl": "À désactiver uniquement pour un certificat auto-signé"
         }
+      },
+      "method": {
+        "title": "Comment se connecter ?",
+        "description": "**Se connecter avec Nextcloud** ouvre la page de connexion de votre Nextcloud : accordez l'accès et Home Assistant reçoit son propre mot de passe d'application. Vous pouvez aussi saisir vous-même un mot de passe d'application.",
+        "menu_options": {
+          "login": "Se connecter avec Nextcloud (recommandé)",
+          "manual": "Saisir un mot de passe d'application"
+        }
+      },
+      "manual": {
+        "title": "Mot de passe d'application",
+        "description": "Créez un mot de passe d'application sur {url} (Paramètres personnels > Sécurité), puis saisissez-le avec votre nom d'utilisateur.",
+        "data": {
+          "username": "Nom d'utilisateur",
+          "password": "Mot de passe d'application"
+        },
+        "data_description": {
+          "username": "Votre identifiant de connexion Nextcloud",
+          "password": "Créez un mot de passe d'application dédié plutôt que d'utiliser celui du compte"
+        }
+      },
+      "reauth_manual": {
+        "title": "Nouveau mot de passe d'application",
+        "description": "Saisissez un nouveau mot de passe d'application pour {username} sur {url}.",
+        "data": {
+          "password": "Mot de passe d'application"
+        },
+        "data_description": {
+          "password": "Créez un mot de passe d'application dédié plutôt que d'utiliser celui du compte"
+        }
+      },
+      "login": {
+        "title": "Nextcloud",
+        "description": "Connectez-vous sur la page Nextcloud qui vient de s'ouvrir et accordez l'accès. Cette fenêtre continuera toute seule."
       }
     },
     "error": {
@@ -52,7 +80,17 @@
     "abort": {
       "already_configured": "Ce compte Nextcloud est déjà configuré",
       "reauth_successful": "Réauthentification réussie",
-      "reconfigure_successful": "Reconfiguration réussie"
+      "reconfigure_successful": "Reconfiguration réussie",
+      "login_timeout": "L'accès n'a pas été accordé à temps, recommencez.",
+      "login_flow_unavailable": "Ce serveur Nextcloud ne propose pas la connexion depuis les applications ; utilisez un mot de passe d'application.",
+      "wrong_account": "Vous vous êtes connecté avec un autre compte Nextcloud que celui configuré.",
+      "invalid_auth": "Nom d'utilisateur ou mot de passe d'application incorrect",
+      "cannot_connect": "Impossible de joindre le serveur Nextcloud",
+      "cookbook_not_found": "L'application Cookbook est introuvable sur ce serveur Nextcloud",
+      "unknown": "Erreur inattendue"
+    },
+    "progress": {
+      "login": "Connectez-vous sur la page Nextcloud qui vient de s'ouvrir et accordez l'accès. Cette fenêtre continuera toute seule."
     }
   },
   "options": {

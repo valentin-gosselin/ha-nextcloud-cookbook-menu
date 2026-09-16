@@ -204,3 +204,83 @@ class CookbookClient:
         # gather relaie directement la première erreur (pas d'ExceptionGroup à dépiler).
         await asyncio.gather(*(charger(stub) for stub in stubs))
         return resultat
+
+
+# --- Login Flow v2 de Nextcloud ------------------------------------------------------------
+# https://docs.nextcloud.com/server/latest/developer_manual/client_apis/LoginFlow/index.html#login-flow-v2
+# L'utilisateur se connecte dans son navigateur et accorde l'accès ; Nextcloud crée alors un mot
+# de passe d'application nommé d'après l'User-Agent, que l'on récupère en interrogeant « poll ».
+
+AGENT_CONNEXION = "Cookbook Menu (Home Assistant)"
+
+
+@dataclass(frozen=True, slots=True)
+class DemandeConnexion:
+    """Connexion en attente : page à ouvrir et jeton d'interrogation."""
+
+    url_connexion: str
+    url_poll: str
+    jeton: str
+
+
+@dataclass(frozen=True, slots=True)
+class IdentifiantsNextcloud:
+    """Identifiants renvoyés par Nextcloud une fois l'accès accordé."""
+
+    url: str
+    utilisateur: str
+    mot_de_passe: str
+
+
+async def async_demarrer_connexion(session: aiohttp.ClientSession, url: str) -> DemandeConnexion:
+    """Ouvre une demande Login Flow v2."""
+    try:
+        async with session.post(
+            f"{url.rstrip('/')}/index.php/login/v2", headers={"User-Agent": AGENT_CONNEXION}, timeout=TIMEOUT
+        ) as reponse:
+            if reponse.status == 404:
+                raise CookbookNotFoundError("login/v2")
+            if reponse.status >= 400:
+                raise CookbookConnectionError(f"Réponse HTTP {reponse.status} sur login/v2")
+            donnees = await reponse.json(content_type=None)
+    except (aiohttp.ClientError, TimeoutError, ValueError) as err:
+        raise CookbookConnectionError(str(err) or type(err).__name__) from err
+    try:
+        return DemandeConnexion(
+            url_connexion=donnees["login"],
+            url_poll=donnees["poll"]["endpoint"],
+            jeton=donnees["poll"]["token"],
+        )
+    except (KeyError, TypeError) as err:
+        raise CookbookConnectionError("Réponse login/v2 inattendue") from err
+
+
+async def async_attendre_connexion(
+    session: aiohttp.ClientSession,
+    demande: DemandeConnexion,
+    intervalle: float = 2.0,
+    duree_max: float = 1200.0,
+) -> IdentifiantsNextcloud | None:
+    """Interroge Nextcloud jusqu'à ce que l'accès soit accordé. None si le délai expire."""
+    ecoule = 0.0
+    while ecoule < duree_max:
+        try:
+            async with session.post(
+                demande.url_poll,
+                data={"token": demande.jeton},
+                headers={"User-Agent": AGENT_CONNEXION},
+                timeout=TIMEOUT,
+            ) as reponse:
+                if reponse.status == 200:
+                    donnees = await reponse.json(content_type=None)
+                    return IdentifiantsNextcloud(
+                        url=str(donnees["server"]).rstrip("/"),
+                        utilisateur=str(donnees["loginName"]),
+                        mot_de_passe=str(donnees["appPassword"]),
+                    )
+        except aiohttp.ClientError, TimeoutError, ValueError, KeyError, TypeError:
+            # Coupure passagère : on continue d'attendre jusqu'au délai.
+            pass
+        await asyncio.sleep(intervalle)
+        ecoule += intervalle
+    return None

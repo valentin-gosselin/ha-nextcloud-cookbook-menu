@@ -15,7 +15,7 @@ Nextcloud Cookbook has no shopping list feature ([nextcloud/cookbook#11](https:/
 
 - Home Assistant **2026.9** or newer.
 - A Nextcloud server with the **Cookbook** app (API 1.x, tested with Cookbook 0.11).
-- A Nextcloud **app password** (Personal settings > Security > Devices & sessions > Create new app password). Do not use your account password.
+- A Nextcloud account. Signing in with Nextcloud creates the app password for you; you can also create one yourself.
 
 ## Installation
 
@@ -30,16 +30,12 @@ Copy `custom_components/cookbook_menu` into the `custom_components` folder of yo
 
 ## Configuration
 
-Settings > Devices & services > Add integration > **Cookbook Menu**.
+Settings > Devices & services > Add integration > **Cookbook Menu**, then enter the address of your Nextcloud server and choose:
 
-| Field | Description |
-|---|---|
-| Nextcloud URL | Address of your Nextcloud server, the one you open in your browser. |
-| Username | Your Nextcloud login name. |
-| App password | A dedicated app password. |
-| Verify SSL certificate | Disable only for a self-signed certificate. |
+- **Sign in with Nextcloud (recommended)**: your Nextcloud login page opens; sign in and grant access. Home Assistant receives its own app password, listed as *Cookbook Menu (Home Assistant)* in Nextcloud Settings > Security, where it can be revoked.
+- **Enter an app password**: create one in Nextcloud (Personal settings > Security > Devices & sessions) and enter it with your username.
 
-The connection is tested before the entry is created. If the app password is revoked later, Home Assistant asks you to enter a new one (re-authentication). The URL, user and password can be changed with *Reconfigure*.
+*Verify SSL certificate* should only be disabled for a self-signed certificate. The connection is tested before the entry is created. If the access is revoked later, Home Assistant asks you to sign in again or enter a new app password (re-authentication). The URL, user and password can be changed with *Reconfigure*.
 
 ### Options
 
@@ -160,7 +156,8 @@ script:
 
 ## Troubleshooting
 
-- **"Invalid username or app password"**: create a new app password in Nextcloud; your account password may be refused when two-factor authentication is enabled.
+- **"Invalid username or app password"**: prefer *Sign in with Nextcloud*; your account password is refused when two-factor authentication is enabled.
+- **"This Nextcloud server does not offer sign-in from applications"**: use an app password instead.
 - **"The Cookbook app was not found"**: check that the Cookbook app is installed and enabled for your user.
 - **A dish is not linked to the right recipe**: rename the menu line with a more precise name, or use `search_recipes` then `add_to_menu`.
 - **Diagnostics**: Settings > Devices & services > Cookbook Menu > menu > Download diagnostics. The password and the username are redacted.
@@ -186,7 +183,7 @@ Cookbook Menu relie vos recettes **Nextcloud Cookbook** à Home Assistant.
 - **Pilotage** : depuis l'interface, les automatisations, Assist (phrases en français) ou un agent LLM.
 - **Synchronisation** : une recopie est possible vers la liste de courses que le foyer utilise déjà.
 
-Installation par HACS (dépôt personnalisé), puis ajout de l'intégration avec l'URL de Nextcloud, l'utilisateur et un **mot de passe d'application**. Toutes les options, actions et phrases sont décrites ci-dessus.
+Installation par HACS (dépôt personnalisé), puis ajout de l'intégration : on saisit l'URL de Nextcloud et on choisit **Se connecter avec Nextcloud** (ou un mot de passe d'application saisi à la main). Toutes les options, actions et phrases sont décrites ci-dessus.
 
 ## License
 
