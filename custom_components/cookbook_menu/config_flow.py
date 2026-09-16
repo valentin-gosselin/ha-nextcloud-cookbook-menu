@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -31,12 +32,15 @@ from . import CookbookMenuConfigEntry, create_client
 from .api import CookbookAuthError, CookbookError, CookbookNotFoundError
 from .const import (
     CONF_EXCLUDED_CATEGORIES,
+    CONF_PANTRY,
+    CONF_PANTRY_REMINDER,
     CONF_SCAN_INTERVAL_MINUTES,
     CONF_SERVINGS,
     DEFAULT_SCAN_INTERVAL_MINUTES,
     DEFAULT_SERVINGS,
     DOMAIN,
 )
+from .ingredients.pantry import PLACARD_PAR_DEFAUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -176,6 +180,8 @@ class CookbookMenuOptionsFlow(OptionsFlowWithReload):
             except CookbookError:
                 _LOGGER.debug("Catégories indisponibles pour le formulaire d'options")
         choix = sorted({*categories, *options.get(CONF_EXCLUDED_CATEGORIES, [])}, key=str.casefold)
+        placard = options.get(CONF_PANTRY, list(PLACARD_PAR_DEFAUT))
+        choix_placard = list(dict.fromkeys([*PLACARD_PAR_DEFAUT, *placard]))
 
         schema = vol.Schema(
             {
@@ -189,6 +195,17 @@ class CookbookMenuOptionsFlow(OptionsFlowWithReload):
                         options=choix, multiple=True, custom_value=True, mode=SelectSelectorMode.DROPDOWN
                     )
                 ),
+                vol.Optional(CONF_PANTRY, default=placard): SelectSelector(
+                    SelectSelectorConfig(
+                        options=choix_placard,
+                        multiple=True,
+                        custom_value=True,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                vol.Required(
+                    CONF_PANTRY_REMINDER, default=options.get(CONF_PANTRY_REMINDER, True)
+                ): BooleanSelector(),
                 vol.Required(
                     CONF_SCAN_INTERVAL_MINUTES,
                     default=options.get(CONF_SCAN_INTERVAL_MINUTES, DEFAULT_SCAN_INTERVAL_MINUTES),

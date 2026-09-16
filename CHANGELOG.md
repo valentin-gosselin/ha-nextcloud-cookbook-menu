@@ -6,6 +6,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [
 ## [Unreleased]
 
 ### Ajouté
+- Placard : produits de base jamais ajoutés aux courses (liste réglable), avec une ligne de rappel à vérifier avant de partir. Un produit du placard ajouté à la main est signalé épuisé et revient au placard une fois coché.
 - Liste « Liste de courses » calculée depuis le menu : quantités mises à l'échelle des couverts, produits fusionnés entre recettes, arrondis à l'achat, rangés par rayon. Les lignes cochées ou ajoutées à la main ne sont jamais écrasées.
 - Liste « Menu de la semaine » : un plat par ligne, lié automatiquement à la recette la plus proche (tolérant aux accents et aux fautes), jour en échéance, couverts réglables dans la description.
 - Configuration par l'UI (URL, utilisateur, mot de passe d'application), avec test de connexion, réauthentification et reconfiguration.

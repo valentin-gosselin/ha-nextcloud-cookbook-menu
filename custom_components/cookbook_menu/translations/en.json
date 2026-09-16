@@ -62,12 +62,16 @@
         "data": {
           "servings": "Default servings",
           "excluded_categories": "Excluded categories",
-          "scan_interval_minutes": "Refresh interval (minutes)"
+          "scan_interval_minutes": "Refresh interval (minutes)",
+          "pantry": "Pantry staples",
+          "pantry_reminder": "Pantry reminder"
         },
         "data_description": {
           "servings": "Number of people a dish is planned for when nothing else is specified",
           "excluded_categories": "Recipes in these categories are never offered (for example household products)",
-          "scan_interval_minutes": "How often recipes are reloaded from Nextcloud"
+          "scan_interval_minutes": "How often recipes are reloaded from Nextcloud",
+          "pantry": "Always at home: never added to the shopping list. Add an item manually to the list when you run out.",
+          "pantry_reminder": "Add a single line listing the pantry staples used by the menu, to check before shopping"
         }
       }
     }

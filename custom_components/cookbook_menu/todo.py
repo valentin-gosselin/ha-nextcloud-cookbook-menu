@@ -11,30 +11,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import CookbookMenuConfigEntry
 from .const import DOMAIN
+from .libelles import libelles
 from .planner import Planificateur, lire_couverts
 from .store import PlatMenu
 
 PARALLEL_UPDATES = 0
-
-_TEXTES = {
-    "fr": {
-        "couverts": "{n} couverts",
-        "un_couvert": "1 couvert",
-        "sans_recette": "sans recette",
-        "introuvable": "recette introuvable",
-    },
-    "en": {
-        "couverts": "{n} servings",
-        "un_couvert": "1 serving",
-        "sans_recette": "no recipe",
-        "introuvable": "recipe not found",
-    },
-}
-
-
-def textes(hass: HomeAssistant) -> dict[str, str]:
-    """Libellés dans la langue de l'instance (français ou anglais)."""
-    return _TEXTES["fr" if hass.config.language.startswith("fr") else "en"]
 
 
 async def async_setup_entry(
@@ -100,14 +81,14 @@ class MenuTodoListEntity(CookbookMenuEntity):
         super().__init__(entry, "menu")
 
     def _description(self, plat: PlatMenu) -> str:
-        libelles = textes(self.hass)
+        textes = libelles(self.hass)
         morceaux = [
-            libelles["un_couvert"] if plat.servings == 1 else libelles["couverts"].format(n=plat.servings)
+            textes["un_couvert"] if plat.servings == 1 else textes["couverts"].format(n=plat.servings)
         ]
         if plat.recipe_id is None:
-            morceaux.append(libelles["sans_recette"])
+            morceaux.append(textes["sans_recette"])
         elif self.planificateur.recette_du_plat(plat) is None:
-            morceaux.append(libelles["introuvable"])
+            morceaux.append(textes["introuvable"])
         return ", ".join(morceaux)
 
     def _elements(self) -> list[TodoItem]:

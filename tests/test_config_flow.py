@@ -138,13 +138,21 @@ async def test_options(hass, mock_client, config_entry) -> None:
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {"servings": 4.0, "excluded_categories": ["Dessert"], "scan_interval_minutes": 60.0},
+        {
+            "servings": 4.0,
+            "excluded_categories": ["Dessert"],
+            "pantry": ["Sel", "Harissa"],
+            "pantry_reminder": False,
+            "scan_interval_minutes": 60.0,
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
-    assert config_entry.options == {
+    assert dict(config_entry.options) == {
         "servings": 4,
         "excluded_categories": ["Dessert"],
+        "pantry": ["Sel", "Harissa"],
+        "pantry_reminder": False,
         "scan_interval_minutes": 60,
     }
     index = config_entry.runtime_data.coordinator.data

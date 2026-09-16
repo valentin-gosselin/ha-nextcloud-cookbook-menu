@@ -8,6 +8,8 @@ DOMAIN: Final = "cookbook_menu"
 CONF_SERVINGS: Final = "servings"
 CONF_EXCLUDED_CATEGORIES: Final = "excluded_categories"
 CONF_SCAN_INTERVAL_MINUTES: Final = "scan_interval_minutes"
+CONF_PANTRY: Final = "pantry"
+CONF_PANTRY_REMINDER: Final = "pantry_reminder"
 
 DEFAULT_SERVINGS: Final = 2
 DEFAULT_SCAN_INTERVAL_MINUTES: Final = 30

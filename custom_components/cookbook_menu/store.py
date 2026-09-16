@@ -53,8 +53,8 @@ class DonneesPlanificateur:
     courses_manuelles: list[dict[str, Any]] = field(default_factory=list)
     # État des lignes calculées, par clé produit : {done, quantite_cochee}.
     etat_courses: dict[str, dict[str, Any]] = field(default_factory=dict)
-    # Clés des produits du placard signalés épuisés.
-    placard_epuise: list[str] = field(default_factory=list)
+    # Produits du placard signalés épuisés : clé produit -> nom saisi.
+    placard_epuise: dict[str, str] = field(default_factory=dict)
     # Plats passés : {day, recipe_id, summary, servings}.
     historique: list[dict[str, Any]] = field(default_factory=list)
 
@@ -75,7 +75,7 @@ class DonneesPlanificateur:
             menu=[PlatMenu.depuis_dict(p) for p in donnees.get("menu", [])],
             courses_manuelles=list(donnees.get("courses_manuelles", [])),
             etat_courses=dict(donnees.get("etat_courses", {})),
-            placard_epuise=list(donnees.get("placard_epuise", [])),
+            placard_epuise=dict(donnees.get("placard_epuise", {})),
             historique=list(donnees.get("historique", [])),
         )
 

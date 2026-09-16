@@ -17,8 +17,19 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 
 from .api import Recipe
-from .const import CONF_SERVINGS, DEFAULT_SERVINGS, DOMAIN
-from .ingredients.shopping import Contribution, LigneCourses, augmentation, calculer, formater_quantites
+from .const import CONF_PANTRY, CONF_PANTRY_REMINDER, CONF_SERVINGS, DEFAULT_SERVINGS, DOMAIN
+from .ingredients.aisles import rayon
+from .ingredients.normalize import cle
+from .ingredients.pantry import PLACARD_PAR_DEFAUT, cles_placard, est_au_placard, texte_rappel
+from .ingredients.shopping import (
+    Contribution,
+    LigneCourses,
+    augmentation,
+    calculer,
+    formater_quantites,
+    trier,
+)
+from .libelles import libelles
 from .matching import Correspondance, chercher, est_ambigu, lien_automatique
 from .store import PlatMenu, StockagePlanificateur
 
@@ -29,6 +40,8 @@ if TYPE_CHECKING:
 INCHANGE: Final = object()
 
 PREFIXE_PRODUIT: Final = "produit:"
+UID_RAPPEL_PLACARD: Final = "rappel:placard"
+_ETAT_RAPPEL: Final = "__rappel_placard__"
 
 _COUVERTS = re.compile(
     r"^\s*(?:pour\s+)?(?P<n>\d{1,2})\s*(?:couverts?|personnes?|pers\.?|parts?|portions?|servings?|people)?\s*$",
@@ -251,14 +264,53 @@ class Planificateur:
         return contributions
 
     def placard(self) -> set[str]:
-        """Clés des produits du placard (complété par la story 2.3)."""
-        return set()
+        """Clés des produits du placard réglés dans les options."""
+        options = self.coordinateur.config_entry.options
+        return cles_placard(options.get(CONF_PANTRY, PLACARD_PAR_DEFAUT))
+
+    def _description(self, ligne: LigneCourses) -> str:
+        textes = libelles(self.hass)
+        morceaux = [textes["pour"].format(recette=r, n=n) for r, n in ligne.sources.items()]
+        if ligne.cle in self.stockage.donnees.placard_epuise:
+            morceaux.append(textes["placard_epuise"])
+        return ", ".join(morceaux)
 
     def liste_de_courses(self) -> list[LigneAffichee]:
-        """Lignes calculées (par rayon) puis lignes manuelles, avec l'état de cochage appliqué."""
-        lignes, _ = calculer(self._contributions(), self.placard())
-        etats = self.stockage.donnees.etat_courses
+        """Rappel du placard, lignes calculées (par rayon), puis lignes manuelles, cochages appliqués."""
+        donnees = self.stockage.donnees
+        epuises = donnees.placard_epuise
+        lignes, ecartes = calculer(self._contributions(), self.placard(), epuises)
+        # Un produit signalé épuisé apparaît même si aucune recette du menu ne l'utilise.
+        presents = {ligne.cle for ligne in lignes}
+        lignes = trier(
+            [
+                *lignes,
+                *(
+                    LigneCourses(cle=c, nom=nom, rayon=rayon(c))
+                    for c, nom in epuises.items()
+                    if c not in presents
+                ),
+            ]
+        )
+        etats = donnees.etat_courses
         affichees: list[LigneAffichee] = []
+
+        options = self.coordinateur.config_entry.options
+        if ecartes and options.get(CONF_PANTRY_REMINDER, True):
+            textes = libelles(self.hass)
+            etat = etats.get(_ETAT_RAPPEL, {})
+            memes_produits = etat.get("produits") == ecartes
+            if not (etat.get("masque") and memes_produits):
+                affichees.append(
+                    LigneAffichee(
+                        uid=UID_RAPPEL_PLACARD,
+                        libelle=texte_rappel(ecartes, textes["rappel_placard"], textes["rappel_autres"]),
+                        description=", ".join(ecartes),
+                        fait=bool(etat.get("fait")) and memes_produits,
+                        calculee=True,
+                    )
+                )
+
         for ligne in lignes:
             etat = etats.get(ligne.cle, {})
             ajout = augmentation(etat.get("mesure", {}), ligne.mesure()) if etat else {}
@@ -272,7 +324,7 @@ class Planificateur:
                 LigneAffichee(
                     uid=f"{PREFIXE_PRODUIT}{ligne.cle}",
                     libelle=libelle,
-                    description=ligne.description,
+                    description=self._description(ligne),
                     fait=fait,
                     calculee=True,
                     ligne=ligne,
@@ -281,9 +333,9 @@ class Planificateur:
         # Oubli des états de produits qui ne sont plus dans la liste (la semaine suivante repart à zéro).
         # Jamais pendant une panne de Nextcloud : les recettes absentes videraient tous les cochages.
         if self.coordinateur.last_update_success and self.coordinateur.data is not None:
-            presentes = {ligne.cle for ligne in lignes}
-            for cle in [c for c in etats if c not in presentes]:
-                del etats[cle]
+            presentes = {ligne.cle for ligne in lignes} | {_ETAT_RAPPEL}
+            for cle_etat in [c for c in etats if c not in presentes]:
+                del etats[cle_etat]
         for manuelle in self.stockage.donnees.courses_manuelles:
             affichees.append(
                 LigneAffichee(
@@ -310,6 +362,13 @@ class Planificateur:
         texte = texte.strip()
         if not texte:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="empty_dish")
+        cle_produit = cle(texte)
+        if est_au_placard(cle_produit, self.placard()):
+            # « Il n'y a plus d'huile d'olive » : le produit du placard redevient une course.
+            self.stockage.donnees.placard_epuise[cle_produit] = texte
+            self.stockage.donnees.etat_courses.pop(cle_produit, None)
+            self._signaler_changement()
+            return f"{PREFIXE_PRODUIT}{cle_produit}"
         uid = uuid4().hex
         self.stockage.donnees.courses_manuelles.append(
             {"uid": uid, "summary": texte, "description": description, "done": fait}
@@ -323,16 +382,21 @@ class Planificateur:
     ) -> None:
         """Modifie une ligne. Pour une ligne calculée, seul le cochage est modifiable."""
         ligne = self._ligne_affichee(uid)
+        donnees = self.stockage.donnees
         if ligne.calculee:
             if texte is not None and texte != ligne.libelle:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN, translation_key="computed_item_readonly"
                 )
-            assert ligne.ligne is not None
-            self.stockage.donnees.etat_courses[ligne.ligne.cle] = {
-                "fait": fait,
-                "mesure": ligne.ligne.mesure(),
-            }
+            if ligne.ligne is None:  # rappel du placard
+                produits = ligne.description.split(", ") if ligne.description else []
+                donnees.etat_courses[_ETAT_RAPPEL] = {"fait": fait, "produits": produits}
+            elif fait and ligne.ligne.cle in donnees.placard_epuise:
+                # Produit du placard racheté : il retourne au placard.
+                del donnees.placard_epuise[ligne.ligne.cle]
+                donnees.etat_courses.pop(ligne.ligne.cle, None)
+            else:
+                donnees.etat_courses[ligne.ligne.cle] = {"fait": fait, "mesure": ligne.ligne.mesure()}
         else:
             manuelle = next(m for m in self.stockage.donnees.courses_manuelles if m["uid"] == uid)
             if texte is not None and texte.strip():
@@ -347,8 +411,12 @@ class Planificateur:
         lignes = [self._ligne_affichee(uid) for uid in uids]
         donnees = self.stockage.donnees
         for ligne in lignes:
-            if ligne.calculee:
+            if ligne.calculee and ligne.ligne is None:
+                produits = ligne.description.split(", ") if ligne.description else []
+                donnees.etat_courses[_ETAT_RAPPEL] = {"masque": True, "produits": produits}
+            elif ligne.calculee:
                 assert ligne.ligne is not None
+                donnees.placard_epuise.pop(ligne.ligne.cle, None)
                 donnees.etat_courses[ligne.ligne.cle] = {"masque": True, "mesure": ligne.ligne.mesure()}
         manuelles = {ligne.uid for ligne in lignes if not ligne.calculee}
         donnees.courses_manuelles = [m for m in donnees.courses_manuelles if m["uid"] not in manuelles]

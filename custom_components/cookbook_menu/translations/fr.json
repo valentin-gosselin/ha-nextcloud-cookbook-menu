@@ -62,12 +62,16 @@
         "data": {
           "servings": "Couverts par défaut",
           "excluded_categories": "Catégories exclues",
-          "scan_interval_minutes": "Intervalle de rafraîchissement (minutes)"
+          "scan_interval_minutes": "Intervalle de rafraîchissement (minutes)",
+          "pantry": "Placard",
+          "pantry_reminder": "Rappel du placard"
         },
         "data_description": {
           "servings": "Nombre de personnes pour lesquelles un plat est prévu quand rien d'autre n'est précisé",
           "excluded_categories": "Les recettes de ces catégories ne sont jamais proposées (par exemple les produits ménagers)",
-          "scan_interval_minutes": "Fréquence de rechargement des recettes depuis Nextcloud"
+          "scan_interval_minutes": "Fréquence de rechargement des recettes depuis Nextcloud",
+          "pantry": "Toujours à la maison : jamais ajoutés aux courses. Ajoutez le produit à la main dans la liste quand il n'y en a plus.",
+          "pantry_reminder": "Ajoute une ligne unique qui cite les produits du placard utilisés par le menu, à vérifier avant les courses"
         }
       }
     }

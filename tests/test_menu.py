@@ -230,7 +230,7 @@ def test_donnees_aller_retour() -> None:
         ],
         courses_manuelles=[{"uid": "m", "summary": "Pain"}],
         etat_courses={"citron": {"done": True}},
-        placard_epuise=["huile olive"],
+        placard_epuise={"huile olive": "Huile d'olive"},
         historique=[{"day": "2026-09-01", "summary": "Chili"}],
     )
     assert DonneesPlanificateur.depuis_dict(donnees.en_dict()) == donnees

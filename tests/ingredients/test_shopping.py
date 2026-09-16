@@ -38,7 +38,7 @@ def test_salade_cesar_pour_deux() -> None:
     assert produits["salade"].libelle == "Salade verte (1)"
     assert produits["citron"].libelle == "Citron (1)"  # 0,5 + 0,5 pour 4, soit 0,5 pour 2, arrondi à 1
     assert "Parmesan" in produits["parmesan"].libelle
-    assert produits["parmesan"].description == "Salade César au poulet pour 2"
+    assert produits["parmesan"].sources == {"Salade César au poulet": 2}
 
 
 def test_fusion_entre_recettes_et_sources() -> None:

@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 
 from .aisles import Rayon, rayon
 from .normalize import sans_accents
+from .pantry import est_au_placard
 from .parser import Ingredient, analyser
 from .units import UNITES, Famille
 
@@ -43,10 +44,6 @@ class LigneCourses:
     def libelle(self) -> str:
         quantites = formater_quantites(self.quantites)
         return f"{self.nom} ({quantites})" if quantites else self.nom
-
-    @property
-    def description(self) -> str:
-        return ", ".join(f"{recette} pour {couverts}" for recette, couverts in self.sources.items())
 
     def mesure(self) -> dict[str, float]:
         """Quantités arrondies à l'achat, pour comparer deux calculs."""
@@ -121,9 +118,14 @@ def formater_quantites(quantites: dict[str, float]) -> str:
 def calculer(
     contributions: Iterable[Contribution],
     placard: Iterable[str] = (),
+    epuises: Iterable[str] = (),
 ) -> tuple[list[LigneCourses], list[str]]:
-    """Lignes de courses triées par rayon, et noms des produits du placard écartés."""
+    """Lignes de courses triées par rayon, et noms des produits du placard écartés.
+
+    `epuises` : clés de produits du placard signalés épuisés, qui redeviennent des courses normales.
+    """
     placard = set(placard)
+    epuises = set(epuises)
     lignes: dict[str, LigneCourses] = {}
     ecartes: dict[str, str] = {}
     for contribution in contributions:
@@ -133,7 +135,7 @@ def calculer(
                 if ingredient.section or not ingredient.cle:
                     continue
                 cle = ingredient.cle
-                if cle in placard:
+                if cle not in epuises and est_au_placard(cle, placard):
                     ecartes.setdefault(cle, ingredient.nom)
                     continue
                 ligne = lignes.get(cle)
@@ -153,8 +155,12 @@ def calculer(
                     ligne.sans_quantite = True
                 else:
                     ligne.quantites[mesure[0]] = ligne.quantites.get(mesure[0], 0) + mesure[1]
-    ordonnees = sorted(lignes.values(), key=lambda produit: (produit.rayon, sans_accents(produit.nom)))
-    return ordonnees, sorted(ecartes.values(), key=sans_accents)
+    return trier(lignes.values()), sorted(ecartes.values(), key=sans_accents)
+
+
+def trier(lignes: Iterable[LigneCourses]) -> list[LigneCourses]:
+    """Ordre de passage en magasin : par rayon, puis par nom sans accents."""
+    return sorted(lignes, key=lambda produit: (produit.rayon, sans_accents(produit.nom)))
 
 
 def augmentation(avant: dict[str, float], apres: dict[str, float]) -> dict[str, float]:
