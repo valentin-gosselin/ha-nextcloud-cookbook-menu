@@ -7,6 +7,7 @@ cochages de lignes de courses restent gérés par les intents natifs de Home Ass
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from typing import TYPE_CHECKING
 
@@ -46,6 +47,13 @@ PHRASES_HISTORIQUE = [
     "c'est quand la dernière fois qu'on a (mangé|fait) {demande}",
     "when did we (last eat|last have|last cook|eat|have) {demande}",
 ]
+PHRASES_MANQUE = [
+    "il (n'y a|y a) plus [de|d'|du|des] {demande}",
+    "(on n'a|on a) plus [de|d'|du|des] {demande}",
+    "(nous n'avons|j'ai|je n'ai) plus [de|d'|du|des] {demande}",
+    "(we're|we are|we ran) out of {demande}",
+    "we have no more {demande}",
+]
 PHRASES_RETRAIT = [
     "(retire|enlève|supprime|annule) {demande} du menu",
     "remove {demande} from [the] menu",
@@ -67,6 +75,7 @@ _REPONSES = {
         "introuvable": "Je ne trouve pas {plat} dans le menu.",
         "non_configure": "Cookbook Menu n'est pas configuré.",
         "plat_vide": "Quel plat faut-il ajouter au menu ?",
+        "manque": "C'est noté, {produit} est dans les courses.",
         "historique": "La dernière fois : {plat}, le {date}.",
         "historique_jamais": "Pas de {plat} dans l'historique.",
         "mois": [
@@ -103,6 +112,7 @@ _REPONSES = {
         "introuvable": "I can't find {plat} in the menu.",
         "non_configure": "Cookbook Menu is not configured.",
         "plat_vide": "Which dish should I add to the menu?",
+        "manque": "Noted, {produit} is on the shopping list.",
         "historique": "Last time: {plat}, on {date}.",
         "historique_jamais": "No {plat} in the history.",
         "mois": [
@@ -239,7 +249,18 @@ def async_enregistrer_phrases(hass: HomeAssistant) -> CALLBACK_TYPE:
         texte_date = f"{jour.day} {mois} {jour.year}" if code == "fr" else f"{mois} {jour.day}, {jour.year}"
         return textes["historique"].format(plat=dernier["summary"], date=texte_date)
 
+    async def manque(entree: ConversationInput, resultat: RecognizeResult) -> str:
+        textes = _REPONSES[langue(entree.language)]
+        planificateur = _planificateur(hass)
+        if planificateur is None:
+            return textes["non_configure"]
+        produit = analyser_demande(_valeur(resultat, "demande"), entree.language).plat
+        produit = re.sub(r"^(?:d'|l')", "", produit).strip()
+        planificateur.async_ajouter_course(produit[:1].upper() + produit[1:])
+        return textes["manque"].format(produit=produit)
+
     retraits = [
+        gestionnaire.register_trigger(PHRASES_MANQUE, manque),
         gestionnaire.register_trigger(PHRASES_HISTORIQUE, historique),
         gestionnaire.register_trigger(PHRASES_AJOUT, ajouter),
         gestionnaire.register_trigger(PHRASES_MENU, menu),

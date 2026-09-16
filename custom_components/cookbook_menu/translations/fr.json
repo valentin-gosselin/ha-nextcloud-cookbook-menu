@@ -102,7 +102,6 @@
           "excluded_categories": "Catégories exclues",
           "scan_interval_minutes": "Intervalle de rafraîchissement (minutes)",
           "pantry": "Placard",
-          "pantry_reminder": "Rappel du placard",
           "sync_menu_entity": "Recopier le menu dans",
           "sync_shopping_entity": "Recopier la liste de courses dans",
           "history_months": "Conservation de l'historique (mois)"
@@ -111,8 +110,7 @@
           "servings": "Nombre de personnes pour lesquelles un plat est prévu quand rien d'autre n'est précisé",
           "excluded_categories": "Les recettes de ces catégories ne sont jamais proposées (par exemple les produits ménagers)",
           "scan_interval_minutes": "Fréquence de rechargement des recettes depuis Nextcloud",
-          "pantry": "Toujours à la maison : jamais ajoutés aux courses. Ajoutez le produit à la main dans la liste quand il n'y en a plus.",
-          "pantry_reminder": "Ajoute une ligne unique qui cite les produits du placard utilisés par le menu, à vérifier avant les courses",
+          "pantry": "Toujours à la maison : jamais ajoutés aux courses tant qu'ils ne sont pas signalés manquants (« il n'y a plus de... », ou la carte Réserve).",
           "sync_menu_entity": "Facultatif : une liste existante qui reçoit une copie du menu. Les lignes que vous y ajoutez vous-même ne sont jamais touchées.",
           "sync_shopping_entity": "Facultatif : la liste que vous ouvrez au magasin. Ce qui y est coché l'est aussi ici.",
           "history_months": "Les plats plus anciens sont oubliés à chaque nouvelle semaine"
@@ -299,6 +297,20 @@
         "limit": {
           "name": "Nombre maximal",
           "description": "Nombre de plats renvoyés."
+        }
+      }
+    },
+    "out_of_stock": {
+      "name": "Il n'y en a plus",
+      "description": "Signale un produit manquant à la maison et l'ajoute à la liste de courses.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Configuration",
+          "description": "Compte Nextcloud Cookbook à utiliser (facultatif s'il n'y en a qu'un)."
+        },
+        "product": {
+          "name": "Produit",
+          "description": "Nom du produit, par exemple huile d'olive."
         }
       }
     }

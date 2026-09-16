@@ -28,7 +28,7 @@ CONSIGNE = (
     "The shopping list is computed automatically from the menu: "
     "never add a recipe's ingredients to it yourself. "
     "Pantry staples (salt, oil, spices...) are left out on purpose; when the user says one is out of stock, "
-    "add it to the Cookbook Menu shopping list. "
+    "call cookbook_menu__out_of_stock. "
     "When the dish the user names could match several recipes, call cookbook_menu__search_recipes first and "
     "ask which one they mean before adding it."
 )
@@ -166,12 +166,45 @@ class LireHistorique(OutilCookbook):
         return {"history": planificateur.historique(arguments.get("dish"), arguments["limit"])}
 
 
+class SignalerManque(OutilCookbook):
+    name = f"{DOMAIN}__out_of_stock"
+    description = (
+        "Mark a product as out of stock at home (pantry, fridge or household item): "
+        "it is added to the shopping list. Use it when the user says they ran out of something."
+    )
+    parameters = vol.Schema({vol.Required("product", description="Product name"): str})
+
+    async def _executer(self, planificateur: Planificateur, arguments: dict[str, Any]) -> JsonObjectType:
+        planificateur.async_ajouter_course(arguments["product"])
+        return {"added_to_shopping_list": arguments["product"]}
+
+
+class LireReserve(OutilCookbook):
+    name = f"{DOMAIN}__get_stock"
+    description = (
+        "Get what is at home: pantry staples (and which are missing), fridge leftovers bought for the menu "
+        "with days before expiry, and household items."
+    )
+    parameters = vol.Schema({})
+
+    async def _executer(self, planificateur: Planificateur, arguments: dict[str, Any]) -> JsonObjectType:
+        return planificateur.reserve()
+
+
 @callback
 def async_get_tools(hass: HomeAssistant, llm_context: LLMContext, api_id: str) -> LLMTools | None:
     """Outils Cookbook Menu pour l'API Assist, si l'intégration est configurée."""
     if api_id != LLM_API_ASSIST or _planificateur(hass) is None:
         return None
     return LLMTools(
-        tools=[ChercherRecettes(), AjouterAuMenu(), RetirerDuMenu(), LireMenu(), LireHistorique()],
+        tools=[
+            ChercherRecettes(),
+            AjouterAuMenu(),
+            RetirerDuMenu(),
+            LireMenu(),
+            LireHistorique(),
+            SignalerManque(),
+            LireReserve(),
+        ],
         prompt=CONSIGNE,
     )

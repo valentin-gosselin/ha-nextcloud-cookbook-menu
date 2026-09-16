@@ -15,27 +15,28 @@ from uuid import uuid4
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util import dt as dt_util
 
 from .api import Recipe
 from .const import (
     CONF_HISTORY_MONTHS,
     CONF_PANTRY,
-    CONF_PANTRY_REMINDER,
     CONF_SERVINGS,
     DEFAULT_HISTORY_MONTHS,
     DEFAULT_SERVINGS,
     DOMAIN,
 )
-from .ingredients.aisles import rayon
+from .ingredients import frigo
+from .ingredients.aisles import Rayon, rayon
+from .ingredients.frigo import manque
 from .ingredients.normalize import cle, sans_accents
-from .ingredients.pantry import PLACARD_PAR_DEFAUT, cles_placard, est_au_placard, texte_rappel
+from .ingredients.pantry import PLACARD_PAR_DEFAUT, cles_placard, est_au_placard
 from .ingredients.shopping import (
     Contribution,
     LigneCourses,
-    augmentation,
+    arrondir,
     calculer,
     formater_quantites,
-    trier,
 )
 from .libelles import libelles
 from .matching import Correspondance, chercher, est_ambigu, lien_automatique, score
@@ -48,10 +49,9 @@ if TYPE_CHECKING:
 INCHANGE: Final = object()
 
 PREFIXE_PRODUIT: Final = "produit:"
+PREFIXE_RESERVE: Final = "reserve:"
 # Score minimal quand on accepte la meilleure recette malgré une ambiguïté.
 SEUIL_MEILLEURE: Final = 0.5
-UID_RAPPEL_PLACARD: Final = "rappel:placard"
-_ETAT_RAPPEL: Final = "__rappel_placard__"
 
 _COUVERTS = re.compile(
     r"^\s*(?:pour\s+)?(?P<n>\d{1,2})\s*(?:couverts?|personnes?|pers\.?|parts?|portions?|servings?|people)?\s*$",
@@ -338,8 +338,15 @@ class Planificateur:
             plat.day = jour  # type: ignore[assignment]
         if couverts is not None and couverts > 0:
             plat.servings = couverts
-        if fait is not None:
+        if fait is not None and fait != plat.done:
             plat.done = fait
+            if fait:
+                self.async_consommer()
+            elif plat.consumed and (plat.day is None or plat.day >= self._aujourdhui()):
+                # Décoché par erreur : sa part revient au frigo.
+                if (contribution := self._contribution(plat)) is not None:
+                    self._appliquer_consommation(contribution, retirer=False)
+                plat.consumed = False
         self._signaler_changement()
         return plat
 
@@ -368,12 +375,13 @@ class Planificateur:
 
     @callback
     def async_nouvelle_semaine(self, aujourdhui: date) -> list[dict[str, Any]]:
-        """Archive les plats cuisinés ou passés, garde les plats à venir, nettoie les courses cochées.
+        """Archive les plats cuisinés ou passés et garde les plats à venir.
 
-        Un plat coché, ou prévu avant aujourd'hui, entre dans l'historique. Un plat à venir ou sans
-        date et non cuisiné reste au menu. Les lignes manuelles cochées disparaissent, et
-        l'historique plus ancien que la durée de conservation est purgé.
+        Un plat coché, ou prévu avant aujourd'hui, entre dans l'historique (sa part est d'abord
+        retirée du frigo). Un plat à venir ou sans date et non cuisiné reste au menu. L'historique
+        plus ancien que la durée de conservation est purgé.
         """
+        self.async_consommer(aujourdhui)
         donnees = self.stockage.donnees
         archives: list[dict[str, Any]] = []
         restants: list[PlatMenu] = []
@@ -393,7 +401,6 @@ class Planificateur:
         limite = (aujourdhui - timedelta(days=30 * self.conservation_mois)).isoformat()
         donnees.historique = [p for p in donnees.historique if (p.get("day") or "") >= limite]
         donnees.menu = restants
-        donnees.courses_manuelles = [m for m in donnees.courses_manuelles if not m.get("done")]
         self._signaler_changement()
         return archives
 
@@ -408,22 +415,27 @@ class Planificateur:
             plats = [p for p in plats if score(filtre, p.get("summary", "")) >= SEUIL_MEILLEURE]
         return plats[:limite]
 
-    # --- Liste de courses -----------------------------------------------------------
+    # --- Liste de courses et réserve ------------------------------------------------
 
-    def _contributions(self) -> list[Contribution]:
+    def _contribution(self, plat: PlatMenu) -> Contribution | None:
+        recette = self.recette_du_plat(plat)
+        if recette is None:
+            return None
+        return Contribution(
+            recette=recette.name,
+            couverts=plat.servings,
+            facteur=plat.servings / recette.servings,
+            lignes=recette.ingredients,
+        )
+
+    def _contributions(self, aujourdhui: date) -> list[Contribution]:
+        """Plats encore à cuisiner : ni cochés, ni consommés, ni passés."""
         contributions = []
         for plat in self.menu:
-            recette = self.recette_du_plat(plat)
-            if plat.done or recette is None:
+            if plat.done or plat.consumed or (plat.day is not None and plat.day < aujourdhui):
                 continue
-            contributions.append(
-                Contribution(
-                    recette=recette.name,
-                    couverts=plat.servings,
-                    facteur=plat.servings / recette.servings,
-                    lignes=recette.ingredients,
-                )
-            )
+            if (contribution := self._contribution(plat)) is not None:
+                contributions.append(contribution)
         return contributions
 
     def placard(self) -> set[str]:
@@ -431,85 +443,86 @@ class Planificateur:
         options = self.coordinateur.config_entry.options
         return cles_placard(options.get(CONF_PANTRY, PLACARD_PAR_DEFAUT))
 
-    def _description(self, ligne: LigneCourses) -> str:
-        textes = libelles(self.hass)
-        morceaux = [textes["pour"].format(recette=r, n=n) for r, n in ligne.sources.items()]
-        if ligne.cle in self.stockage.donnees.placard_epuise:
-            morceaux.append(textes["placard_epuise"])
-        return ", ".join(morceaux)
+    def noms_placard(self) -> list[str]:
+        options = self.coordinateur.config_entry.options
+        return list(options.get(CONF_PANTRY, PLACARD_PAR_DEFAUT))
+
+    @staticmethod
+    def _aujourdhui() -> date:
+        return dt_util.now().date()
+
+    def _besoins(self, aujourdhui: date) -> dict[str, LigneCourses]:
+        donnees = self.stockage.donnees
+        lignes, _ = calculer(self._contributions(aujourdhui), self.placard(), donnees.placard_epuise)
+        return {ligne.cle: ligne for ligne in lignes}
 
     def liste_de_courses(self) -> list[LigneAffichee]:
-        """Rappel du placard, lignes calculées (par rayon), puis lignes manuelles, cochages appliqués."""
+        """Produits du menu (moins le frigo), produits du placard et de la maison qui manquent."""
+        textes = libelles(self.hass)
         donnees = self.stockage.donnees
-        epuises = donnees.placard_epuise
-        lignes, ecartes = calculer(self._contributions(), self.placard(), epuises)
-        # Un produit signalé épuisé apparaît même si aucune recette du menu ne l'utilise.
-        presents = {ligne.cle for ligne in lignes}
-        lignes = trier(
-            [
-                *lignes,
-                *(
-                    LigneCourses(cle=c, nom=nom, rayon=rayon(c))
-                    for c, nom in epuises.items()
-                    if c not in presents
-                ),
-            ]
-        )
-        etats = donnees.etat_courses
-        affichees: list[LigneAffichee] = []
-
-        options = self.coordinateur.config_entry.options
-        if ecartes and options.get(CONF_PANTRY_REMINDER, True):
-            textes = libelles(self.hass)
-            etat = etats.get(_ETAT_RAPPEL, {})
-            memes_produits = etat.get("produits") == ecartes
-            if not (etat.get("masque") and memes_produits):
-                affichees.append(
+        affichees: list[tuple[Rayon, str, LigneAffichee]] = []
+        for ligne in self._besoins(self._aujourdhui()).values():
+            sources = [textes["pour"].format(recette=r, n=n) for r, n in ligne.sources.items()]
+            stock = donnees.frigo.get(ligne.cle, {}).get("quantites", {})
+            if ligne.cle in donnees.placard_epuise:
+                libelle, fait = ligne.libelle, False
+                sources.append(textes["placard_epuise"])
+            elif ligne.quantites:
+                reste = manque(ligne.quantites, stock)
+                fait = not reste
+                libelle = f"{ligne.nom} ({formater_quantites(reste)})" if reste else ligne.libelle
+                if stock:
+                    sources.append(textes["au_frigo"].format(quantite=formater_quantites(stock)))
+            else:
+                libelle, fait = ligne.nom, ligne.cle in donnees.frigo
+            affichees.append(
+                (
+                    ligne.rayon,
+                    sans_accents(ligne.nom),
                     LigneAffichee(
-                        uid=UID_RAPPEL_PLACARD,
-                        libelle=texte_rappel(ecartes, textes["rappel_placard"], textes["rappel_autres"]),
-                        description=", ".join(ecartes),
-                        fait=bool(etat.get("fait")) and memes_produits,
+                        uid=f"{PREFIXE_PRODUIT}{ligne.cle}",
+                        libelle=libelle,
+                        description=", ".join(sources),
+                        fait=fait,
                         calculee=True,
-                    )
+                        ligne=ligne,
+                    ),
                 )
-
-        for ligne in lignes:
-            etat = etats.get(ligne.cle, {})
-            ajout = augmentation(etat.get("mesure", {}), ligne.mesure()) if etat else {}
-            if etat.get("masque") and not ajout:
+            )
+        deja = {f"{PREFIXE_PRODUIT}{c}" for c in donnees.placard_epuise} | {a.uid for _, _, a in affichees}
+        for cle_produit, nom in donnees.placard_epuise.items():
+            if f"{PREFIXE_PRODUIT}{cle_produit}" in {a.uid for _, _, a in affichees}:
                 continue
-            libelle = ligne.libelle
-            fait = bool(etat.get("fait")) and not ajout
-            if ajout:
-                libelle = f"{libelle} +{formater_quantites(ajout)}"
             affichees.append(
-                LigneAffichee(
-                    uid=f"{PREFIXE_PRODUIT}{ligne.cle}",
-                    libelle=libelle,
-                    description=self._description(ligne),
-                    fait=fait,
-                    calculee=True,
-                    ligne=ligne,
+                (
+                    rayon(cle_produit),
+                    sans_accents(nom),
+                    LigneAffichee(
+                        uid=f"{PREFIXE_RESERVE}{cle_produit}",
+                        libelle=nom,
+                        description=textes["placard_epuise"],
+                        fait=False,
+                        calculee=False,
+                    ),
                 )
             )
-        # Oubli des états de produits qui ne sont plus dans la liste (la semaine suivante repart à zéro).
-        # Jamais pendant une panne de Nextcloud : les recettes absentes videraient tous les cochages.
-        if self.coordinateur.last_update_success and self.coordinateur.data is not None:
-            presentes = {ligne.cle for ligne in lignes} | {_ETAT_RAPPEL}
-            for cle_etat in [c for c in etats if c not in presentes]:
-                del etats[cle_etat]
-        for manuelle in self.stockage.donnees.courses_manuelles:
+        for cle_produit, produit in donnees.maison.items():
+            if produit.get("present") or f"{PREFIXE_PRODUIT}{cle_produit}" in deja:
+                continue
             affichees.append(
-                LigneAffichee(
-                    uid=manuelle["uid"],
-                    libelle=manuelle["summary"],
-                    description=manuelle.get("description"),
-                    fait=bool(manuelle.get("done")),
-                    calculee=False,
+                (
+                    rayon(cle_produit),
+                    sans_accents(produit["nom"]),
+                    LigneAffichee(
+                        uid=f"{PREFIXE_RESERVE}{cle_produit}",
+                        libelle=produit["nom"],
+                        description=produit.get("description"),
+                        fait=False,
+                        calculee=False,
+                    ),
                 )
             )
-        return affichees
+        return [a for _, _, a in sorted(affichees, key=lambda x: (x[0], x[1]))]
 
     def _ligne_affichee(self, uid: str) -> LigneAffichee:
         for ligne in self.liste_de_courses():
@@ -521,66 +534,222 @@ class Planificateur:
 
     @callback
     def async_ajouter_course(self, texte: str, description: str | None = None, fait: bool = False) -> str:
-        """Ajoute une ligne manuelle à la liste de courses. Renvoie son uid."""
+        """Ajout à la main, ou « il n'y en a plus » : le produit rejoint les courses.
+
+        Produit du placard : signalé manquant. Produit au frigo : le frigo est vidé de ce produit.
+        Autre produit (papier toilette, poêle) : produit « maison » manquant, qui rejoindra la
+        réserve une fois acheté.
+        """
         texte = texte.strip()
         if not texte:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="empty_dish")
+        donnees = self.stockage.donnees
         cle_produit = cle(texte)
         if est_au_placard(cle_produit, self.placard()):
-            # « Il n'y a plus d'huile d'olive » : le produit du placard redevient une course.
-            self.stockage.donnees.placard_epuise[cle_produit] = texte
-            self.stockage.donnees.etat_courses.pop(cle_produit, None)
+            donnees.placard_epuise[cle_produit] = texte
             self._signaler_changement()
             return f"{PREFIXE_PRODUIT}{cle_produit}"
-        uid = uuid4().hex
-        self.stockage.donnees.courses_manuelles.append(
-            {"uid": uid, "summary": texte, "description": description, "done": fait}
-        )
+        donnees.frigo.pop(cle_produit, None)
+        besoins = self._besoins(self._aujourdhui())
+        if cle_produit not in besoins or fait:
+            existant = donnees.maison.get(cle_produit, {})
+            donnees.maison[cle_produit] = {
+                "nom": existant.get("nom") or texte,
+                "present": fait,
+                "description": description if description is not None else existant.get("description"),
+            }
         self._signaler_changement()
-        return uid
+        prefixe = PREFIXE_PRODUIT if cle_produit in besoins else PREFIXE_RESERVE
+        return f"{prefixe}{cle_produit}"
 
     @callback
     def async_modifier_course(
         self, uid: str, *, texte: str | None, description: str | None, fait: bool
     ) -> None:
-        """Modifie une ligne. Pour une ligne calculée, seul le cochage est modifiable."""
+        """Cocher, c'est acheter : le produit rejoint le frigo, le placard ou la maison."""
         ligne = self._ligne_affichee(uid)
         donnees = self.stockage.donnees
         if ligne.calculee:
+            assert ligne.ligne is not None
             if texte is not None and texte != ligne.libelle:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN, translation_key="computed_item_readonly"
                 )
-            if ligne.ligne is None:  # rappel du placard
-                produits = ligne.description.split(", ") if ligne.description else []
-                donnees.etat_courses[_ETAT_RAPPEL] = {"fait": fait, "produits": produits}
-            elif fait and ligne.ligne.cle in donnees.placard_epuise:
-                # Produit du placard racheté : il retourne au placard.
-                del donnees.placard_epuise[ligne.ligne.cle]
-                donnees.etat_courses.pop(ligne.ligne.cle, None)
-            else:
-                donnees.etat_courses[ligne.ligne.cle] = {"fait": fait, "mesure": ligne.ligne.mesure()}
+            produit = ligne.ligne
+            if produit.cle in donnees.placard_epuise:
+                if fait:
+                    del donnees.placard_epuise[produit.cle]
+            elif fait and not ligne.fait:
+                self._acheter(produit)
+            elif not fait and ligne.fait:
+                # Décoché : l'achat est annulé.
+                if produit.quantites:
+                    frigo.retirer(donnees.frigo, produit.cle, produit.mesure())
+                else:
+                    donnees.frigo.pop(produit.cle, None)
         else:
-            manuelle = next(m for m in self.stockage.donnees.courses_manuelles if m["uid"] == uid)
-            if texte is not None and texte.strip():
-                manuelle["summary"] = texte.strip()
-            manuelle["description"] = description
-            manuelle["done"] = fait
+            cle_produit = uid.removeprefix(PREFIXE_RESERVE)
+            if cle_produit in donnees.placard_epuise:
+                if fait:
+                    del donnees.placard_epuise[cle_produit]
+            else:
+                produit_maison = donnees.maison[cle_produit]
+                if texte is not None and texte.strip():
+                    produit_maison["nom"] = texte.strip()
+                produit_maison["description"] = description
+                produit_maison["present"] = fait
         self._signaler_changement()
+
+    def _acheter(self, produit: LigneCourses) -> None:
+        donnees = self.stockage.donnees
+        stock = donnees.frigo.get(produit.cle, {}).get("quantites", {})
+        # On achète des quantités arrondies (un citron entier, pas un demi).
+        achat = (
+            {m: arrondir(m, v) for m, v in manque(produit.quantites, stock).items()}
+            if produit.quantites
+            else {"pièce": 1}
+        )
+        frigo.ajouter(donnees.frigo, produit.cle, produit.nom, achat, produit.rayon, self._aujourdhui())
 
     @callback
     def async_supprimer_courses(self, uids: list[str]) -> None:
-        """Supprime des lignes. Une ligne calculée est masquée tant que sa quantité n'augmente pas."""
+        """Supprimer une ligne du menu vaut « j'en ai déjà » ; une ligne de réserve sort de la réserve."""
         lignes = [self._ligne_affichee(uid) for uid in uids]
         donnees = self.stockage.donnees
         for ligne in lignes:
-            if ligne.calculee and ligne.ligne is None:
-                produits = ligne.description.split(", ") if ligne.description else []
-                donnees.etat_courses[_ETAT_RAPPEL] = {"masque": True, "produits": produits}
-            elif ligne.calculee:
+            if ligne.calculee:
                 assert ligne.ligne is not None
-                donnees.placard_epuise.pop(ligne.ligne.cle, None)
-                donnees.etat_courses[ligne.ligne.cle] = {"masque": True, "mesure": ligne.ligne.mesure()}
-        manuelles = {ligne.uid for ligne in lignes if not ligne.calculee}
-        donnees.courses_manuelles = [m for m in donnees.courses_manuelles if m["uid"] not in manuelles]
+                if ligne.ligne.cle in donnees.placard_epuise:
+                    del donnees.placard_epuise[ligne.ligne.cle]
+                elif not ligne.fait:
+                    self._acheter(ligne.ligne)
+            else:
+                cle_produit = ligne.uid.removeprefix(PREFIXE_RESERVE)
+                donnees.placard_epuise.pop(cle_produit, None)
+                donnees.maison.pop(cle_produit, None)
+        self._signaler_changement()
+
+    @callback
+    def async_consommer(self, aujourdhui: date | None = None) -> None:
+        """Retire du frigo la part des plats cuisinés ou passés, puis les produits expirés."""
+        aujourdhui = aujourdhui or self._aujourdhui()
+        donnees = self.stockage.donnees
+        modifie = bool(frigo.expirer(donnees.frigo, aujourdhui))
+        for plat in self.menu:
+            fini = plat.done or (plat.day is not None and plat.day < aujourdhui)
+            if fini and not plat.consumed and (contribution := self._contribution(plat)) is not None:
+                self._appliquer_consommation(contribution, retirer=True)
+                plat.consumed = True
+                modifie = True
+        if modifie:
+            self._signaler_changement()
+
+    def _appliquer_consommation(self, contribution: Contribution, *, retirer: bool) -> None:
+        donnees = self.stockage.donnees
+        lignes, _ = calculer([contribution], self.placard(), donnees.placard_epuise)
+        for ligne in lignes:
+            if not ligne.quantites:
+                continue
+            if retirer:
+                frigo.retirer(donnees.frigo, ligne.cle, ligne.quantites)
+            elif ligne.cle in donnees.frigo:
+                frigo.ajouter(
+                    donnees.frigo, ligne.cle, ligne.nom, ligne.quantites, ligne.rayon, self._aujourdhui()
+                )
+
+    # --- Réserve (carte et voix) ----------------------------------------------------
+
+    def reserve(self) -> dict[str, Any]:
+        """Placard, frigo et maison, pour la carte « Réserve »."""
+        donnees = self.stockage.donnees
+        aujourdhui = self._aujourdhui()
+        placard = [
+            {"key": cle(nom), "name": nom, "missing": cle(nom) in donnees.placard_epuise}
+            for nom in self.noms_placard()
+        ]
+        noms_options = {p["key"] for p in placard}
+        placard.extend(
+            {"key": c, "name": nom, "missing": True}
+            for c, nom in donnees.placard_epuise.items()
+            if c not in noms_options
+        )
+        return {
+            "pantry_checked": donnees.placard_verifie,
+            "pantry": sorted(placard, key=lambda p: sans_accents(p["name"])),
+            "fridge": sorted(
+                (
+                    {
+                        "key": c,
+                        "name": e["nom"],
+                        "quantity": formater_quantites(e["quantites"]),
+                        "days_left": (date.fromisoformat(e["expire"]) - aujourdhui).days
+                        if e.get("expire")
+                        else None,
+                    }
+                    for c, e in donnees.frigo.items()
+                ),
+                key=lambda p: sans_accents(p["name"]),
+            ),
+            "home": sorted(
+                (
+                    {
+                        "key": c,
+                        "name": m["nom"],
+                        "present": bool(m.get("present")),
+                        "description": m.get("description"),
+                    }
+                    for c, m in donnees.maison.items()
+                ),
+                key=lambda p: sans_accents(p["name"]),
+            ),
+        }
+
+    @callback
+    def async_reserve_present(self, cle_produit: str) -> None:
+        """« J'en ai » : le produit n'est plus à acheter."""
+        donnees = self.stockage.donnees
+        donnees.placard_epuise.pop(cle_produit, None)
+        if cle_produit in donnees.maison:
+            donnees.maison[cle_produit]["present"] = True
+        self._signaler_changement()
+
+    @callback
+    def async_reserve_manquant(self, cle_produit: str) -> None:
+        """« Il n'y en a plus » depuis la carte, par clé de produit."""
+        donnees = self.stockage.donnees
+        noms_placard = {cle(n): n for n in self.noms_placard()}
+        if cle_produit in donnees.maison:
+            donnees.maison[cle_produit]["present"] = False
+        elif cle_produit in donnees.frigo:
+            nom = donnees.frigo.pop(cle_produit)["nom"]
+            if cle_produit not in self._besoins(self._aujourdhui()):
+                donnees.maison[cle_produit] = {"nom": nom, "present": False, "description": None}
+        elif cle_produit in noms_placard:
+            donnees.placard_epuise[cle_produit] = noms_placard[cle_produit]
+        else:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="item_not_found",
+                translation_placeholders={"uid": cle_produit},
+            )
+        self._signaler_changement()
+
+    @callback
+    def async_reserve_retirer(self, cle_produit: str) -> None:
+        """Sortir un produit de la réserve (frigo ou maison)."""
+        donnees = self.stockage.donnees
+        donnees.frigo.pop(cle_produit, None)
+        donnees.maison.pop(cle_produit, None)
+        donnees.placard_epuise.pop(cle_produit, None)
+        self._signaler_changement()
+
+    @callback
+    def async_valider_placard(self, manquants: list[str]) -> None:
+        """Première vérification du placard : seuls les produits décochés sont à racheter."""
+        donnees = self.stockage.donnees
+        noms = {cle(n): n for n in self.noms_placard()}
+        for cle_produit in manquants:
+            if cle_produit in noms:
+                donnees.placard_epuise[cle_produit] = noms[cle_produit]
+        donnees.placard_verifie = True
         self._signaler_changement()

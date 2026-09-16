@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
+from .ingredients.normalize import cle
 
 VERSION_STOCKAGE = 1
 DELAI_SAUVEGARDE = 2
@@ -25,6 +26,8 @@ class PlatMenu:
     recipe_id: str | None = None
     day: date | None = None
     done: bool = False
+    # Sa part d'ingrédients a déjà été retirée du frigo (plat cuisiné ou date passée).
+    consumed: bool = False
 
     def en_dict(self) -> dict[str, Any]:
         donnees = asdict(self)
@@ -41,6 +44,7 @@ class PlatMenu:
             recipe_id=donnees.get("recipe_id"),
             day=date.fromisoformat(jour) if jour else None,
             done=bool(donnees.get("done", False)),
+            consumed=bool(donnees.get("consumed", False)),
         )
 
 
@@ -49,12 +53,14 @@ class DonneesPlanificateur:
     """Tout ce qui est persisté pour une entrée."""
 
     menu: list[PlatMenu] = field(default_factory=list)
-    # Lignes de courses ajoutées à la main : {uid, summary, description, done}.
-    courses_manuelles: list[dict[str, Any]] = field(default_factory=list)
-    # État des lignes calculées, par clé produit : {done, quantite_cochee}.
-    etat_courses: dict[str, dict[str, Any]] = field(default_factory=dict)
-    # Produits du placard signalés épuisés : clé produit -> nom saisi.
+    # Produits du placard signalés manquants : clé produit -> nom saisi.
     placard_epuise: dict[str, str] = field(default_factory=dict)
+    # Frigo : clé produit -> {nom, quantites {mesure: valeur}, expire (date ISO)}.
+    frigo: dict[str, dict[str, Any]] = field(default_factory=dict)
+    # Maison (hors menu et hors placard) : clé -> {nom, present (bool), description}.
+    maison: dict[str, dict[str, Any]] = field(default_factory=dict)
+    # Le placard a été vérifié une première fois dans la carte.
+    placard_verifie: bool = False
     # Plats passés : {day, recipe_id, summary, servings}.
     historique: list[dict[str, Any]] = field(default_factory=list)
     # Synchronisation : entité cible -> notre uid -> {uid cible, dernier état poussé}.
@@ -63,9 +69,10 @@ class DonneesPlanificateur:
     def en_dict(self) -> dict[str, Any]:
         return {
             "menu": [p.en_dict() for p in self.menu],
-            "courses_manuelles": self.courses_manuelles,
-            "etat_courses": self.etat_courses,
             "placard_epuise": self.placard_epuise,
+            "frigo": self.frigo,
+            "maison": self.maison,
+            "placard_verifie": self.placard_verifie,
             "historique": self.historique,
             "synchro": self.synchro,
         }
@@ -74,11 +81,25 @@ class DonneesPlanificateur:
     def depuis_dict(cls, donnees: dict[str, Any] | None) -> DonneesPlanificateur:
         if not donnees:
             return cls()
+        maison = dict(donnees.get("maison", {}))
+        # Migration : les anciennes lignes manuelles deviennent des produits « maison ».
+        for manuelle in donnees.get("courses_manuelles", []):
+            nom = str(manuelle.get("summary", "")).strip()
+            if nom:
+                maison.setdefault(
+                    cle(nom),
+                    {
+                        "nom": nom,
+                        "present": bool(manuelle.get("done")),
+                        "description": manuelle.get("description"),
+                    },
+                )
         return cls(
             menu=[PlatMenu.depuis_dict(p) for p in donnees.get("menu", [])],
-            courses_manuelles=list(donnees.get("courses_manuelles", [])),
-            etat_courses=dict(donnees.get("etat_courses", {})),
             placard_epuise=dict(donnees.get("placard_epuise", {})),
+            frigo=dict(donnees.get("frigo", {})),
+            maison=maison,
+            placard_verifie=bool(donnees.get("placard_verifie", False)),
             historique=list(donnees.get("historique", [])),
             synchro=dict(donnees.get("synchro", {})),
         )

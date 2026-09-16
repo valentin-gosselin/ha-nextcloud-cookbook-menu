@@ -276,7 +276,6 @@ async def test_options(hass, mock_client, config_entry) -> None:
             "servings": 4.0,
             "excluded_categories": ["Dessert"],
             "pantry": ["Sel", "Harissa"],
-            "pantry_reminder": False,
             "history_months": 12.0,
             "scan_interval_minutes": 60.0,
         },
@@ -287,7 +286,6 @@ async def test_options(hass, mock_client, config_entry) -> None:
         "servings": 4,
         "excluded_categories": ["Dessert"],
         "pantry": ["Sel", "Harissa"],
-        "pantry_reminder": False,
         "history_months": 12,
         "scan_interval_minutes": 60,
     }

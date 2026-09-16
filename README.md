@@ -44,7 +44,6 @@ Settings > Devices & services > Add integration > **Cookbook Menu**, then enter 
 | Default servings | 2 | Servings used when none is given. |
 | Excluded categories | none | Recipe categories never offered (for example household products). |
 | Pantry staples | salt, pepper, oils, vinegar, sugar, flour, common spices | Never added to the shopping list. "Oil", "vinegar", "salt" and "pepper" also cover their variants. |
-| Pantry reminder | on | Adds one line, at the top of the shopping list, listing up to 5 pantry staples used by the menu. |
 | History retention | 24 months | Past dishes older than this are forgotten at each new week. |
 | Copy the menu to / Copy the shopping list to | none | An existing to-do list that receives a copy (see below). |
 | Refresh interval | 30 minutes | How often recipes are reloaded from Nextcloud. |
@@ -54,11 +53,11 @@ Settings > Devices & services > Add integration > **Cookbook Menu**, then enter 
 Each configured account creates a service device with two to-do lists:
 
 - **Weekly menu**: one dish per line. Type a dish name: it is linked to the closest recipe (accents, plurals and small typos are tolerated) and renamed to the exact recipe name. An ambiguous or unknown name stays a free dish that does not affect the shopping list. The due date is the planned day; write "for 4" or "4 servings" in the description to change the servings.
-- **Shopping list**: the pantry reminder, then products computed from the menu by aisle, then the lines you added yourself.
-  - Checking a computed line keeps it checked as long as the needed quantity does not increase; if it does, the line comes back unchecked with "+N".
-  - Deleting a computed line hides it until the quantity increases.
-  - Adding a pantry staple by hand ("olive oil") marks it out of stock: it is added like any product, and goes back to the pantry once checked.
-  - Computed lines cannot be renamed; manual lines are never modified by the computation.
+- **Shopping list**: products computed from the menu minus what is already in the fridge, plus missing pantry staples and household items, sorted by aisle.
+  - Checking a line means you bought it (see *Stock* below); unchecking cancels the purchase.
+  - Deleting a computed line means "I already have it".
+  - Adding a product by hand marks it missing: a pantry staple, a fridge product or a household item.
+  - Computed lines cannot be renamed.
 
 ## Dashboard card
 
@@ -75,6 +74,20 @@ Click a dish to open its recipe: photo, times, ingredients scaled to the serving
 
 The same can be done without the card with the entities *Recipe to add*, *Day*, *Servings* and the *Add to menu* button.
 
+## Stock: pantry, fridge and household
+
+Cookbook Menu keeps track of what is at home without asking you to type anything:
+
+- **Pantry** (the staples from the options): either in stock or missing. Say "we're out of olive oil" (or tap it in the stock card) and it goes to the shopping list; check it when bought and it is back in stock.
+- **Fridge**: checking a shopping line means you bought it. The quantity goes to the fridge, a line stays checked while the fridge covers the menu, and only what is missing is asked for. A cooked dish (checked in the menu) or a dish whose day has passed uses its share. Leftovers are reused by the next dishes. Fresh products are forgotten after 7 days, groceries after 60.
+- **Household**: items added by hand to the shopping list (toilet paper, a pan) join the stock once checked. They can be marked out of stock again, or removed from the stock.
+
+```yaml
+type: custom:cookbook-stock-card
+```
+
+The first time, the card asks you to check the pantry: everything is considered in stock, uncheck what is missing.
+
 ## Actions
 
 | Action | Fields | Response |
@@ -85,6 +98,7 @@ The same can be done without the card with the entities *Recipe to add*, *Day*, 
 | `cookbook_menu.new_week` | | archived dishes |
 | `cookbook_menu.get_history` | `recipe` (optional), `limit` | past dishes, most recent first |
 | `cookbook_menu.search_recipes` | `query`, `limit` | recipes with a similarity score |
+| `cookbook_menu.out_of_stock` | `product` | |
 
 `config_entry_id` is optional when a single account is configured. Weekdays can be written in French or English ("jeudi", "thursday", "mercredi prochain").
 
@@ -103,12 +117,13 @@ The sentences are registered automatically, no configuration needed.
 | Qu'est-ce qu'on mange ce soir / vendredi | What's for dinner / What are we eating on friday |
 | Retire le carry du menu | Remove the curry from the menu |
 | Quand est-ce qu'on a mangé du carry | When did we last eat curry |
+| Il n'y a plus d'huile d'olive | We're out of olive oil |
 
 Adding, checking or removing shopping items uses the built-in Home Assistant list sentences ("add eggs to my shopping list").
 
 ### LLM conversation agents
 
-With the Assist API enabled, agents get the tools `cookbook_menu__search_recipes`, `__add_to_menu`, `__remove_from_menu`, `__get_menu` and `__get_history`, and a short instruction: never copy ingredients into the shopping list themselves, ask which recipe is meant when a name is ambiguous.
+With the Assist API enabled, agents get the tools `cookbook_menu__search_recipes`, `__add_to_menu`, `__remove_from_menu`, `__get_menu`, `__get_history`, `__out_of_stock` and `__get_stock`, and a short instruction: never copy ingredients into the shopping list themselves, ask which recipe is meant when a name is ambiguous.
 
 ## Copying to existing lists
 

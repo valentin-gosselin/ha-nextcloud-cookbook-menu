@@ -30,6 +30,8 @@ SERVICE_SET_SERVINGS = "set_servings"
 SERVICE_NEW_WEEK = "new_week"
 SERVICE_SEARCH_RECIPES = "search_recipes"
 SERVICE_GET_HISTORY = "get_history"
+SERVICE_OUT_OF_STOCK = "out_of_stock"
+ATTR_PRODUCT = "product"
 
 _ENTREE = {vol.Optional(ATTR_CONFIG_ENTRY_ID): cv.string}
 _COUVERTS = vol.All(vol.Coerce(int), vol.Range(min=1, max=50))
@@ -60,6 +62,9 @@ SCHEMA_HISTORY = vol.Schema(
         vol.Optional(ATTR_RECIPE): cv.string,
         vol.Optional(ATTR_LIMIT, default=20): vol.All(vol.Coerce(int), vol.Range(min=1, max=500)),
     }
+)
+SCHEMA_OUT_OF_STOCK = vol.Schema(
+    {**_ENTREE, vol.Required(ATTR_PRODUCT): vol.All(cv.string, vol.Length(min=1))}
 )
 SCHEMA_SEARCH = vol.Schema(
     {
@@ -125,6 +130,10 @@ async def _historique(appel: ServiceCall) -> ServiceResponse:
     return {"history": planificateur.historique(appel.data.get(ATTR_RECIPE), appel.data[ATTR_LIMIT])}
 
 
+async def _manque(appel: ServiceCall) -> None:
+    _planificateur(appel).async_ajouter_course(appel.data[ATTR_PRODUCT])
+
+
 async def _chercher(appel: ServiceCall) -> ServiceResponse:
     planificateur = _planificateur(appel)
     return {
@@ -156,6 +165,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=SCHEMA_NEW_WEEK,
         supports_response=SupportsResponse.OPTIONAL,
     )
+    hass.services.async_register(DOMAIN, SERVICE_OUT_OF_STOCK, _manque, schema=SCHEMA_OUT_OF_STOCK)
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_HISTORY,

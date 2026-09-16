@@ -10,6 +10,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.typing import ConfigType
 
 from .api import CookbookClient
@@ -87,6 +88,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry)
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.runtime_data.sync.async_demarrer()
+    # Chaque nuit : part des plats de la veille retirée du frigo, produits expirés oubliés.
+    planificateur.async_consommer()
+    entry.async_on_unload(
+        async_track_time_change(
+            hass, lambda _maintenant: planificateur.async_consommer(), hour=0, minute=1, second=0
+        )
+    )
     return True
 
 

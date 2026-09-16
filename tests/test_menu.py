@@ -228,11 +228,19 @@ def test_donnees_aller_retour() -> None:
         menu=[
             PlatMenu(uid="a", summary="Carry", servings=4, recipe_id="1", day=date(2026, 9, 20), done=True)
         ],
-        courses_manuelles=[{"uid": "m", "summary": "Pain"}],
-        etat_courses={"citron": {"done": True}},
         placard_epuise={"huile olive": "Huile d'olive"},
+        frigo={"citron": {"nom": "Citron", "quantites": {"pièce": 1}, "expire": "2026-09-23"}},
+        maison={"pain": {"nom": "Pain", "present": False, "description": None}},
+        placard_verifie=True,
         historique=[{"day": "2026-09-01", "summary": "Chili"}],
     )
     assert DonneesPlanificateur.depuis_dict(donnees.en_dict()) == donnees
     assert DonneesPlanificateur.depuis_dict(None) == DonneesPlanificateur()
     assert PlatMenu.depuis_dict({"uid": 1, "servings": 0}).servings == 1
+    # Migration : anciennes lignes manuelles vers la maison.
+    migre = DonneesPlanificateur.depuis_dict(
+        {"courses_manuelles": [{"summary": "Papier toilette", "done": True}, {"summary": " "}]}
+    )
+    assert migre.maison == {
+        "papier toilette": {"nom": "Papier toilette", "present": True, "description": None}
+    }

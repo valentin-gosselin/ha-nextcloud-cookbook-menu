@@ -45,6 +45,9 @@
     },
     "get_history": {
       "service": "mdi:history"
+    },
+    "out_of_stock": {
+      "service": "mdi:basket-remove"
     }
   }
 }

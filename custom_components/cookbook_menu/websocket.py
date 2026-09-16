@@ -7,6 +7,7 @@ from typing import Any
 import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN
@@ -17,6 +18,8 @@ from .fiche import fiche
 def async_enregistrer_commandes(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_recettes)
     websocket_api.async_register_command(hass, ws_fiche)
+    websocket_api.async_register_command(hass, ws_reserve)
+    websocket_api.async_register_command(hass, ws_reserve_modifier)
 
 
 @websocket_api.websocket_command(
@@ -51,6 +54,74 @@ def ws_recettes(
             ],
         },
     )
+
+
+def _entree(hass: HomeAssistant, message: dict[str, Any]) -> Any:
+    for entree in hass.config_entries.async_loaded_entries(DOMAIN):
+        if message.get("config_entry_id") in (None, entree.entry_id):
+            return entree
+    return None
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): "cookbook_menu/stock/subscribe", vol.Optional("config_entry_id"): str}
+)
+@callback
+def ws_reserve(
+    hass: HomeAssistant, connexion: websocket_api.ActiveConnection, message: dict[str, Any]
+) -> None:
+    """Réserve (placard, frigo, maison), puis chaque changement."""
+    entree = _entree(hass, message)
+    if entree is None:
+        connexion.send_error(message["id"], "not_found", "Cookbook Menu is not set up")
+        return
+    planificateur = entree.runtime_data.planner
+
+    @callback
+    def envoyer() -> None:
+        connexion.send_message(websocket_api.event_message(message["id"], planificateur.reserve()))
+
+    connexion.subscriptions[message["id"]] = planificateur.async_ecouter(envoyer)
+    connexion.send_result(message["id"])
+    envoyer()
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "cookbook_menu/stock/update",
+        vol.Optional("config_entry_id"): str,
+        vol.Required("action"): vol.In(["missing", "present", "remove", "check_pantry"]),
+        vol.Optional("key"): str,
+        vol.Optional("missing"): [str],
+    }
+)
+@callback
+def ws_reserve_modifier(
+    hass: HomeAssistant, connexion: websocket_api.ActiveConnection, message: dict[str, Any]
+) -> None:
+    """« Il n'y en a plus », « j'en ai », « sortir de la réserve », vérification du placard."""
+    entree = _entree(hass, message)
+    if entree is None:
+        connexion.send_error(message["id"], "not_found", "Cookbook Menu is not set up")
+        return
+    planificateur = entree.runtime_data.planner
+    action = message["action"]
+    try:
+        if action == "check_pantry":
+            planificateur.async_valider_placard(message.get("missing", []))
+        elif "key" not in message:
+            connexion.send_error(message["id"], "invalid_format", "key is required")
+            return
+        elif action == "missing":
+            planificateur.async_reserve_manquant(message["key"])
+        elif action == "present":
+            planificateur.async_reserve_present(message["key"])
+        else:
+            planificateur.async_reserve_retirer(message["key"])
+    except HomeAssistantError as err:
+        connexion.send_error(message["id"], "not_found", str(err))
+        return
+    connexion.send_result(message["id"])
 
 
 @websocket_api.websocket_command(

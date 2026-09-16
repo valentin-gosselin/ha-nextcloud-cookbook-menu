@@ -32,8 +32,6 @@ PLACARD_PAR_DEFAUT: tuple[str, ...] = (
 # Familles où toute variante reste un produit de placard (« poivre du moulin », « vinaigre de cidre »).
 _FAMILLES = {"sel", "poivre", "huile", "vinaigre", "laurier"}
 
-RAPPEL_MAX_CITES = 5
-
 
 def cles_placard(noms: Iterable[str]) -> set[str]:
     """Clés de fusion des produits du placard."""
@@ -49,12 +47,3 @@ def est_au_placard(cle_produit: str, placard: set[str]) -> bool:
         return True
     premier = cle_produit.split(" ", 1)[0]
     return premier in _FAMILLES and premier in placard
-
-
-def texte_rappel(noms: list[str], modele: str, modele_autres: str) -> str:
-    """« À vérifier au placard : huile d'olive, sel, poivre et 3 autres »."""
-    cites = [n[0].lower() + n[1:] for n in noms[:RAPPEL_MAX_CITES]]
-    texte = modele.format(produits=", ".join(cites))
-    if len(noms) > RAPPEL_MAX_CITES:
-        texte += modele_autres.format(n=len(noms) - RAPPEL_MAX_CITES)
-    return texte

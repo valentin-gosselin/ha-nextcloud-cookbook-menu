@@ -20,7 +20,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
-    BooleanSelector,
     EntitySelector,
     EntitySelectorConfig,
     NumberSelector,
@@ -48,7 +47,6 @@ from .const import (
     CONF_EXCLUDED_CATEGORIES,
     CONF_HISTORY_MONTHS,
     CONF_PANTRY,
-    CONF_PANTRY_REMINDER,
     CONF_SCAN_INTERVAL_MINUTES,
     CONF_SERVINGS,
     CONF_SYNC_MENU_ENTITY,
@@ -330,9 +328,6 @@ class CookbookMenuOptionsFlow(OptionsFlowWithReload):
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 ),
-                vol.Required(
-                    CONF_PANTRY_REMINDER, default=options.get(CONF_PANTRY_REMINDER, True)
-                ): BooleanSelector(),
                 vol.Optional(
                     CONF_SYNC_MENU_ENTITY,
                     description={"suggested_value": options.get(CONF_SYNC_MENU_ENTITY)},

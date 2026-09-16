@@ -11,9 +11,8 @@ _LIBELLES = {
         "sans_recette": "sans recette",
         "introuvable": "recette introuvable",
         "pour": "{recette} pour {n}",
-        "rappel_placard": "À vérifier au placard : {produits}",
-        "rappel_autres": " et {n} autres",
-        "placard_epuise": "au placard, signalé épuisé",
+        "placard_epuise": "manque au placard",
+        "au_frigo": "déjà au frigo : {quantite}",
     },
     "en": {
         "couverts": "{n} servings",
@@ -21,9 +20,8 @@ _LIBELLES = {
         "sans_recette": "no recipe",
         "introuvable": "recipe not found",
         "pour": "{recette} for {n}",
-        "rappel_placard": "Check the pantry: {produits}",
-        "rappel_autres": " and {n} more",
-        "placard_epuise": "pantry item marked as out of stock",
+        "placard_epuise": "missing from the pantry",
+        "au_frigo": "already in the fridge: {quantite}",
     },
 }
 

@@ -6,9 +6,11 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [
 ## [Unreleased]
 
 ### Modifié
+- La ligne « À vérifier au placard » et son option sont supprimées au profit de la réserve. Les lignes ajoutées à la main deviennent des produits « maison ».
 - Home Assistant 2026.9.0 minimum.
 
 ### Ajouté
+- Réserve : placard (présent ou manquant), frigo (cocher une ligne de courses, c'est acheter ; les plats cuisinés ou passés consomment ; restes réutilisés ; expiration 7 jours pour le frais, 60 pour l'épicerie) et maison (achats hors menu). Carte `custom:cookbook-stock-card`, phrase « il n'y a plus de... », action `out_of_stock`, outils LLM.
 - Unités d'achat : l'ail en gousses ou en têtes, les herbes en bouquets, les légumes à la pièce, le beurre au poids, les sachets et boîtes. Blancs et jaunes rejoignent les œufs, le jus de citron les citrons. L'eau et le laurier sont au placard par défaut.
 - Fiche recette dans la carte : photo, temps, ingrédients à l'échelle des couverts, étapes cochables, minuteurs lancés depuis les durées des étapes, écran maintenu allumé.
 - Carte de tableau de bord `custom:cookbook-menu-card`, installée automatiquement : recherche de recette pendant la frappe, jour, couverts, ajout, et menu affiché avec « cuisiné » et suppression.

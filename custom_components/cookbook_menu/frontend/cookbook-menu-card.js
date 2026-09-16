@@ -766,6 +766,205 @@ class CookbookMenuCard extends HTMLElement {
   }
 }
 
+
+const TEXTES_RESERVE = {
+  fr: {
+    titre: "Réserve",
+    verifier: "Première vérification du placard",
+    verifierAide: "Tout est considéré comme présent. Décochez ce qui manque, puis validez.",
+    valider: "Valider",
+    aRacheter: "À racheter",
+    rien: "Rien à racheter",
+    placard: "Placard",
+    placardAide: "Touchez un produit quand il n'y en a plus.",
+    frigo: "Frigo",
+    frigoVide: "Rien d'acheté pour le menu en ce moment",
+    maison: "Maison",
+    maisonVide: "Les achats hors menu apparaîtront ici une fois cochés dans la liste de courses",
+    jours: (n) => (n <= 0 ? "à consommer aujourd'hui" : `encore ${n} jour${n > 1 ? "s" : ""}`),
+    plusRien: "Il n'y en a plus",
+    jEnAi: "J'en ai",
+    sortir: "Sortir de la réserve",
+    nonConfigure: "Cookbook Menu n'est pas configuré",
+  },
+  en: {
+    titre: "Stock",
+    verifier: "First pantry check",
+    verifierAide: "Everything is considered in stock. Uncheck what is missing, then confirm.",
+    valider: "Confirm",
+    aRacheter: "To buy again",
+    rien: "Nothing to buy again",
+    placard: "Pantry",
+    placardAide: "Tap a product when you run out of it.",
+    frigo: "Fridge",
+    frigoVide: "Nothing bought for the menu right now",
+    maison: "Household",
+    maisonVide: "Items bought outside the menu show up here once checked on the shopping list",
+    jours: (n) => (n <= 0 ? "use today" : `${n} day${n > 1 ? "s" : ""} left`),
+    plusRien: "Out of stock",
+    jEnAi: "In stock",
+    sortir: "Remove from stock",
+    nonConfigure: "Cookbook Menu is not set up",
+  },
+};
+
+class CookbookStockCard extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this._reserve = null;
+    this._manquantsVerification = new Set();
+    this._desabonner = null;
+    this._erreur = "";
+  }
+
+  setConfig(config) {
+    this._config = config || {};
+  }
+
+  static getStubConfig() {
+    return {};
+  }
+
+  getCardSize() {
+    return 5;
+  }
+
+  get _t() {
+    const langue = (this._hass && this._hass.language) || "en";
+    return TEXTES_RESERVE[langue.startsWith("fr") ? "fr" : "en"];
+  }
+
+  set hass(hass) {
+    const premier = !this._hass;
+    this._hass = hass;
+    if (premier) this._abonner();
+  }
+
+  connectedCallback() {
+    if (this._hass && !this._desabonner) this._abonner();
+  }
+
+  disconnectedCallback() {
+    if (this._desabonner) {
+      this._desabonner.then((fn) => fn && fn()).catch(() => {});
+      this._desabonner = null;
+    }
+  }
+
+  _abonner() {
+    const message = { type: "cookbook_menu/stock/subscribe" };
+    if (this._config && this._config.config_entry_id) message.config_entry_id = this._config.config_entry_id;
+    this._desabonner = this._hass.connection.subscribeMessage((reserve) => {
+      this._reserve = reserve;
+      this._erreur = "";
+      this._rendre();
+    }, message);
+    this._desabonner.catch(() => {
+      this._erreur = this._t.nonConfigure;
+      this._rendre();
+    });
+  }
+
+  _agir(action, cle, extra = {}) {
+    const message = { type: "cookbook_menu/stock/update", action, ...extra };
+    if (cle) message.key = cle;
+    if (this._config && this._config.config_entry_id) message.config_entry_id = this._config.config_entry_id;
+    return this._hass.callWS(message);
+  }
+
+  _rendre() {
+    const t = this._t;
+    const r = this._reserve;
+    const style = `
+      <style>
+        :host { display: block; color: var(--primary-text-color); }
+        ha-card { padding: 16px; }
+        h2 { margin: 0 0 8px; font-size: 1.2em; font-weight: 500; }
+        h3 { margin: 16px 0 6px; font-size: 1em; font-weight: 500; display: flex; align-items: baseline; gap: 8px; }
+        h3 small { font-weight: 400; color: var(--secondary-text-color); font-size: .8em; }
+        .aide, .vide { color: var(--secondary-text-color); font-size: .9em; }
+        .puces { display: flex; flex-wrap: wrap; gap: 6px; }
+        .puce {
+          border: 1px solid var(--divider-color); border-radius: 16px; padding: 4px 12px; cursor: pointer;
+          background: transparent; color: var(--primary-text-color); font-size: .9em;
+        }
+        .puce.manque { border-color: var(--error-color); color: var(--error-color); }
+        .verification { border: 1px solid var(--primary-color); border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+        .verification label { display: inline-flex; align-items: center; gap: 4px; margin: 4px 12px 4px 0; }
+        .ligne { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--divider-color); flex-wrap: wrap; }
+        .ligne .nom { flex: 1; min-width: 120px; }
+        .ligne .detail { color: var(--secondary-text-color); font-size: .85em; }
+        .ligne .detail.urgent { color: var(--error-color); }
+        button.action {
+          border: 1px solid var(--divider-color); border-radius: 12px; background: transparent; cursor: pointer;
+          color: var(--primary-text-color); padding: 2px 10px; font-size: .85em;
+        }
+        button.principal { background: var(--primary-color); border-color: var(--primary-color); color: var(--text-primary-color, #fff); }
+      </style>`;
+    if (this._erreur || !r) {
+      this.shadowRoot.innerHTML = `${style}<ha-card><h2>${echapper(this._config.title || t.titre)}</h2><div class="aide">${echapper(this._erreur)}</div></ha-card>`;
+      return;
+    }
+    const aRacheter = [
+      ...r.pantry.filter((p) => p.missing).map((p) => ({ cle: p.key, nom: p.name })),
+      ...r.home.filter((m) => !m.present).map((m) => ({ cle: m.key, nom: m.name })),
+    ];
+    const verification = r.pantry_checked
+      ? ""
+      : `<div class="verification"><strong>${echapper(t.verifier)}</strong><div class="aide">${echapper(t.verifierAide)}</div>
+          <div>${r.pantry
+            .map((p) => `<label><input type="checkbox" data-verifier="${echapper(p.key)}" ${this._manquantsVerification.has(p.key) ? "" : "checked"}> ${echapper(p.name)}</label>`)
+            .join("")}</div>
+          <button class="action principal" id="valider">${echapper(t.valider)}</button></div>`;
+    this.shadowRoot.innerHTML = `${style}<ha-card>
+      <h2>${echapper(this._config.title || t.titre)}</h2>
+      ${verification}
+      <h3>${echapper(t.aRacheter)}</h3>
+      ${aRacheter.length
+        ? `<div class="puces">${aRacheter.map((p) => `<button class="puce manque" data-present="${echapper(p.cle)}" title="${echapper(t.jEnAi)}">${echapper(p.nom)}</button>`).join("")}</div>`
+        : `<div class="vide">${echapper(t.rien)}</div>`}
+      <h3>${echapper(t.frigo)}</h3>
+      ${r.fridge.length
+        ? r.fridge
+            .map(
+              (f) => `<div class="ligne"><span class="nom">${echapper(f.name)}${f.quantity ? ` <span class="detail">(${echapper(f.quantity)})</span>` : ""}</span>
+                <span class="detail ${f.days_left !== null && f.days_left <= 1 ? "urgent" : ""}">${f.days_left === null ? "" : echapper(t.jours(f.days_left))}</span>
+                <button class="action" data-manquant="${echapper(f.key)}">${echapper(t.plusRien)}</button></div>`,
+            )
+            .join("")
+        : `<div class="vide">${echapper(t.frigoVide)}</div>`}
+      <h3>${echapper(t.placard)} <small>${echapper(t.placardAide)}</small></h3>
+      <div class="puces">${r.pantry
+        .filter((p) => !p.missing)
+        .map((p) => `<button class="puce" data-manquant="${echapper(p.key)}" title="${echapper(t.plusRien)}">${echapper(p.name)}</button>`)
+        .join("")}</div>
+      <h3>${echapper(t.maison)}</h3>
+      ${r.home.some((m) => m.present)
+        ? r.home
+            .filter((m) => m.present)
+            .map(
+              (m) => `<div class="ligne"><span class="nom">${echapper(m.name)}${m.description ? ` <span class="detail">${echapper(m.description)}</span>` : ""}</span>
+                <button class="action" data-manquant="${echapper(m.key)}">${echapper(t.plusRien)}</button>
+                <button class="action" data-retirer="${echapper(m.key)}">${echapper(t.sortir)}</button></div>`,
+            )
+            .join("")
+        : `<div class="vide">${echapper(t.maisonVide)}</div>`}
+    </ha-card>`;
+    this.shadowRoot.querySelectorAll("[data-present]").forEach((b) => b.addEventListener("click", () => this._agir("present", b.dataset.present)));
+    this.shadowRoot.querySelectorAll("[data-manquant]").forEach((b) => b.addEventListener("click", () => this._agir("missing", b.dataset.manquant)));
+    this.shadowRoot.querySelectorAll("[data-retirer]").forEach((b) => b.addEventListener("click", () => this._agir("remove", b.dataset.retirer)));
+    this.shadowRoot.querySelectorAll("[data-verifier]").forEach((c) =>
+      c.addEventListener("change", () => {
+        if (c.checked) this._manquantsVerification.delete(c.dataset.verifier);
+        else this._manquantsVerification.add(c.dataset.verifier);
+      }),
+    );
+    const valider = this.shadowRoot.getElementById("valider");
+    if (valider) valider.addEventListener("click", () => this._agir("check_pantry", null, { missing: [...this._manquantsVerification] }));
+  }
+}
+
 if (!customElements.get("cookbook-menu-card")) {
   customElements.define("cookbook-menu-card", CookbookMenuCard);
   window.customCards = window.customCards || [];
@@ -773,6 +972,17 @@ if (!customElements.get("cookbook-menu-card")) {
     type: "cookbook-menu-card",
     name: "Cookbook Menu",
     description: "Weekly menu from Nextcloud Cookbook recipes, with recipe search.",
+    preview: false,
+  });
+}
+
+if (!customElements.get("cookbook-stock-card")) {
+  customElements.define("cookbook-stock-card", CookbookStockCard);
+  window.customCards = window.customCards || [];
+  window.customCards.push({
+    type: "cookbook-stock-card",
+    name: "Cookbook Menu : réserve",
+    description: "Pantry, fridge and household stock kept up to date from the menu and the shopping list.",
     preview: false,
   });
 }

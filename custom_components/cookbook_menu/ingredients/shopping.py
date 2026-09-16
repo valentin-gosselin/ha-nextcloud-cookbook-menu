@@ -53,7 +53,7 @@ class LigneCourses:
 
     def mesure(self) -> dict[str, float]:
         """Quantités arrondies à l'achat, pour comparer deux calculs."""
-        return {m: _arrondir(m, q) for m, q in self.quantites.items()}
+        return {m: arrondir(m, q) for m, q in self.quantites.items()}
 
 
 def _mesure_et_valeur(ingredient: Ingredient, facteur: float) -> tuple[str, float] | None:
@@ -74,7 +74,7 @@ def _mesure_et_valeur(ingredient: Ingredient, facteur: float) -> tuple[str, floa
     return unite, quantite
 
 
-def _arrondir(mesure: str, valeur: float) -> float:
+def arrondir(mesure: str, valeur: float) -> float:
     if mesure == "g":
         pas = 10 if valeur < 100 else 50
         return math.ceil(round(valeur, 6) / pas) * pas
@@ -98,7 +98,7 @@ def formater_quantites(quantites: dict[str, float]) -> str:
     """« 1 kg + 2 gousses », avec arrondi à l'achat et unités lisibles."""
     morceaux = []
     for mesure, valeur in quantites.items():
-        arrondi = _arrondir(mesure, valeur)
+        arrondi = arrondir(mesure, valeur)
         if mesure == "g":
             morceaux.append(f"{_nombre(arrondi / 1000)} kg" if arrondi >= 1000 else f"{int(arrondi)} g")
         elif mesure == "ml":

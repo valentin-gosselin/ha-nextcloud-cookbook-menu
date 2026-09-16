@@ -189,10 +189,14 @@ async def test_mise_a_jour_et_cochage_remonte(hass: HomeAssistant, entree, freez
 
 async def test_ligne_cochee_d_emblee_et_date_retiree(hass: HomeAssistant, entree, freezer) -> None:
     planificateur = entree.runtime_data.planner
-    planificateur.async_ajouter_course("Pain", fait=True)
+    planificateur.async_ajouter_course("Pain")
     plat = planificateur.async_ajouter_plat("carry", jour=None)
+    # Déjà acheté avant la première synchronisation : la ligne arrive cochée.
+    thym = next(ligne for ligne in planificateur.liste_de_courses() if ligne.libelle.startswith("Thym"))
+    planificateur.async_modifier_course(thym.uid, texte=None, description=None, fait=True)
     await attendre(hass, freezer)
-    assert (await cible(hass, COURSES_CIBLE))["Pain"]["status"] == "completed"
+    assert (await cible(hass, COURSES_CIBLE))["Pain"]["status"] == "needs_action"
+    assert (await cible(hass, COURSES_CIBLE))["Thym (1 branche)"]["status"] == "completed"
     assert "due" not in (await cible(hass, MENU_CIBLE))["Carry de poulet"]
     from datetime import date
 
