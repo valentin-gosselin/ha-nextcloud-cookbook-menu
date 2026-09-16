@@ -209,6 +209,10 @@
         "servings": {
           "name": "Servings",
           "description": "Number of people; the default servings from the options when empty."
+        },
+        "recipe_id": {
+          "name": "Recipe identifier",
+          "description": "Exact Nextcloud Cookbook recipe id; takes precedence over the name."
         }
       }
     },

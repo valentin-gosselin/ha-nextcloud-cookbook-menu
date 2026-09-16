@@ -16,10 +16,12 @@ from .api import CookbookClient
 from .assist import async_enregistrer_phrases
 from .const import DOMAIN
 from .coordinator import CookbookCoordinator
+from .frontend import async_enregistrer_carte
 from .planner import Planificateur
 from .services import async_setup_services
 from .store import StockagePlanificateur
 from .sync import Synchroniseur
+from .websocket import async_enregistrer_commandes
 
 PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.NUMBER, Platform.SELECT, Platform.TODO]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -59,6 +61,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Enregistre les actions et les phrases vocales du domaine."""
     async_setup_services(hass)
     async_enregistrer_phrases(hass)
+    async_enregistrer_commandes(hass)
+    await async_enregistrer_carte(hass)
     return True
 
 

@@ -1,6 +1,11 @@
 {
   "domain": "cookbook_menu",
   "name": "Cookbook Menu",
+  "after_dependencies": [
+    "frontend",
+    "http",
+    "lovelace"
+  ],
   "codeowners": [
     "@valentin-gosselin"
   ],

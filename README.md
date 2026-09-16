@@ -60,11 +60,24 @@ Each configured account creates a service device with two to-do lists:
   - Adding a pantry staple by hand ("olive oil") marks it out of stock: it is added like any product, and goes back to the pantry once checked.
   - Computed lines cannot be renamed; manual lines are never modified by the computation.
 
+## Dashboard card
+
+The integration ships a card and registers it automatically (reload the browser once after installing):
+
+```yaml
+type: custom:cookbook-menu-card
+title: Weekly menu   # optional
+```
+
+Type a few letters to find a recipe (accents are ignored), pick the day and the servings, then *Add to menu*. The menu is shown below: check a dish once cooked, or remove it.
+
+The same can be done without the card with the entities *Recipe to add*, *Day*, *Servings* and the *Add to menu* button.
+
 ## Actions
 
 | Action | Fields | Response |
 |---|---|---|
-| `cookbook_menu.add_to_menu` | `recipe` (text), `day` (date, weekday, today, tomorrow), `servings` | dish, linked recipe, alternatives, changed shopping lines |
+| `cookbook_menu.add_to_menu` | `recipe` (text), `recipe_id` (exact id, optional), `day` (date, weekday, today, tomorrow), `servings` | dish, linked recipe, alternatives, changed shopping lines |
 | `cookbook_menu.remove_from_menu` | `recipe` or `uid` | |
 | `cookbook_menu.set_servings` | `recipe` or `uid`, `servings` | |
 | `cookbook_menu.new_week` | | archived dishes |

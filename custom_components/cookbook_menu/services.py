@@ -22,6 +22,7 @@ ATTR_SERVINGS = "servings"
 ATTR_UID = "uid"
 ATTR_QUERY = "query"
 ATTR_LIMIT = "limit"
+ATTR_RECIPE_ID = "recipe_id"
 
 SERVICE_ADD_TO_MENU = "add_to_menu"
 SERVICE_REMOVE_FROM_MENU = "remove_from_menu"
@@ -39,6 +40,7 @@ SCHEMA_ADD = vol.Schema(
         vol.Required(ATTR_RECIPE): vol.All(cv.string, vol.Length(min=1)),
         vol.Optional(ATTR_DAY): vol.Any(cv.date, cv.string),
         vol.Optional(ATTR_SERVINGS): _COUVERTS,
+        vol.Optional(ATTR_RECIPE_ID): cv.string,
     }
 )
 SCHEMA_CIBLE = {
@@ -94,7 +96,10 @@ def _uid_du_plat(planificateur: Planificateur, appel: ServiceCall) -> str:
 
 async def _ajouter(appel: ServiceCall) -> ServiceResponse:
     return _planificateur(appel).async_ajouter_au_menu(
-        appel.data[ATTR_RECIPE], jour=_jour(appel), couverts=appel.data.get(ATTR_SERVINGS)
+        appel.data[ATTR_RECIPE],
+        jour=_jour(appel),
+        couverts=appel.data.get(ATTR_SERVINGS),
+        recipe_id=appel.data.get(ATTR_RECIPE_ID),
     )
 
 

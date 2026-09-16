@@ -209,6 +209,10 @@
         "servings": {
           "name": "Couverts",
           "description": "Nombre de personnes ; les couverts par défaut des options si vide."
+        },
+        "recipe_id": {
+          "name": "Identifiant de recette",
+          "description": "Identifiant exact de la recette Nextcloud Cookbook ; prioritaire sur le nom."
         }
       }
     },
