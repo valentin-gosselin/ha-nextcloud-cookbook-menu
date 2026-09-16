@@ -9,6 +9,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [
 - Home Assistant 2026.9.0 minimum.
 
 ### Ajouté
+- Documentation complète (README), auto-évaluation `quality_scale.yaml`, icône et logo.
 - Historique des plats : action `get_history`, question vocale « Quand est-ce qu'on a mangé du carry ? », durée de conservation réglable. `new_week` garde les plats à venir.
 - Outils pour les agents LLM (API Assist) : chercher une recette, ajouter au menu, retirer, lire le menu, consulter l'historique.
 - Voix avec l'agent Assist par défaut, en français et en anglais : ajouter un plat au menu (jour et couverts compris), demander ce qu'on mange, retirer un plat.

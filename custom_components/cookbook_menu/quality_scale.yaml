@@ -1,0 +1,98 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: done
+    comment: Recettes rechargées toutes les 30 minutes par défaut (réglable), détail seulement si la recette a changé.
+  brands:
+    status: todo
+    comment: Icône et logo prêts dans brands/, soumission à home-assistant/brands au passage en public (story 5.2).
+  common-modules:
+    status: done
+    comment: coordinator.py et une base d'entité commune dans todo.py (seule plateforme).
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency:
+    status: done
+    comment: Aucune dépendance pypi.
+  docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: Pas de conditions fournies.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: Pas de déclencheurs d'automatisation fournis.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: Géré par le DataUpdateCoordinator.
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: done
+    comment: Un appareil de type service par compte Nextcloud.
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: Service Nextcloud distant, rien à découvrir sur le réseau local.
+  discovery-update-info:
+    status: exempt
+    comment: Pas de découverte.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: Intégration de service, pas d'appareils physiques.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Un seul appareil de service par entrée.
+  entity-category:
+    status: exempt
+    comment: Les deux listes sont des entités principales.
+  entity-device-class:
+    status: exempt
+    comment: Les entités todo n'ont pas de classe.
+  entity-disabled-by-default:
+    status: exempt
+    comment: Les deux listes sont utiles par défaut.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: Aucun problème réparable par l'utilisateur ; la réauthentification couvre le mot de passe révoqué.
+  stale-devices:
+    status: exempt
+    comment: Un seul appareil, supprimé avec l'entrée.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: done
+    comment: Session créée par async_create_clientsession, dédiée et sans cookies (le cookie de session Nextcloud masquerait un mot de passe révoqué).
+  strict-typing: todo
