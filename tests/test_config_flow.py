@@ -84,6 +84,8 @@ async def test_reauth(hass, mock_client, config_entry) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data[CONF_PASSWORD] == "nouveau"
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_reconfigure(hass, mock_client, config_entry) -> None:
@@ -98,6 +100,8 @@ async def test_reconfigure(hass, mock_client, config_entry) -> None:
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data[CONF_URL] == "https://nouveau.exemple.fr"
     assert config_entry.unique_id == "https://nouveau.exemple.fr|valentin"
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_reconfigure_vers_compte_existant(hass, mock_client, config_entry) -> None:

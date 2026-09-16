@@ -6,12 +6,16 @@ from dataclasses import dataclass
 
 import aiohttp
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .api import CookbookClient
 from .coordinator import CookbookCoordinator
+from .planner import Planificateur
+from .store import StockagePlanificateur
+
+PLATFORMS: list[Platform] = [Platform.TODO]
 
 
 @dataclass(slots=True)
@@ -20,6 +24,7 @@ class CookbookMenuData:
 
     client: CookbookClient
     coordinator: CookbookCoordinator
+    planner: Planificateur
 
 
 type CookbookMenuConfigEntry = ConfigEntry[CookbookMenuData]
@@ -51,11 +56,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry)
     except Exception:
         await client.async_close()
         raise
-    entry.runtime_data = CookbookMenuData(client=client, coordinator=coordinator)
+    stockage = StockagePlanificateur(hass, entry.entry_id)
+    await stockage.async_charger()
+    entry.runtime_data = CookbookMenuData(
+        client=client, coordinator=coordinator, planner=Planificateur(hass, coordinator, stockage)
+    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry) -> bool:
     """Décharge une entrée et ferme sa session HTTP."""
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):  # pragma: no cover
+        return False
     await entry.runtime_data.client.async_close()
     return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry) -> None:
+    """Suppression de l'intégration : on efface aussi le menu stocké."""
+    await StockagePlanificateur(hass, entry.entry_id).async_supprimer()

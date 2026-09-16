@@ -78,6 +78,22 @@
     },
     "update_failed": {
       "message": "Impossible de charger les recettes depuis Nextcloud : {error}"
+    },
+    "item_not_found": {
+      "message": "Aucun élément d'identifiant {uid} dans la liste"
+    },
+    "empty_dish": {
+      "message": "Le nom du plat est vide"
+    },
+    "recipe_not_found": {
+      "message": "Recette {recipe} introuvable dans Nextcloud Cookbook"
+    }
+  },
+  "entity": {
+    "todo": {
+      "menu": {
+        "name": "Menu de la semaine"
+      }
     }
   }
 }

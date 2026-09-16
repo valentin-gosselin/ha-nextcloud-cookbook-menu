@@ -78,6 +78,22 @@
     },
     "update_failed": {
       "message": "Unable to load recipes from Nextcloud: {error}"
+    },
+    "item_not_found": {
+      "message": "No item with identifier {uid} in the list"
+    },
+    "empty_dish": {
+      "message": "The dish name is empty"
+    },
+    "recipe_not_found": {
+      "message": "Recipe {recipe} not found in Nextcloud Cookbook"
+    }
+  },
+  "entity": {
+    "todo": {
+      "menu": {
+        "name": "Weekly menu"
+      }
     }
   }
 }
