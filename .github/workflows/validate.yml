@@ -1,0 +1,41 @@
+name: Validation
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+jobs:
+  hassfest:
+    name: Hassfest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: home-assistant/actions/hassfest@master
+
+  hacs:
+    name: Validation HACS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hacs/action@main
+        with:
+          category: integration
+          # Tant que le dépôt est privé et sans brands publiés, ces contrôles ne peuvent pas passer.
+          ignore: brands description topics
+
+  tests:
+    name: Lint et tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.14"
+      - name: Installer les dépendances de test
+        run: uv pip install --system -r requirements_test.txt
+      - name: Ruff
+        run: ruff check . && ruff format --check .
+      - name: Pytest
+        run: pytest --cov --cov-report=term-missing

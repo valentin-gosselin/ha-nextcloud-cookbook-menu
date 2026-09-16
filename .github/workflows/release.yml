@@ -1,0 +1,34 @@
+name: Release
+
+# Attache à chaque release publiée un zip du composant, au format attendu par HACS
+# (`zip_release` et `filename` dans hacs.json). Le zip contient le contenu de
+# custom_components/cookbook_menu/ à sa racine.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release-zip:
+    name: Construire et attacher le zip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Vérifier que la version du manifest correspond au tag
+        run: |
+          version=$(python3 -c "import json;print(json.load(open('custom_components/cookbook_menu/manifest.json'))['version'])")
+          test "v${version}" = "${GITHUB_REF_NAME}" || { echo "manifest ${version} != tag ${GITHUB_REF_NAME}"; exit 1; }
+
+      - name: Créer le zip
+        run: |
+          cd custom_components/cookbook_menu
+          zip -r cookbook_menu.zip . -x '*.pyc' -x '__pycache__/*'
+
+      - name: Attacher le zip à la release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: custom_components/cookbook_menu/cookbook_menu.zip
