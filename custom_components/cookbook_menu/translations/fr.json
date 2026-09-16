@@ -2,12 +2,82 @@
   "config": {
     "step": {
       "user": {
-        "title": "Cookbook Menu",
-        "description": "Configurer Cookbook Menu."
+        "title": "Nextcloud Cookbook",
+        "description": "Connexion à l'application Cookbook de votre serveur Nextcloud. Utilisez un mot de passe d'application (paramètres personnels Nextcloud > Sécurité).",
+        "data": {
+          "url": "URL de Nextcloud",
+          "username": "Nom d'utilisateur",
+          "password": "Mot de passe d'application",
+          "verify_ssl": "Vérifier le certificat SSL"
+        },
+        "data_description": {
+          "url": "Adresse de votre serveur Nextcloud, par exemple https://cloud.exemple.fr",
+          "username": "Votre identifiant de connexion Nextcloud",
+          "password": "Créez un mot de passe d'application dédié plutôt que d'utiliser celui du compte",
+          "verify_ssl": "À désactiver uniquement pour un certificat auto-signé"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Mot de passe d'application Nextcloud refusé",
+        "description": "Le mot de passe d'application de {username} sur {url} n'est plus accepté. Saisissez-en un nouveau.",
+        "data": {
+          "password": "Mot de passe d'application"
+        },
+        "data_description": {
+          "password": "Créez un mot de passe d'application dédié plutôt que d'utiliser celui du compte"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigurer Nextcloud Cookbook",
+        "data": {
+          "url": "URL de Nextcloud",
+          "username": "Nom d'utilisateur",
+          "password": "Mot de passe d'application",
+          "verify_ssl": "Vérifier le certificat SSL"
+        },
+        "data_description": {
+          "url": "Adresse de votre serveur Nextcloud, par exemple https://cloud.exemple.fr",
+          "username": "Votre identifiant de connexion Nextcloud",
+          "password": "Créez un mot de passe d'application dédié plutôt que d'utiliser celui du compte",
+          "verify_ssl": "À désactiver uniquement pour un certificat auto-signé"
+        }
       }
     },
+    "error": {
+      "invalid_auth": "Nom d'utilisateur ou mot de passe d'application incorrect",
+      "cannot_connect": "Impossible de joindre le serveur Nextcloud",
+      "cookbook_not_found": "L'application Cookbook est introuvable sur ce serveur Nextcloud",
+      "unknown": "Erreur inattendue"
+    },
     "abort": {
-      "already_configured": "Le service est déjà configuré"
+      "already_configured": "Ce compte Nextcloud est déjà configuré",
+      "reauth_successful": "Réauthentification réussie",
+      "reconfigure_successful": "Reconfiguration réussie"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Réglages du foyer",
+        "data": {
+          "servings": "Couverts par défaut",
+          "excluded_categories": "Catégories exclues",
+          "scan_interval_minutes": "Intervalle de rafraîchissement (minutes)"
+        },
+        "data_description": {
+          "servings": "Nombre de personnes pour lesquelles un plat est prévu quand rien d'autre n'est précisé",
+          "excluded_categories": "Les recettes de ces catégories ne sont jamais proposées (par exemple les produits ménagers)",
+          "scan_interval_minutes": "Fréquence de rechargement des recettes depuis Nextcloud"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Nextcloud a refusé le mot de passe d'application"
+    },
+    "update_failed": {
+      "message": "Impossible de charger les recettes depuis Nextcloud : {error}"
     }
   }
 }

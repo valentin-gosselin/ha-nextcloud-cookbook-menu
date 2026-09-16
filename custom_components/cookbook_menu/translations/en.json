@@ -2,12 +2,82 @@
   "config": {
     "step": {
       "user": {
-        "title": "Cookbook Menu",
-        "description": "Set up Cookbook Menu."
+        "title": "Nextcloud Cookbook",
+        "description": "Connect to the Cookbook app of your Nextcloud server. Use an app password (Nextcloud personal settings > Security).",
+        "data": {
+          "url": "Nextcloud URL",
+          "username": "Username",
+          "password": "App password",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "data_description": {
+          "url": "Address of your Nextcloud server, for example https://cloud.example.com",
+          "username": "Your Nextcloud login name",
+          "password": "Create a dedicated app password rather than using your account password",
+          "verify_ssl": "Disable only for a self-signed certificate"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Nextcloud app password rejected",
+        "description": "The app password of {username} on {url} is no longer accepted. Enter a new one.",
+        "data": {
+          "password": "App password"
+        },
+        "data_description": {
+          "password": "Create a dedicated app password rather than using your account password"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Nextcloud Cookbook",
+        "data": {
+          "url": "Nextcloud URL",
+          "username": "Username",
+          "password": "App password",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "data_description": {
+          "url": "Address of your Nextcloud server, for example https://cloud.example.com",
+          "username": "Your Nextcloud login name",
+          "password": "Create a dedicated app password rather than using your account password",
+          "verify_ssl": "Disable only for a self-signed certificate"
+        }
       }
     },
+    "error": {
+      "invalid_auth": "Invalid username or app password",
+      "cannot_connect": "Cannot connect to the Nextcloud server",
+      "cookbook_not_found": "The Cookbook app was not found on this Nextcloud server",
+      "unknown": "Unexpected error"
+    },
     "abort": {
-      "already_configured": "Service is already configured"
+      "already_configured": "This Nextcloud account is already configured",
+      "reauth_successful": "Re-authentication was successful",
+      "reconfigure_successful": "Reconfiguration was successful"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Household settings",
+        "data": {
+          "servings": "Default servings",
+          "excluded_categories": "Excluded categories",
+          "scan_interval_minutes": "Refresh interval (minutes)"
+        },
+        "data_description": {
+          "servings": "Number of people a dish is planned for when nothing else is specified",
+          "excluded_categories": "Recipes in these categories are never offered (for example household products)",
+          "scan_interval_minutes": "How often recipes are reloaded from Nextcloud"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Nextcloud rejected the app password"
+    },
+    "update_failed": {
+      "message": "Unable to load recipes from Nextcloud: {error}"
     }
   }
 }

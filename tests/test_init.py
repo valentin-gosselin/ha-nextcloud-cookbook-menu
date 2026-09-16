@@ -1,0 +1,90 @@
+"""Tests de la mise en place, du coordinateur et des diagnostics."""
+
+from __future__ import annotations
+
+from datetime import timedelta
+
+import pytest
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.core import HomeAssistant
+
+from custom_components.cookbook_menu.api import CookbookAuthError, CookbookConnectionError
+from custom_components.cookbook_menu.const import DOMAIN
+from custom_components.cookbook_menu.diagnostics import async_get_config_entry_diagnostics
+
+
+async def test_setup_charge_les_recettes(hass: HomeAssistant, mock_client, config_entry) -> None:
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    index = config_entry.runtime_data.coordinator.data
+    assert len(index.recipes) == 57
+    assert {r.name for r in index.excluded.values()} == {"Lessive", "Colle à papier-peint"}
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_identifiants_refuses(hass, mock_client, config_entry) -> None:
+    mock_client.async_get_recipe_stubs.side_effect = CookbookAuthError
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    flux = hass.config_entries.flow.async_progress()
+    assert [f["context"]["source"] for f in flux] == [SOURCE_REAUTH]
+
+
+async def test_setup_serveur_injoignable(hass, mock_client, config_entry) -> None:
+    mock_client.async_get_recipes.side_effect = CookbookConnectionError("hors ligne")
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_rafraichissement_transmet_le_cache(hass, mock_client, config_entry) -> None:
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    coordinateur = config_entry.runtime_data.coordinator
+    assert coordinateur.update_interval == timedelta(minutes=30)
+
+    mock_client.async_get_recipes.side_effect = CookbookConnectionError("coupure")
+    await coordinateur.async_refresh()
+    assert not coordinateur.last_update_success
+
+    mock_client.async_get_recipes.side_effect = None
+    await coordinateur.async_refresh()
+    assert coordinateur.last_update_success
+    appel = mock_client.async_get_recipes.call_args
+    assert len(appel.args[2]) == 59
+
+
+@pytest.mark.parametrize("sans_ingredients", [0, 1])
+async def test_diagnostics_sans_secret(hass, mock_client, config_entry, recettes, sans_ingredients) -> None:
+    if sans_ingredients:
+        premiere = next(iter(recettes))
+        recettes[premiere] = recettes[premiere].__class__(
+            **{**{f: getattr(recettes[premiere], f) for f in recettes[premiere].__slots__}, "ingredients": ()}
+        )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    diag = await async_get_config_entry_diagnostics(hass, config_entry)
+    texte = str(diag)
+    assert "mot-de-passe-application" not in texte
+    assert "valentin" not in texte
+    assert diag["recipes"]["available"] == 57
+    assert diag["recipes"]["excluded"] == 2
+    assert diag["recipes"]["without_ingredients"] >= sans_ingredients
+    assert DOMAIN not in diag["entry"]["data"]
+
+
+async def test_client_sans_cookies(hass: HomeAssistant) -> None:
+    """Le client ne doit jamais conserver le cookie de session Nextcloud (voir create_client)."""
+    import aiohttp
+
+    from custom_components.cookbook_menu import create_client
+
+    from .conftest import DONNEES_ENTREE
+
+    client = create_client(hass, dict(DONNEES_ENTREE))
+    assert isinstance(client._session.cookie_jar, aiohttp.DummyCookieJar)
