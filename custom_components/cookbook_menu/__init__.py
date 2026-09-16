@@ -13,6 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .api import CookbookClient
+from .assist import async_enregistrer_phrases
 from .const import DOMAIN
 from .coordinator import CookbookCoordinator
 from .planner import Planificateur
@@ -55,8 +56,9 @@ def create_client(hass: HomeAssistant, data: dict) -> CookbookClient:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Enregistre les actions du domaine."""
+    """Enregistre les actions et les phrases vocales du domaine."""
     async_setup_services(hass)
+    async_enregistrer_phrases(hass)
     return True
 
 

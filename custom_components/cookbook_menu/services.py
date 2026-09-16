@@ -85,31 +85,9 @@ def _uid_du_plat(planificateur: Planificateur, appel: ServiceCall) -> str:
 
 
 async def _ajouter(appel: ServiceCall) -> ServiceResponse:
-    planificateur = _planificateur(appel)
-    avant = {ligne.uid: ligne.libelle for ligne in planificateur.liste_de_courses()}
-    resultat = planificateur.async_ajouter_plat(
-        appel.data[ATTR_RECIPE],
-        jour=_jour(appel),
-        couverts=appel.data.get(ATTR_SERVINGS),
-        choisir_meilleure=True,
+    return _planificateur(appel).async_ajouter_au_menu(
+        appel.data[ATTR_RECIPE], jour=_jour(appel), couverts=appel.data.get(ATTR_SERVINGS)
     )
-    apres = planificateur.liste_de_courses()
-    modifiees = [ligne.libelle for ligne in apres if avant.get(ligne.uid) != ligne.libelle]
-    plat = resultat.plat
-    return {
-        "dish": plat.summary,
-        "recipe_id": plat.recipe_id,
-        "linked": resultat.recette is not None,
-        "day": plat.day.isoformat() if plat.day else None,
-        "servings": plat.servings,
-        "uid": plat.uid,
-        "alternatives": [
-            c.recette.name
-            for c in resultat.candidats
-            if resultat.recette is None or c.recette.id != resultat.recette.id
-        ][:3],
-        "shopping_items_changed": modifiees,
-    }
 
 
 async def _retirer(appel: ServiceCall) -> None:

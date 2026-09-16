@@ -218,6 +218,33 @@ class Planificateur:
         return ResultatAjout(plat=plat, recette=recette, candidats=candidats, ambigu=est_ambigu(candidats))
 
     @callback
+    def async_ajouter_au_menu(
+        self, texte: str, *, jour: date | None = None, couverts: int | None = None
+    ) -> dict[str, Any]:
+        """Ajout « intelligent » (actions, voix, LLM) : meilleure recette, et bilan des courses."""
+        avant = {ligne.uid: ligne.libelle for ligne in self.liste_de_courses()}
+        resultat = self.async_ajouter_plat(texte, jour=jour, couverts=couverts, choisir_meilleure=True)
+        modifiees = [
+            ligne.libelle for ligne in self.liste_de_courses() if avant.get(ligne.uid) != ligne.libelle
+        ]
+        plat = resultat.plat
+        return {
+            "dish": plat.summary,
+            "recipe_id": plat.recipe_id,
+            "linked": resultat.recette is not None,
+            "ambiguous": resultat.ambigu,
+            "day": plat.day.isoformat() if plat.day else None,
+            "servings": plat.servings,
+            "uid": plat.uid,
+            "alternatives": [
+                c.recette.name
+                for c in resultat.candidats
+                if resultat.recette is None or c.recette.id != resultat.recette.id
+            ][:3],
+            "shopping_items_changed": modifiees,
+        }
+
+    @callback
     def async_modifier_plat(
         self,
         uid: str,

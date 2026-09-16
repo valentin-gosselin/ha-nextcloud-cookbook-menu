@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.cookbook_menu.api import Recipe, RecipeStub, parse_recipe
@@ -25,9 +26,9 @@ DONNEES_ENTREE = {
 
 
 @pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations):
-    """Active le chargement des intégrations custom dans chaque test."""
-    return
+async def auto_enable_custom_integrations(hass, enable_custom_integrations):
+    """Active les intégrations custom, et le composant homeassistant dont dépend conversation."""
+    assert await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture
