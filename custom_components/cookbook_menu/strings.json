@@ -94,6 +94,12 @@
     },
     "computed_item_readonly": {
       "message": "This item is computed from the menu: only its status can be changed. Edit the menu or add a separate item instead."
+    },
+    "invalid_day": {
+      "message": "Day not understood: {day}"
+    },
+    "dish_not_in_menu": {
+      "message": "No dish matching {dish} in the menu"
     }
   },
   "entity": {
@@ -103,6 +109,98 @@
       },
       "shopping": {
         "name": "Shopping list"
+      }
+    }
+  },
+  "services": {
+    "add_to_menu": {
+      "name": "Add to menu",
+      "description": "Adds a dish to the weekly menu; its ingredients go to the shopping list.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Configuration",
+          "description": "The Nextcloud Cookbook account to use (optional when only one is configured)."
+        },
+        "recipe": {
+          "name": "Recipe",
+          "description": "Name of the dish, even approximate: the closest recipe is used."
+        },
+        "day": {
+          "name": "Day",
+          "description": "A date, a weekday (thursday) or today / tomorrow."
+        },
+        "servings": {
+          "name": "Servings",
+          "description": "Number of people; the default servings from the options when empty."
+        }
+      }
+    },
+    "remove_from_menu": {
+      "name": "Remove from menu",
+      "description": "Removes a dish from the weekly menu and its ingredients from the shopping list.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Configuration",
+          "description": "The Nextcloud Cookbook account to use (optional when only one is configured)."
+        },
+        "recipe": {
+          "name": "Recipe",
+          "description": "Name of the dish, even approximate: the closest recipe is used."
+        },
+        "uid": {
+          "name": "Item identifier",
+          "description": "Identifier of the dish in the menu list, instead of its name."
+        }
+      }
+    },
+    "set_servings": {
+      "name": "Set servings",
+      "description": "Changes the number of servings of a dish in the menu.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Configuration",
+          "description": "The Nextcloud Cookbook account to use (optional when only one is configured)."
+        },
+        "recipe": {
+          "name": "Recipe",
+          "description": "Name of the dish, even approximate: the closest recipe is used."
+        },
+        "uid": {
+          "name": "Item identifier",
+          "description": "Identifier of the dish in the menu list, instead of its name."
+        },
+        "servings": {
+          "name": "Servings",
+          "description": "Number of people; the default servings from the options when empty."
+        }
+      }
+    },
+    "new_week": {
+      "name": "New week",
+      "description": "Archives the menu in the history, empties it and removes checked manual shopping items.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Configuration",
+          "description": "The Nextcloud Cookbook account to use (optional when only one is configured)."
+        }
+      }
+    },
+    "search_recipes": {
+      "name": "Search recipes",
+      "description": "Finds Nextcloud Cookbook recipes by name.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Configuration",
+          "description": "The Nextcloud Cookbook account to use (optional when only one is configured)."
+        },
+        "query": {
+          "name": "Search",
+          "description": "Words to look for in recipe names."
+        },
+        "limit": {
+          "name": "Maximum results",
+          "description": "Number of recipes returned."
+        }
       }
     }
   }

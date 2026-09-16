@@ -1,0 +1,169 @@
+"""Actions de service : pilotage du menu par les automatisations, les scripts et la voix."""
+
+from __future__ import annotations
+
+from typing import Any
+
+import voluptuous as vol
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import service
+from homeassistant.util import dt as dt_util
+
+from .const import DOMAIN
+from .jours import lire_jour
+from .planner import INCHANGE, Planificateur
+
+ATTR_RECIPE = "recipe"
+ATTR_DAY = "day"
+ATTR_SERVINGS = "servings"
+ATTR_UID = "uid"
+ATTR_QUERY = "query"
+ATTR_LIMIT = "limit"
+
+SERVICE_ADD_TO_MENU = "add_to_menu"
+SERVICE_REMOVE_FROM_MENU = "remove_from_menu"
+SERVICE_SET_SERVINGS = "set_servings"
+SERVICE_NEW_WEEK = "new_week"
+SERVICE_SEARCH_RECIPES = "search_recipes"
+
+_ENTREE = {vol.Optional(ATTR_CONFIG_ENTRY_ID): cv.string}
+_COUVERTS = vol.All(vol.Coerce(int), vol.Range(min=1, max=50))
+
+SCHEMA_ADD = vol.Schema(
+    {
+        **_ENTREE,
+        vol.Required(ATTR_RECIPE): vol.All(cv.string, vol.Length(min=1)),
+        vol.Optional(ATTR_DAY): vol.Any(cv.date, cv.string),
+        vol.Optional(ATTR_SERVINGS): _COUVERTS,
+    }
+)
+SCHEMA_CIBLE = {
+    **_ENTREE,
+    vol.Exclusive(ATTR_RECIPE, "cible"): cv.string,
+    vol.Exclusive(ATTR_UID, "cible"): cv.string,
+}
+SCHEMA_REMOVE = vol.All(vol.Schema(SCHEMA_CIBLE), cv.has_at_least_one_key(ATTR_RECIPE, ATTR_UID))
+SCHEMA_SERVINGS = vol.All(
+    vol.Schema({**SCHEMA_CIBLE, vol.Required(ATTR_SERVINGS): _COUVERTS}),
+    cv.has_at_least_one_key(ATTR_RECIPE, ATTR_UID),
+)
+SCHEMA_NEW_WEEK = vol.Schema(_ENTREE)
+SCHEMA_SEARCH = vol.Schema(
+    {
+        **_ENTREE,
+        vol.Required(ATTR_QUERY): cv.string,
+        vol.Optional(ATTR_LIMIT, default=5): vol.All(vol.Coerce(int), vol.Range(min=1, max=50)),
+    }
+)
+
+
+def _planificateur(appel: ServiceCall) -> Planificateur:
+    entree = service.async_get_config_entry(appel.hass, DOMAIN, appel.data.get(ATTR_CONFIG_ENTRY_ID))
+    return entree.runtime_data.planner
+
+
+def _jour(appel: ServiceCall) -> Any:
+    if ATTR_DAY not in appel.data:
+        return None
+    try:
+        return lire_jour(appel.data[ATTR_DAY], dt_util.now().date())
+    except ValueError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_day",
+            translation_placeholders={"day": str(appel.data[ATTR_DAY])},
+        ) from err
+
+
+def _uid_du_plat(planificateur: Planificateur, appel: ServiceCall) -> str:
+    if ATTR_UID in appel.data:
+        return appel.data[ATTR_UID]
+    return planificateur.plat_par_nom(appel.data[ATTR_RECIPE]).uid
+
+
+async def _ajouter(appel: ServiceCall) -> ServiceResponse:
+    planificateur = _planificateur(appel)
+    avant = {ligne.uid: ligne.libelle for ligne in planificateur.liste_de_courses()}
+    resultat = planificateur.async_ajouter_plat(
+        appel.data[ATTR_RECIPE],
+        jour=_jour(appel),
+        couverts=appel.data.get(ATTR_SERVINGS),
+        choisir_meilleure=True,
+    )
+    apres = planificateur.liste_de_courses()
+    modifiees = [ligne.libelle for ligne in apres if avant.get(ligne.uid) != ligne.libelle]
+    plat = resultat.plat
+    return {
+        "dish": plat.summary,
+        "recipe_id": plat.recipe_id,
+        "linked": resultat.recette is not None,
+        "day": plat.day.isoformat() if plat.day else None,
+        "servings": plat.servings,
+        "uid": plat.uid,
+        "alternatives": [
+            c.recette.name
+            for c in resultat.candidats
+            if resultat.recette is None or c.recette.id != resultat.recette.id
+        ][:3],
+        "shopping_items_changed": modifiees,
+    }
+
+
+async def _retirer(appel: ServiceCall) -> None:
+    planificateur = _planificateur(appel)
+    planificateur.async_supprimer_plats([_uid_du_plat(planificateur, appel)])
+
+
+async def _couverts(appel: ServiceCall) -> None:
+    planificateur = _planificateur(appel)
+    planificateur.async_modifier_plat(
+        _uid_du_plat(planificateur, appel), jour=INCHANGE, couverts=appel.data[ATTR_SERVINGS]
+    )
+
+
+async def _nouvelle_semaine(appel: ServiceCall) -> ServiceResponse:
+    archives = _planificateur(appel).async_nouvelle_semaine(dt_util.now().date())
+    return {"archived": archives}
+
+
+async def _chercher(appel: ServiceCall) -> ServiceResponse:
+    planificateur = _planificateur(appel)
+    return {
+        "recipes": [
+            {
+                "id": c.recette.id,
+                "name": c.recette.name,
+                "category": c.recette.category,
+                "servings": c.recette.servings,
+                "score": c.score,
+            }
+            for c in planificateur.chercher_recettes(appel.data[ATTR_QUERY], appel.data[ATTR_LIMIT])
+        ]
+    }
+
+
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
+    """Enregistre les actions (une seule fois pour le domaine, règle action-setup)."""
+    hass.services.async_register(
+        DOMAIN, SERVICE_ADD_TO_MENU, _ajouter, schema=SCHEMA_ADD, supports_response=SupportsResponse.OPTIONAL
+    )
+    hass.services.async_register(DOMAIN, SERVICE_REMOVE_FROM_MENU, _retirer, schema=SCHEMA_REMOVE)
+    hass.services.async_register(DOMAIN, SERVICE_SET_SERVINGS, _couverts, schema=SCHEMA_SERVINGS)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_NEW_WEEK,
+        _nouvelle_semaine,
+        schema=SCHEMA_NEW_WEEK,
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEARCH_RECIPES,
+        _chercher,
+        schema=SCHEMA_SEARCH,
+        supports_response=SupportsResponse.ONLY,
+    )

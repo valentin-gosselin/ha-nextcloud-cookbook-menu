@@ -1,0 +1,82 @@
+add_to_menu:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: cookbook_menu
+    recipe:
+      required: true
+      example: "salade césar"
+      selector:
+        text:
+    day:
+      example: "jeudi"
+      selector:
+        text:
+    servings:
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+
+remove_from_menu:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: cookbook_menu
+    recipe:
+      example: "carry"
+      selector:
+        text:
+    uid:
+      selector:
+        text:
+
+set_servings:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: cookbook_menu
+    recipe:
+      example: "carry"
+      selector:
+        text:
+    uid:
+      selector:
+        text:
+    servings:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+
+new_week:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: cookbook_menu
+
+search_recipes:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: cookbook_menu
+    query:
+      required: true
+      example: "gratin"
+      selector:
+        text:
+    limit:
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box

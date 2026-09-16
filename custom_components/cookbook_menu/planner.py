@@ -10,7 +10,7 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Any, Final
 from uuid import uuid4
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -30,7 +30,7 @@ from .ingredients.shopping import (
     trier,
 )
 from .libelles import libelles
-from .matching import Correspondance, chercher, est_ambigu, lien_automatique
+from .matching import Correspondance, chercher, est_ambigu, lien_automatique, score
 from .store import PlatMenu, StockagePlanificateur
 
 if TYPE_CHECKING:
@@ -40,6 +40,8 @@ if TYPE_CHECKING:
 INCHANGE: Final = object()
 
 PREFIXE_PRODUIT: Final = "produit:"
+# Score minimal quand on accepte la meilleure recette malgré une ambiguïté.
+SEUIL_MEILLEURE: Final = 0.5
 UID_RAPPEL_PLACARD: Final = "rappel:placard"
 _ETAT_RAPPEL: Final = "__rappel_placard__"
 
@@ -149,6 +151,17 @@ class Planificateur:
             translation_domain=DOMAIN, translation_key="item_not_found", translation_placeholders={"uid": uid}
         )
 
+    def plat_par_nom(self, texte: str) -> PlatMenu:
+        """Plat du menu le plus proche du texte (pour « retire le carry du menu »)."""
+        candidats = sorted(((score(texte, p.summary), p) for p in self.menu), key=lambda c: -c[0])
+        if not candidats or candidats[0][0] < SEUIL_MEILLEURE:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dish_not_in_menu",
+                translation_placeholders={"dish": texte},
+            )
+        return candidats[0][1]
+
     # --- Écriture --------------------------------------------------------------------
 
     def _position_chronologique(self, jour: date | None) -> int:
@@ -169,8 +182,13 @@ class Planificateur:
         couverts: int | None = None,
         recipe_id: str | None = None,
         fait: bool = False,
+        choisir_meilleure: bool = False,
     ) -> ResultatAjout:
-        """Ajoute un plat. Le texte est rapproché d'une recette sauf si `recipe_id` est donné."""
+        """Ajoute un plat. Le texte est rapproché d'une recette sauf si `recipe_id` est donné.
+
+        `choisir_meilleure` (voix, actions) : prend la meilleure recette même si le choix est
+        ambigu, pourvu qu'elle ressemble assez ; l'UI, elle, ne lie que les correspondances nettes.
+        """
         texte = texte.strip()
         if not texte and recipe_id is None:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="empty_dish")
@@ -185,6 +203,8 @@ class Planificateur:
                 )
         else:
             recette, candidats = lien_automatique(texte, list(self.recettes.values()))
+            if recette is None and choisir_meilleure and candidats and candidats[0].score >= SEUIL_MEILLEURE:
+                recette = candidats[0].recette
         plat = PlatMenu(
             uid=uuid4().hex,
             summary=recette.name if recette else texte,
@@ -244,6 +264,25 @@ class Planificateur:
         )
         self.menu.insert(index, plat)
         self._signaler_changement()
+
+    @callback
+    def async_nouvelle_semaine(self, aujourdhui: date) -> list[dict[str, Any]]:
+        """Archive tout le menu dans l'historique, vide le menu et les lignes manuelles cochées."""
+        donnees = self.stockage.donnees
+        archives = [
+            {
+                "day": (plat.day or aujourdhui).isoformat(),
+                "recipe_id": plat.recipe_id,
+                "summary": plat.summary,
+                "servings": plat.servings,
+            }
+            for plat in self.menu
+        ]
+        donnees.historique.extend(archives)
+        donnees.menu = []
+        donnees.courses_manuelles = [m for m in donnees.courses_manuelles if not m.get("done")]
+        self._signaler_changement()
+        return archives
 
     # --- Liste de courses -----------------------------------------------------------
 

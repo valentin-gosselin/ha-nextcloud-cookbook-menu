@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "todo": {
+      "menu": { "default": "mdi:silverware-fork-knife" },
+      "shopping": { "default": "mdi:cart-outline" }
+    }
+  },
+  "services": {
+    "add_to_menu": { "service": "mdi:silverware-variant" },
+    "remove_from_menu": { "service": "mdi:silverware-clean" },
+    "set_servings": { "service": "mdi:account-multiple" },
+    "new_week": { "service": "mdi:calendar-refresh" },
+    "search_recipes": { "service": "mdi:book-search" }
+  }
+}

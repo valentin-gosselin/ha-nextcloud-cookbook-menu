@@ -94,6 +94,12 @@
     },
     "computed_item_readonly": {
       "message": "Cette ligne est calculée depuis le menu : seul son cochage est modifiable. Modifiez le menu ou ajoutez une ligne à part."
+    },
+    "invalid_day": {
+      "message": "Jour non compris : {day}"
+    },
+    "dish_not_in_menu": {
+      "message": "Aucun plat du menu ne correspond à {dish}"
     }
   },
   "entity": {
@@ -103,6 +109,98 @@
       },
       "shopping": {
         "name": "Liste de courses"
+      }
+    }
+  },
+  "services": {
+    "add_to_menu": {
+      "name": "Ajouter au menu",
+      "description": "Ajoute un plat au menu de la semaine ; ses ingrédients vont dans la liste de courses.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Configuration",
+          "description": "Compte Nextcloud Cookbook à utiliser (facultatif s'il n'y en a qu'un)."
+        },
+        "recipe": {
+          "name": "Recette",
+          "description": "Nom du plat, même approximatif : la recette la plus proche est retenue."
+        },
+        "day": {
+          "name": "Jour",
+          "description": "Une date, un jour de la semaine (jeudi) ou aujourd'hui, demain."
+        },
+        "servings": {
+          "name": "Couverts",
+          "description": "Nombre de personnes ; les couverts par défaut des options si vide."
+        }
+      }
+    },
+    "remove_from_menu": {
+      "name": "Retirer du menu",
+      "description": "Retire un plat du menu de la semaine et ses ingrédients de la liste de courses.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Configuration",
+          "description": "Compte Nextcloud Cookbook à utiliser (facultatif s'il n'y en a qu'un)."
+        },
+        "recipe": {
+          "name": "Recette",
+          "description": "Nom du plat, même approximatif : la recette la plus proche est retenue."
+        },
+        "uid": {
+          "name": "Identifiant",
+          "description": "Identifiant du plat dans la liste du menu, à la place de son nom."
+        }
+      }
+    },
+    "set_servings": {
+      "name": "Changer les couverts",
+      "description": "Modifie le nombre de couverts d'un plat du menu.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Configuration",
+          "description": "Compte Nextcloud Cookbook à utiliser (facultatif s'il n'y en a qu'un)."
+        },
+        "recipe": {
+          "name": "Recette",
+          "description": "Nom du plat, même approximatif : la recette la plus proche est retenue."
+        },
+        "uid": {
+          "name": "Identifiant",
+          "description": "Identifiant du plat dans la liste du menu, à la place de son nom."
+        },
+        "servings": {
+          "name": "Couverts",
+          "description": "Nombre de personnes ; les couverts par défaut des options si vide."
+        }
+      }
+    },
+    "new_week": {
+      "name": "Nouvelle semaine",
+      "description": "Archive le menu dans l'historique, le vide et retire les lignes de courses manuelles cochées.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Configuration",
+          "description": "Compte Nextcloud Cookbook à utiliser (facultatif s'il n'y en a qu'un)."
+        }
+      }
+    },
+    "search_recipes": {
+      "name": "Chercher des recettes",
+      "description": "Trouve des recettes Nextcloud Cookbook par leur nom.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Configuration",
+          "description": "Compte Nextcloud Cookbook à utiliser (facultatif s'il n'y en a qu'un)."
+        },
+        "query": {
+          "name": "Recherche",
+          "description": "Mots à chercher dans le nom des recettes."
+        },
+        "limit": {
+          "name": "Nombre maximal",
+          "description": "Nombre de recettes renvoyées."
+        }
       }
     }
   }
