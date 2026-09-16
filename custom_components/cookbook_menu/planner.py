@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, timedelta
 from typing import TYPE_CHECKING, Any, Final
 from uuid import uuid4
 
@@ -17,7 +17,15 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 
 from .api import Recipe
-from .const import CONF_PANTRY, CONF_PANTRY_REMINDER, CONF_SERVINGS, DEFAULT_SERVINGS, DOMAIN
+from .const import (
+    CONF_HISTORY_MONTHS,
+    CONF_PANTRY,
+    CONF_PANTRY_REMINDER,
+    CONF_SERVINGS,
+    DEFAULT_HISTORY_MONTHS,
+    DEFAULT_SERVINGS,
+    DOMAIN,
+)
 from .ingredients.aisles import rayon
 from .ingredients.normalize import cle
 from .ingredients.pantry import PLACARD_PAR_DEFAUT, cles_placard, est_au_placard, texte_rappel
@@ -301,22 +309,38 @@ class Planificateur:
 
     @callback
     def async_nouvelle_semaine(self, aujourdhui: date) -> list[dict[str, Any]]:
-        """Archive tout le menu dans l'historique, vide le menu et les lignes manuelles cochées."""
+        """Archive les plats cuisinés ou passés, garde les plats à venir, nettoie les courses cochées.
+
+        Un plat coché, ou prévu avant aujourd'hui, entre dans l'historique. Un plat à venir ou sans
+        date et non cuisiné reste au menu. Les lignes manuelles cochées disparaissent, et
+        l'historique plus ancien que la durée de conservation est purgé.
+        """
         donnees = self.stockage.donnees
-        archives = [
-            {
-                "day": (plat.day or aujourdhui).isoformat(),
-                "recipe_id": plat.recipe_id,
-                "summary": plat.summary,
-                "servings": plat.servings,
-            }
-            for plat in self.menu
-        ]
+        archives: list[dict[str, Any]] = []
+        restants: list[PlatMenu] = []
+        for plat in self.menu:
+            if plat.done or (plat.day is not None and plat.day < aujourdhui):
+                archives.append(
+                    {
+                        "day": (plat.day or aujourdhui).isoformat(),
+                        "recipe_id": plat.recipe_id,
+                        "summary": plat.summary,
+                        "servings": plat.servings,
+                    }
+                )
+            else:
+                restants.append(plat)
         donnees.historique.extend(archives)
-        donnees.menu = []
+        limite = (aujourdhui - timedelta(days=30 * self.conservation_mois)).isoformat()
+        donnees.historique = [p for p in donnees.historique if (p.get("day") or "") >= limite]
+        donnees.menu = restants
         donnees.courses_manuelles = [m for m in donnees.courses_manuelles if not m.get("done")]
         self._signaler_changement()
         return archives
+
+    @property
+    def conservation_mois(self) -> int:
+        return int(self.coordinateur.config_entry.options.get(CONF_HISTORY_MONTHS, DEFAULT_HISTORY_MONTHS))
 
     def historique(self, filtre: str | None = None, limite: int = 20) -> list[dict[str, Any]]:
         """Plats archivés, du plus récent au plus ancien, éventuellement filtrés par nom."""

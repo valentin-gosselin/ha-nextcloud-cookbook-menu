@@ -35,12 +35,14 @@ from . import CookbookMenuConfigEntry, create_client
 from .api import CookbookAuthError, CookbookError, CookbookNotFoundError
 from .const import (
     CONF_EXCLUDED_CATEGORIES,
+    CONF_HISTORY_MONTHS,
     CONF_PANTRY,
     CONF_PANTRY_REMINDER,
     CONF_SCAN_INTERVAL_MINUTES,
     CONF_SERVINGS,
     CONF_SYNC_MENU_ENTITY,
     CONF_SYNC_SHOPPING_ENTITY,
+    DEFAULT_HISTORY_MONTHS,
     DEFAULT_SCAN_INTERVAL_MINUTES,
     DEFAULT_SERVINGS,
     DOMAIN,
@@ -174,6 +176,7 @@ class CookbookMenuOptionsFlow(OptionsFlowWithReload):
         if user_input is not None:
             user_input[CONF_SERVINGS] = int(user_input[CONF_SERVINGS])
             user_input[CONF_SCAN_INTERVAL_MINUTES] = int(user_input[CONF_SCAN_INTERVAL_MINUTES])
+            user_input[CONF_HISTORY_MONTHS] = int(user_input[CONF_HISTORY_MONTHS])
             return self.async_create_entry(data=user_input)
 
         options = self.config_entry.options
@@ -224,6 +227,9 @@ class CookbookMenuOptionsFlow(OptionsFlowWithReload):
                     CONF_SYNC_SHOPPING_ENTITY,
                     description={"suggested_value": options.get(CONF_SYNC_SHOPPING_ENTITY)},
                 ): selecteur_liste,
+                vol.Required(
+                    CONF_HISTORY_MONTHS, default=options.get(CONF_HISTORY_MONTHS, DEFAULT_HISTORY_MONTHS)
+                ): NumberSelector(NumberSelectorConfig(min=1, max=120, step=1, mode=NumberSelectorMode.BOX)),
                 vol.Required(
                     CONF_SCAN_INTERVAL_MINUTES,
                     default=options.get(CONF_SCAN_INTERVAL_MINUTES, DEFAULT_SCAN_INTERVAL_MINUTES),

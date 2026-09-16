@@ -125,3 +125,24 @@ async def test_retrait_des_phrases(hass: HomeAssistant, entree) -> None:
     assert len(gestionnaire.trigger_sentences) > avant
     retirer()
     assert len(gestionnaire.trigger_sentences) == avant
+
+
+async def test_quand_a_t_on_mange(hass: HomeAssistant, entree) -> None:
+    entree.runtime_data.planner.stockage.donnees.historique.extend(
+        [
+            {"day": "2026-08-15", "summary": "Carry de poulet", "recipe_id": "2176038", "servings": 2},
+            {"day": "2026-07-01", "summary": "Carry de poulet", "recipe_id": "2176038", "servings": 2},
+        ]
+    )
+    assert (
+        await dire(hass, "quand est-ce qu'on a mangé du carry")
+        == "La dernière fois : Carry de poulet, le 15 août 2026."
+    )
+    assert await dire(hass, "quand a-t-on fait une tartiflette") == "Pas de tartiflette dans l'historique."
+    await hass.config.async_update(language="en")
+    assert (
+        await dire(hass, "when did we last eat carry", "en")
+        == "Last time: Carry de poulet, on August 15, 2026."
+    )
+    await hass.config_entries.async_unload(entree.entry_id)
+    assert await dire(hass, "quand a-t-on fait une tartiflette") == "Cookbook Menu n'est pas configuré."

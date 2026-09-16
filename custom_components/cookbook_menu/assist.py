@@ -41,6 +41,11 @@ PHRASES_MENU = [
     "what are we eating [{quand}]",
     "what's on the menu [{quand}]",
 ]
+PHRASES_HISTORIQUE = [
+    "quand (est-ce qu'on a|avons-nous|a-t-on) (mangé|fait|cuisiné) {demande}",
+    "c'est quand la dernière fois qu'on a (mangé|fait) {demande}",
+    "when did we (last eat|last have|last cook|eat|have) {demande}",
+]
 PHRASES_RETRAIT = [
     "(retire|enlève|supprime|annule) {demande} du menu",
     "remove {demande} from [the] menu",
@@ -62,6 +67,22 @@ _REPONSES = {
         "introuvable": "Je ne trouve pas {plat} dans le menu.",
         "non_configure": "Cookbook Menu n'est pas configuré.",
         "plat_vide": "Quel plat faut-il ajouter au menu ?",
+        "historique": "La dernière fois : {plat}, le {date}.",
+        "historique_jamais": "Pas de {plat} dans l'historique.",
+        "mois": [
+            "janvier",
+            "février",
+            "mars",
+            "avril",
+            "mai",
+            "juin",
+            "juillet",
+            "août",
+            "septembre",
+            "octobre",
+            "novembre",
+            "décembre",
+        ],
         "et": " et ",
         "aujourd_hui": "aujourd'hui",
         "demain": "demain",
@@ -82,6 +103,22 @@ _REPONSES = {
         "introuvable": "I can't find {plat} in the menu.",
         "non_configure": "Cookbook Menu is not configured.",
         "plat_vide": "Which dish should I add to the menu?",
+        "historique": "Last time: {plat}, on {date}.",
+        "historique_jamais": "No {plat} in the history.",
+        "mois": [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ],
         "et": " and ",
         "aujourd_hui": "today",
         "demain": "tomorrow",
@@ -187,7 +224,23 @@ def async_enregistrer_phrases(hass: HomeAssistant) -> CALLBACK_TYPE:
         planificateur.async_supprimer_plats([plat.uid])
         return textes["retrait"].format(plat=plat.summary)
 
+    async def historique(entree: ConversationInput, resultat: RecognizeResult) -> str:
+        code = langue(entree.language)
+        textes = _REPONSES[code]
+        planificateur = _planificateur(hass)
+        if planificateur is None:
+            return textes["non_configure"]
+        demande = analyser_demande(_valeur(resultat, "demande"), entree.language)
+        [dernier, *_] = planificateur.historique(demande.plat, 1) or [None]
+        if dernier is None:
+            return textes["historique_jamais"].format(plat=demande.plat)
+        jour = date.fromisoformat(dernier["day"])
+        mois = textes["mois"][jour.month - 1]
+        texte_date = f"{jour.day} {mois} {jour.year}" if code == "fr" else f"{mois} {jour.day}, {jour.year}"
+        return textes["historique"].format(plat=dernier["summary"], date=texte_date)
+
     retraits = [
+        gestionnaire.register_trigger(PHRASES_HISTORIQUE, historique),
         gestionnaire.register_trigger(PHRASES_AJOUT, ajouter),
         gestionnaire.register_trigger(PHRASES_MENU, menu),
         gestionnaire.register_trigger(PHRASES_RETRAIT, retirer),

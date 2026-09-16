@@ -80,3 +80,21 @@ search_recipes:
           min: 1
           max: 50
           mode: box
+
+get_history:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: cookbook_menu
+    recipe:
+      example: "carry"
+      selector:
+        text:
+    limit:
+      default: 20
+      selector:
+        number:
+          min: 1
+          max: 500
+          mode: box

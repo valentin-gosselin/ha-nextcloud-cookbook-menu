@@ -66,7 +66,8 @@
           "pantry": "Pantry staples",
           "pantry_reminder": "Pantry reminder",
           "sync_menu_entity": "Copy the menu to",
-          "sync_shopping_entity": "Copy the shopping list to"
+          "sync_shopping_entity": "Copy the shopping list to",
+          "history_months": "History retention (months)"
         },
         "data_description": {
           "servings": "Number of people a dish is planned for when nothing else is specified",
@@ -75,7 +76,8 @@
           "pantry": "Always at home: never added to the shopping list. Add an item manually to the list when you run out.",
           "pantry_reminder": "Add a single line listing the pantry staples used by the menu, to check before shopping",
           "sync_menu_entity": "Optional: an existing to-do list that receives a copy of the menu. Items you add there yourself are never touched.",
-          "sync_shopping_entity": "Optional: the to-do list you open at the store. Items checked there are checked here too."
+          "sync_shopping_entity": "Optional: the to-do list you open at the store. Items checked there are checked here too.",
+          "history_months": "Past dishes older than this are forgotten at each new week"
         }
       }
     }
@@ -181,7 +183,7 @@
     },
     "new_week": {
       "name": "New week",
-      "description": "Archives the menu in the history, empties it and removes checked manual shopping items.",
+      "description": "Archives cooked or past dishes in the history, keeps upcoming ones and removes checked manual shopping items.",
       "fields": {
         "config_entry_id": {
           "name": "Configuration",
@@ -204,6 +206,24 @@
         "limit": {
           "name": "Maximum results",
           "description": "Number of recipes returned."
+        }
+      }
+    },
+    "get_history": {
+      "name": "Get history",
+      "description": "Dishes eaten in past weeks, most recent first.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Configuration",
+          "description": "The Nextcloud Cookbook account to use (optional when only one is configured)."
+        },
+        "recipe": {
+          "name": "Dish",
+          "description": "Only dishes matching this name (optional)."
+        },
+        "limit": {
+          "name": "Maximum results",
+          "description": "Number of dishes returned."
         }
       }
     }

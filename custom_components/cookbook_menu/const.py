@@ -12,8 +12,10 @@ CONF_PANTRY: Final = "pantry"
 CONF_PANTRY_REMINDER: Final = "pantry_reminder"
 CONF_SYNC_MENU_ENTITY: Final = "sync_menu_entity"
 CONF_SYNC_SHOPPING_ENTITY: Final = "sync_shopping_entity"
+CONF_HISTORY_MONTHS: Final = "history_months"
 
 DEFAULT_SERVINGS: Final = 2
+DEFAULT_HISTORY_MONTHS: Final = 24
 DEFAULT_SCAN_INTERVAL_MINUTES: Final = 30
 DEFAULT_SCAN_INTERVAL: Final = timedelta(minutes=DEFAULT_SCAN_INTERVAL_MINUTES)
 

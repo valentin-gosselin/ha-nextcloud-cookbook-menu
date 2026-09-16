@@ -115,19 +115,30 @@ async def test_retirer_et_couverts(hass: HomeAssistant, entree) -> None:
 
 
 async def test_nouvelle_semaine(hass: HomeAssistant, entree) -> None:
-    await appeler(hass, "add_to_menu", recipe="carry", day="jeudi")
-    await appeler(hass, "add_to_menu", recipe="restes")
     planificateur = entree.runtime_data.planner
+    from datetime import date as _date
+
+    planificateur.async_ajouter_plat("carry", jour=_date(2026, 9, 14))  # passé
+    planificateur.async_ajouter_plat("tartiflette", jour=_date(2026, 9, 18))  # à venir
+    planificateur.async_ajouter_plat("restes", fait=True)  # cuisiné, sans date
+    planificateur.async_ajouter_plat("chili")  # sans date, pas cuisiné
     planificateur.async_ajouter_course("Pain", fait=True)
     planificateur.async_ajouter_course("Lessive")
+    planificateur.stockage.donnees.historique.append(
+        {"day": "2024-01-01", "summary": "Vieux plat", "recipe_id": None, "servings": 2}
+    )
     reponse = await appeler(hass, "new_week", True)
     assert reponse["archived"] == [
-        {"day": "2026-09-17", "recipe_id": "2176038", "summary": "Carry de poulet", "servings": 2},
+        {"day": "2026-09-14", "recipe_id": "2176038", "summary": "Carry de poulet", "servings": 2},
         {"day": "2026-09-16", "recipe_id": None, "summary": "restes", "servings": 2},
     ]
-    assert await elements(hass) == []
-    assert list(await courses(hass)) == ["Lessive"]
-    assert len(planificateur.stockage.donnees.historique) == 2
+    assert [p["summary"] for p in await elements(hass)] == ["Tartiflette", "Chili con carne"]
+    assert "Lessive" in await courses(hass)
+    assert "Pain" not in await courses(hass)
+    assert [p["summary"] for p in planificateur.stockage.donnees.historique] == ["Carry de poulet", "restes"]
+
+    historique = await appeler(hass, "get_history", True, recipe="carry")
+    assert historique == {"history": [reponse["archived"][0]]}
 
 
 async def test_chercher(hass: HomeAssistant, entree) -> None:

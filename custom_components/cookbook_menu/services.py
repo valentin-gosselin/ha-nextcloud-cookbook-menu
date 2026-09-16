@@ -28,6 +28,7 @@ SERVICE_REMOVE_FROM_MENU = "remove_from_menu"
 SERVICE_SET_SERVINGS = "set_servings"
 SERVICE_NEW_WEEK = "new_week"
 SERVICE_SEARCH_RECIPES = "search_recipes"
+SERVICE_GET_HISTORY = "get_history"
 
 _ENTREE = {vol.Optional(ATTR_CONFIG_ENTRY_ID): cv.string}
 _COUVERTS = vol.All(vol.Coerce(int), vol.Range(min=1, max=50))
@@ -51,6 +52,13 @@ SCHEMA_SERVINGS = vol.All(
     cv.has_at_least_one_key(ATTR_RECIPE, ATTR_UID),
 )
 SCHEMA_NEW_WEEK = vol.Schema(_ENTREE)
+SCHEMA_HISTORY = vol.Schema(
+    {
+        **_ENTREE,
+        vol.Optional(ATTR_RECIPE): cv.string,
+        vol.Optional(ATTR_LIMIT, default=20): vol.All(vol.Coerce(int), vol.Range(min=1, max=500)),
+    }
+)
 SCHEMA_SEARCH = vol.Schema(
     {
         **_ENTREE,
@@ -107,6 +115,11 @@ async def _nouvelle_semaine(appel: ServiceCall) -> ServiceResponse:
     return {"archived": archives}
 
 
+async def _historique(appel: ServiceCall) -> ServiceResponse:
+    planificateur = _planificateur(appel)
+    return {"history": planificateur.historique(appel.data.get(ATTR_RECIPE), appel.data[ATTR_LIMIT])}
+
+
 async def _chercher(appel: ServiceCall) -> ServiceResponse:
     planificateur = _planificateur(appel)
     return {
@@ -137,6 +150,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _nouvelle_semaine,
         schema=SCHEMA_NEW_WEEK,
         supports_response=SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_HISTORY,
+        _historique,
+        schema=SCHEMA_HISTORY,
+        supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,

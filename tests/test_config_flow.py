@@ -143,6 +143,7 @@ async def test_options(hass, mock_client, config_entry) -> None:
             "excluded_categories": ["Dessert"],
             "pantry": ["Sel", "Harissa"],
             "pantry_reminder": False,
+            "history_months": 12.0,
             "scan_interval_minutes": 60.0,
         },
     )
@@ -153,6 +154,7 @@ async def test_options(hass, mock_client, config_entry) -> None:
         "excluded_categories": ["Dessert"],
         "pantry": ["Sel", "Harissa"],
         "pantry_reminder": False,
+        "history_months": 12,
         "scan_interval_minutes": 60,
     }
     index = config_entry.runtime_data.coordinator.data

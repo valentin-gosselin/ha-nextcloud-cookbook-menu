@@ -66,7 +66,8 @@
           "pantry": "Placard",
           "pantry_reminder": "Rappel du placard",
           "sync_menu_entity": "Recopier le menu dans",
-          "sync_shopping_entity": "Recopier la liste de courses dans"
+          "sync_shopping_entity": "Recopier la liste de courses dans",
+          "history_months": "Conservation de l'historique (mois)"
         },
         "data_description": {
           "servings": "Nombre de personnes pour lesquelles un plat est prévu quand rien d'autre n'est précisé",
@@ -75,7 +76,8 @@
           "pantry": "Toujours à la maison : jamais ajoutés aux courses. Ajoutez le produit à la main dans la liste quand il n'y en a plus.",
           "pantry_reminder": "Ajoute une ligne unique qui cite les produits du placard utilisés par le menu, à vérifier avant les courses",
           "sync_menu_entity": "Facultatif : une liste existante qui reçoit une copie du menu. Les lignes que vous y ajoutez vous-même ne sont jamais touchées.",
-          "sync_shopping_entity": "Facultatif : la liste que vous ouvrez au magasin. Ce qui y est coché l'est aussi ici."
+          "sync_shopping_entity": "Facultatif : la liste que vous ouvrez au magasin. Ce qui y est coché l'est aussi ici.",
+          "history_months": "Les plats plus anciens sont oubliés à chaque nouvelle semaine"
         }
       }
     }
@@ -181,7 +183,7 @@
     },
     "new_week": {
       "name": "Nouvelle semaine",
-      "description": "Archive le menu dans l'historique, le vide et retire les lignes de courses manuelles cochées.",
+      "description": "Archive dans l'historique les plats cuisinés ou passés, garde ceux à venir et retire les lignes de courses manuelles cochées.",
       "fields": {
         "config_entry_id": {
           "name": "Configuration",
@@ -204,6 +206,24 @@
         "limit": {
           "name": "Nombre maximal",
           "description": "Nombre de recettes renvoyées."
+        }
+      }
+    },
+    "get_history": {
+      "name": "Consulter l'historique",
+      "description": "Plats mangés les semaines passées, du plus récent au plus ancien.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Configuration",
+          "description": "Compte Nextcloud Cookbook à utiliser (facultatif s'il n'y en a qu'un)."
+        },
+        "recipe": {
+          "name": "Plat",
+          "description": "Seulement les plats proches de ce nom (facultatif)."
+        },
+        "limit": {
+          "name": "Nombre maximal",
+          "description": "Nombre de plats renvoyés."
         }
       }
     }
