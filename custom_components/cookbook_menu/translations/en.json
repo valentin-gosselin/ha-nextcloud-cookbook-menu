@@ -64,14 +64,18 @@
           "excluded_categories": "Excluded categories",
           "scan_interval_minutes": "Refresh interval (minutes)",
           "pantry": "Pantry staples",
-          "pantry_reminder": "Pantry reminder"
+          "pantry_reminder": "Pantry reminder",
+          "sync_menu_entity": "Copy the menu to",
+          "sync_shopping_entity": "Copy the shopping list to"
         },
         "data_description": {
           "servings": "Number of people a dish is planned for when nothing else is specified",
           "excluded_categories": "Recipes in these categories are never offered (for example household products)",
           "scan_interval_minutes": "How often recipes are reloaded from Nextcloud",
           "pantry": "Always at home: never added to the shopping list. Add an item manually to the list when you run out.",
-          "pantry_reminder": "Add a single line listing the pantry staples used by the menu, to check before shopping"
+          "pantry_reminder": "Add a single line listing the pantry staples used by the menu, to check before shopping",
+          "sync_menu_entity": "Optional: an existing to-do list that receives a copy of the menu. Items you add there yourself are never touched.",
+          "sync_shopping_entity": "Optional: the to-do list you open at the store. Items checked there are checked here too."
         }
       }
     }

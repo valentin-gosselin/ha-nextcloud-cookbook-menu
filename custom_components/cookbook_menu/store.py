@@ -57,6 +57,8 @@ class DonneesPlanificateur:
     placard_epuise: dict[str, str] = field(default_factory=dict)
     # Plats passés : {day, recipe_id, summary, servings}.
     historique: list[dict[str, Any]] = field(default_factory=list)
+    # Synchronisation : entité cible -> notre uid -> {uid cible, dernier état poussé}.
+    synchro: dict[str, dict[str, dict[str, Any]]] = field(default_factory=dict)
 
     def en_dict(self) -> dict[str, Any]:
         return {
@@ -65,6 +67,7 @@ class DonneesPlanificateur:
             "etat_courses": self.etat_courses,
             "placard_epuise": self.placard_epuise,
             "historique": self.historique,
+            "synchro": self.synchro,
         }
 
     @classmethod
@@ -77,6 +80,7 @@ class DonneesPlanificateur:
             etat_courses=dict(donnees.get("etat_courses", {})),
             placard_epuise=dict(donnees.get("placard_epuise", {})),
             historique=list(donnees.get("historique", [])),
+            synchro=dict(donnees.get("synchro", {})),
         )
 
 

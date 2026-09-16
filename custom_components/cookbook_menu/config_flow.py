@@ -15,8 +15,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    EntitySelector,
+    EntitySelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -36,6 +39,8 @@ from .const import (
     CONF_PANTRY_REMINDER,
     CONF_SCAN_INTERVAL_MINUTES,
     CONF_SERVINGS,
+    CONF_SYNC_MENU_ENTITY,
+    CONF_SYNC_SHOPPING_ENTITY,
     DEFAULT_SCAN_INTERVAL_MINUTES,
     DEFAULT_SERVINGS,
     DOMAIN,
@@ -181,6 +186,11 @@ class CookbookMenuOptionsFlow(OptionsFlowWithReload):
                 _LOGGER.debug("Catégories indisponibles pour le formulaire d'options")
         choix = sorted({*categories, *options.get(CONF_EXCLUDED_CATEGORIES, [])}, key=str.casefold)
         placard = options.get(CONF_PANTRY, list(PLACARD_PAR_DEFAUT))
+        nos_listes = [
+            e.entity_id
+            for e in er.async_entries_for_config_entry(er.async_get(self.hass), self.config_entry.entry_id)
+        ]
+        selecteur_liste = EntitySelector(EntitySelectorConfig(domain="todo", exclude_entities=nos_listes))
         choix_placard = list(dict.fromkeys([*PLACARD_PAR_DEFAUT, *placard]))
 
         schema = vol.Schema(
@@ -206,6 +216,14 @@ class CookbookMenuOptionsFlow(OptionsFlowWithReload):
                 vol.Required(
                     CONF_PANTRY_REMINDER, default=options.get(CONF_PANTRY_REMINDER, True)
                 ): BooleanSelector(),
+                vol.Optional(
+                    CONF_SYNC_MENU_ENTITY,
+                    description={"suggested_value": options.get(CONF_SYNC_MENU_ENTITY)},
+                ): selecteur_liste,
+                vol.Optional(
+                    CONF_SYNC_SHOPPING_ENTITY,
+                    description={"suggested_value": options.get(CONF_SYNC_SHOPPING_ENTITY)},
+                ): selecteur_liste,
                 vol.Required(
                     CONF_SCAN_INTERVAL_MINUTES,
                     default=options.get(CONF_SCAN_INTERVAL_MINUTES, DEFAULT_SCAN_INTERVAL_MINUTES),

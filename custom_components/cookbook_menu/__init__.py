@@ -18,6 +18,7 @@ from .coordinator import CookbookCoordinator
 from .planner import Planificateur
 from .services import async_setup_services
 from .store import StockagePlanificateur
+from .sync import Synchroniseur
 
 PLATFORMS: list[Platform] = [Platform.TODO]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -30,6 +31,7 @@ class CookbookMenuData:
     client: CookbookClient
     coordinator: CookbookCoordinator
     planner: Planificateur
+    sync: Synchroniseur
 
 
 type CookbookMenuConfigEntry = ConfigEntry[CookbookMenuData]
@@ -69,15 +71,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry)
         raise
     stockage = StockagePlanificateur(hass, entry.entry_id)
     await stockage.async_charger()
+    planificateur = Planificateur(hass, coordinator, stockage)
     entry.runtime_data = CookbookMenuData(
-        client=client, coordinator=coordinator, planner=Planificateur(hass, coordinator, stockage)
+        client=client, coordinator=coordinator, planner=planificateur, sync=Synchroniseur(hass, planificateur)
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.runtime_data.sync.async_demarrer()
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry) -> bool:
     """Décharge une entrée et ferme sa session HTTP."""
+    entry.runtime_data.sync.async_arreter()
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):  # pragma: no cover
         return False
     await entry.runtime_data.client.async_close()
