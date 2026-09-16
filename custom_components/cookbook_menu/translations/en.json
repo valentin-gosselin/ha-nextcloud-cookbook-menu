@@ -87,12 +87,18 @@
     },
     "recipe_not_found": {
       "message": "Recipe {recipe} not found in Nextcloud Cookbook"
+    },
+    "computed_item_readonly": {
+      "message": "This item is computed from the menu: only its status can be changed. Edit the menu or add a separate item instead."
     }
   },
   "entity": {
     "todo": {
       "menu": {
         "name": "Weekly menu"
+      },
+      "shopping": {
+        "name": "Shopping list"
       }
     }
   }

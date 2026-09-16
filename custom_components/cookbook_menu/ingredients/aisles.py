@@ -1,0 +1,251 @@
+"""Rayon d'un produit, pour lire la liste de courses dans l'ordre de passage en magasin."""
+
+from __future__ import annotations
+
+from enum import IntEnum
+
+
+class Rayon(IntEnum):
+    """Rayons dans l'ordre de passage le plus courant (surgelés vers la fin pour le froid)."""
+
+    FRUITS_LEGUMES = 1
+    CREMERIE = 2
+    BOUCHERIE_POISSON = 3
+    BOULANGERIE = 4
+    EPICERIE_SALEE = 5
+    EPICERIE_SUCREE = 6
+    SURGELES = 7
+    BOISSONS = 8
+    MAISON = 9
+    AUTRE = 10
+
+
+# Règles évaluées dans l'ordre : préfixes multi-mots d'abord, puis premier mot de la clé.
+_PREFIXES: list[tuple[str, Rayon]] = [
+    ("beurre cacahuete", Rayon.EPICERIE_SALEE),
+    ("lait coco", Rayon.EPICERIE_SALEE),
+    ("lait amande", Rayon.EPICERIE_SALEE),
+    ("lait vegetal", Rayon.EPICERIE_SALEE),
+    ("pate arachide", Rayon.EPICERIE_SALEE),
+    ("pate curry", Rayon.EPICERIE_SALEE),
+    ("pate feuilletee", Rayon.CREMERIE),
+    ("pate brisee", Rayon.CREMERIE),
+    ("pate sablee", Rayon.CREMERIE),
+    ("jus citron", Rayon.FRUITS_LEGUMES),
+    ("jus saumon", Rayon.EPICERIE_SALEE),
+    ("glace", Rayon.SURGELES),
+    ("fondant poireau", Rayon.SURGELES),
+    ("eau", Rayon.BOISSONS),
+    ("chair saucisse", Rayon.BOUCHERIE_POISSON),
+    ("blanc poulet", Rayon.BOUCHERIE_POISSON),
+    ("blanc dinde", Rayon.BOUCHERIE_POISSON),
+    ("poudre cacao", Rayon.EPICERIE_SUCREE),
+    ("poudre noisette", Rayon.EPICERIE_SUCREE),
+    ("amande poudre", Rayon.EPICERIE_SUCREE),
+    ("grain cafe", Rayon.EPICERIE_SUCREE),
+    ("cafe", Rayon.EPICERIE_SUCREE),
+    ("tomate conserve", Rayon.EPICERIE_SALEE),
+    ("crepe dentelle", Rayon.EPICERIE_SUCREE),
+    ("pain mie", Rayon.BOULANGERIE),
+    ("pepite chocolat", Rayon.EPICERIE_SUCREE),
+    ("vermicelle chocolat", Rayon.EPICERIE_SUCREE),
+    ("mini mars", Rayon.EPICERIE_SUCREE),
+    ("nugget", Rayon.SURGELES),
+]
+
+_PREMIER_MOT: dict[Rayon, set[str]] = {
+    Rayon.FRUITS_LEGUMES: {
+        "ail",
+        "aubergine",
+        "avocat",
+        "banane",
+        "butternut",
+        "carotte",
+        "champignon",
+        "chou",
+        "ciboulette",
+        "citron",
+        "concombre",
+        "coriandre",
+        "courgette",
+        "echalote",
+        "endive",
+        "fenouil",
+        "fraise",
+        "gingembre",
+        "menthe",
+        "navet",
+        "oignon",
+        "orange",
+        "pamplemousse",
+        "persil",
+        "piment",
+        "poireau",
+        "poivron",
+        "pomme",
+        "potimarron",
+        "radis",
+        "salade",
+        "thym",
+        "tomate",
+        "vert",
+        "legume",
+        "laurier",
+        "bouquet",
+        "basilic",
+        "romarin",
+        "estragon",
+        "aneth",
+        "celeri",
+        "brocoli",
+        "epinard",
+        "haricot vert",
+        "poire",
+        "raisin",
+        "kiwi",
+        "mangue",
+        "ananas",
+        "patate",
+        "betterave",
+        "chataigne",
+        "courge",
+        "zeste",
+    },
+    Rayon.CREMERIE: {
+        "beurre",
+        "blanc",
+        "comte",
+        "creme",
+        "emmental",
+        "feta",
+        "fromage",
+        "gruyere",
+        "jaune",
+        "lait",
+        "mascarpone",
+        "oeuf",
+        "parmesan",
+        "reblochon",
+        "yaourt",
+        "mozzarella",
+        "chevre",
+        "ricotta",
+        "raclette",
+    },
+    Rayon.BOUCHERIE_POISSON: {
+        "aiguillette",
+        "boeuf",
+        "chorizo",
+        "crevette",
+        "escalope",
+        "jambon",
+        "lardon",
+        "merguez",
+        "pilon",
+        "poulet",
+        "saucisse",
+        "saumon",
+        "steak",
+        "thon",
+        "viande",
+        "dinde",
+        "porc",
+        "veau",
+        "agneau",
+        "cabillaud",
+        "lardons",
+        "canard",
+    },
+    Rayon.BOULANGERIE: {"brioche", "pain", "baguette", "biscotte", "tortillas", "tortilla", "wrap"},
+    Rayon.EPICERIE_SALEE: {
+        "bouillon",
+        "boulgour",
+        "capre",
+        "chapelure",
+        "concentre",
+        "cornichon",
+        "coulis",
+        "couscous",
+        "cumin",
+        "curcuma",
+        "curry",
+        "epice",
+        "haricot",
+        "harissa",
+        "herbe",
+        "huile",
+        "lasagne",
+        "lentille",
+        "mayonnaise",
+        "moutarde",
+        "muscade",
+        "olive",
+        "origan",
+        "paprika",
+        "pistil",
+        "pois",
+        "poivre",
+        "puree",
+        "quatre",
+        "ramen",
+        "riz",
+        "safran",
+        "sauce",
+        "sel",
+        "tabasco",
+        "vinaigre",
+        "crouton",
+        "fecule",
+        "pate",
+        "noix",
+        "levure",
+        "cannelle",
+        "cacahuete",
+        "noisette",
+        "semoule",
+        "farine",
+    },
+    Rayon.EPICERIE_SUCREE: {
+        "boudoir",
+        "cassonade",
+        "chocolat",
+        "cocktail",
+        "macaron",
+        "miel",
+        "pralin",
+        "pralinoise",
+        "sucre",
+        "raisin sec",
+        "confiture",
+        "biscuit",
+        "grenadine",
+    },
+    Rayon.BOISSONS: {
+        "alcool",
+        "aperol",
+        "jus",
+        "kirsch",
+        "prosecco",
+        "pur",
+        "vin",
+        "vodka",
+        "biere",
+        "cidre",
+    },
+    Rayon.SURGELES: {"glacon"},
+}
+
+_INDEX_PREMIER_MOT = {mot: rayon for rayon, mots in _PREMIER_MOT.items() for mot in mots}
+
+
+def rayon(cle: str) -> Rayon:
+    """Rayon d'une clé produit (voir `normalize.cle`)."""
+    for prefixe, rayon_prefixe in _PREFIXES:
+        if cle == prefixe or cle.startswith(prefixe + " "):
+            return rayon_prefixe
+    mots = cle.split()
+    if len(mots) >= 2 and f"{mots[0]} {mots[1]}" in _INDEX_PREMIER_MOT:
+        return _INDEX_PREMIER_MOT[f"{mots[0]} {mots[1]}"]
+    if mots and mots[0] in _INDEX_PREMIER_MOT:
+        return _INDEX_PREMIER_MOT[mots[0]]
+    return Rayon.AUTRE

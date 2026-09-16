@@ -87,12 +87,18 @@
     },
     "recipe_not_found": {
       "message": "Recette {recipe} introuvable dans Nextcloud Cookbook"
+    },
+    "computed_item_readonly": {
+      "message": "Cette ligne est calculée depuis le menu : seul son cochage est modifiable. Modifiez le menu ou ajoutez une ligne à part."
     }
   },
   "entity": {
     "todo": {
       "menu": {
         "name": "Menu de la semaine"
+      },
+      "shopping": {
+        "name": "Liste de courses"
       }
     }
   }

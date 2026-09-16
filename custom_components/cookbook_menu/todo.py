@@ -1,4 +1,4 @@
-"""Listes todo : « Menu de la semaine » (et « Liste de courses » à partir de la story 2.2)."""
+"""Listes todo : « Menu de la semaine » et « Liste de courses »."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Crée les listes d'une entrée."""
-    async_add_entities([MenuTodoListEntity(entry)])
+    async_add_entities([MenuTodoListEntity(entry), CoursesTodoListEntity(entry)])
 
 
 class CookbookMenuEntity(TodoListEntity):
@@ -146,3 +146,44 @@ class MenuTodoListEntity(CookbookMenuEntity):
 
     async def async_move_todo_item(self, uid: str, previous_uid: str | None = None) -> None:
         self.planificateur.async_deplacer_plat(uid, previous_uid)
+
+
+class CoursesTodoListEntity(CookbookMenuEntity):
+    """Liste de courses : produits calculés depuis le menu, puis lignes ajoutées à la main."""
+
+    _attr_supported_features = (
+        TodoListEntityFeature.CREATE_TODO_ITEM
+        | TodoListEntityFeature.UPDATE_TODO_ITEM
+        | TodoListEntityFeature.DELETE_TODO_ITEM
+        | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
+    )
+
+    def __init__(self, entry: CookbookMenuConfigEntry) -> None:
+        super().__init__(entry, "shopping")
+
+    def _elements(self) -> list[TodoItem]:
+        return [
+            TodoItem(
+                uid=ligne.uid,
+                summary=ligne.libelle,
+                status=TodoItemStatus.COMPLETED if ligne.fait else TodoItemStatus.NEEDS_ACTION,
+                description=ligne.description,
+            )
+            for ligne in self.planificateur.liste_de_courses()
+        ]
+
+    async def async_create_todo_item(self, item: TodoItem) -> None:
+        self.planificateur.async_ajouter_course(
+            item.summary or "", item.description, fait=item.status == TodoItemStatus.COMPLETED
+        )
+
+    async def async_update_todo_item(self, item: TodoItem) -> None:
+        self.planificateur.async_modifier_course(
+            item.uid or "",
+            texte=item.summary,
+            description=item.description,
+            fait=item.status == TodoItemStatus.COMPLETED,
+        )
+
+    async def async_delete_todo_items(self, uids: list[str]) -> None:
+        self.planificateur.async_supprimer_courses(uids)
