@@ -1,0 +1,3676 @@
+{
+ "6 cl Prosecco": [
+  {
+   "nom": "Prosecco",
+   "quantite": 6.0,
+   "unite": "cl",
+   "cle": "prosecco"
+  }
+ ],
+ "4 cl Aperol": [
+  {
+   "nom": "Aperol",
+   "quantite": 4.0,
+   "unite": "cl",
+   "cle": "aperol"
+  }
+ ],
+ "2 cl Eau gazeuse": [
+  {
+   "nom": "Eau gazeuse",
+   "quantite": 2.0,
+   "unite": "cl",
+   "cle": "eau gazeuse"
+  }
+ ],
+ "1 Rondelle Orange(s)": [
+  {
+   "nom": "Orange",
+   "quantite": 1.0,
+   "unite": "rondelle",
+   "cle": "orange"
+  }
+ ],
+ "2 Glaçon(s)": [
+  {
+   "nom": "Glaçon",
+   "quantite": 2.0,
+   "cle": "glacon"
+  }
+ ],
+ "180g de farine de blé mi-blanche": [
+  {
+   "nom": "Farine de blé mi-blanche",
+   "quantite": 180.0,
+   "unite": "g",
+   "cle": "farine ble mi blanche"
+  }
+ ],
+ "2 bananes mûres": [
+  {
+   "nom": "Bananes mûres",
+   "quantite": 2.0,
+   "cle": "banane"
+  }
+ ],
+ "2 oeufs entiers": [
+  {
+   "nom": "Oeufs entiers",
+   "quantite": 2.0,
+   "cle": "oeuf"
+  }
+ ],
+ "100g de pépites de chocolat noir": [
+  {
+   "nom": "Pépites de chocolat noir",
+   "quantite": 100.0,
+   "unite": "g",
+   "cle": "pepite chocolat noir"
+  }
+ ],
+ "50ml de lait d'amande": [
+  {
+   "nom": "Lait d'amande",
+   "quantite": 50.0,
+   "unite": "ml",
+   "cle": "lait amande"
+  }
+ ],
+ "6g de levure chimique": [
+  {
+   "nom": "Levure chimique",
+   "quantite": 6.0,
+   "unite": "g",
+   "cle": "levure chimique"
+  }
+ ],
+ "750 g de bœuf (macreuse ou rond de cuisse)": [
+  {
+   "nom": "Bœuf",
+   "quantite": 750.0,
+   "unite": "g",
+   "cle": "boeuf"
+  }
+ ],
+ "150 g d'oignons": [
+  {
+   "nom": "Oignons",
+   "quantite": 150.0,
+   "unite": "g",
+   "cle": "oignon"
+  }
+ ],
+ "5 g d'ail": [
+  {
+   "nom": "Ail",
+   "quantite": 5.0,
+   "unite": "g",
+   "cle": "ail"
+  }
+ ],
+ "100 g de tomates": [
+  {
+   "nom": "Tomates",
+   "quantite": 100.0,
+   "unite": "g",
+   "cle": "tomate"
+  }
+ ],
+ "1 branche de thym": [
+  {
+   "nom": "Thym",
+   "quantite": 1.0,
+   "unite": "branche",
+   "cle": "thym"
+  }
+ ],
+ "2 feuilles de quatre-épices ou 1 pincée": [
+  {
+   "nom": "Quatre-épices",
+   "quantite": 2.0,
+   "unite": "feuille",
+   "cle": "quatre epice"
+  }
+ ],
+ "Sel, poivre": [
+  {
+   "nom": "Sel",
+   "cle": "sel"
+  },
+  {
+   "nom": "Poivre",
+   "cle": "poivre"
+  }
+ ],
+ "2 c. à soupe d'huile": [
+  {
+   "nom": "Huile",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "huile"
+  }
+ ],
+ "2 c. à soupe d'huile de sésame (non grillé)": [
+  {
+   "nom": "Huile de sésame",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "huile sesame"
+  }
+ ],
+ "450g Boeuf haché, maigre": [
+  {
+   "nom": "Boeuf haché",
+   "quantite": 450.0,
+   "unite": "g",
+   "cle": "viande hachee"
+  }
+ ],
+ "1 c. à soupe de gingembre, haché": [
+  {
+   "nom": "Gingembre",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "gingembre"
+  }
+ ],
+ "60 ml de cassonade": [
+  {
+   "nom": "Cassonade",
+   "quantite": 60.0,
+   "unite": "ml",
+   "cle": "cassonade"
+  }
+ ],
+ "60 ml de sauce soya, réduite en sodium": [
+  {
+   "nom": "Sauce soya",
+   "quantite": 60.0,
+   "unite": "ml",
+   "cle": "sauce soja"
+  }
+ ],
+ "10 ml, haché d’ ail": [
+  {
+   "nom": "Ail",
+   "quantite": 10.0,
+   "unite": "ml",
+   "cle": "ail"
+  }
+ ],
+ "3 émincés oignons verts": [
+  {
+   "nom": "Oignons verts",
+   "quantite": 3.0,
+   "cle": "oignon vert"
+  }
+ ],
+ "1 haché piment thaï (facultatif)": [
+  {
+   "nom": "Piment thaï",
+   "quantite": 1.0,
+   "cle": "piment thai",
+   "facultatif": true
+  }
+ ],
+ "1.250 kg de poulet découpé": [
+  {
+   "nom": "Poulet découpé",
+   "quantite": 1.25,
+   "unite": "kg",
+   "cle": "poulet"
+  }
+ ],
+ "200 g d’oignons": [
+  {
+   "nom": "Oignons",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "oignon"
+  }
+ ],
+ "6 gousses d’ail": [
+  {
+   "nom": "Ail",
+   "quantite": 6.0,
+   "unite": "gousse",
+   "cle": "ail"
+  }
+ ],
+ "1/2 c. à café de safran": [
+  {
+   "nom": "Safran",
+   "quantite": 0.5,
+   "unite": "c. à c.",
+   "cle": "safran"
+  }
+ ],
+ "200 g de tomates": [
+  {
+   "nom": "Tomates",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "tomate"
+  }
+ ],
+ "1 morceau de gingembre": [
+  {
+   "nom": "Gingembre",
+   "quantite": 1.0,
+   "unite": "morceau",
+   "cle": "gingembre"
+  }
+ ],
+ "1 feuille ou pincée de quatre-épices": [
+  {
+   "nom": "Quatre-épices",
+   "quantite": 1.0,
+   "unite": "feuille",
+   "cle": "quatre epice"
+  }
+ ],
+ "4 c. à soupe d’huile": [
+  {
+   "nom": "Huile",
+   "quantite": 4.0,
+   "unite": "c. à s.",
+   "cle": "huile"
+  }
+ ],
+ "1 c. à café de sel": [
+  {
+   "nom": "Sel",
+   "quantite": 1.0,
+   "unite": "c. à c.",
+   "cle": "sel"
+  }
+ ],
+ "5 grains de poivre gris": [
+  {
+   "nom": "Poivre gris",
+   "quantite": 5.0,
+   "unite": "grain",
+   "cle": "poivre gris"
+  }
+ ],
+ "300 g haricot rouge": [
+  {
+   "nom": "Haricot rouge",
+   "quantite": 300.0,
+   "unite": "g",
+   "cle": "haricot rouge"
+  }
+ ],
+ "2 oignon": [
+  {
+   "nom": "Oignon",
+   "quantite": 2.0,
+   "cle": "oignon"
+  }
+ ],
+ "600 g boeuf hâchée": [
+  {
+   "nom": "Boeuf hâchée",
+   "quantite": 600.0,
+   "unite": "g",
+   "cle": "viande hachee"
+  }
+ ],
+ "2 tomate (ou une boîte de tomates pelées)": [
+  {
+   "nom": "Tomate",
+   "quantite": 2.0,
+   "cle": "tomate"
+  }
+ ],
+ "2 gousse ail": [
+  {
+   "nom": "Ail",
+   "quantite": 2.0,
+   "unite": "gousse",
+   "cle": "ail"
+  }
+ ],
+ "½ c à c piment": [
+  {
+   "nom": "Piment",
+   "quantite": 0.5,
+   "unite": "c. à c.",
+   "cle": "piment"
+  }
+ ],
+ "25 cl jus de tomate": [
+  {
+   "nom": "Jus de tomate",
+   "quantite": 25.0,
+   "unite": "cl",
+   "cle": "jus tomate"
+  }
+ ],
+ "2 c à c cumin": [
+  {
+   "nom": "Cumin",
+   "quantite": 2.0,
+   "unite": "c. à c.",
+   "cle": "cumin"
+  }
+ ],
+ "1 c à s origan séché": [
+  {
+   "nom": "Origan séché",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "origan seche"
+  }
+ ],
+ "tabasco": [
+  {
+   "nom": "Tabasco",
+   "cle": "tabasco"
+  }
+ ],
+ "huile d'olive": [
+  {
+   "nom": "Huile d'olive",
+   "cle": "huile olive"
+  }
+ ],
+ "sel": [
+  {
+   "nom": "Sel",
+   "cle": "sel"
+  }
+ ],
+ "poivre": [
+  {
+   "nom": "Poivre",
+   "cle": "poivre"
+  }
+ ],
+ "1 dose de farine": [
+  {
+   "nom": "Farine",
+   "quantite": 1.0,
+   "unite": "dose",
+   "cle": "farine"
+  }
+ ],
+ "5 doses d’eau": [
+  {
+   "nom": "Eau",
+   "quantite": 5.0,
+   "unite": "dose",
+   "cle": "eau"
+  }
+ ],
+ "160 gr de beurre demi-sel fondu": [
+  {
+   "nom": "Beurre demi-sel fondu",
+   "quantite": 160.0,
+   "unite": "g",
+   "cle": "beurre demi sel"
+  }
+ ],
+ "270 gr de sucre roux": [
+  {
+   "nom": "Sucre roux",
+   "quantite": 270.0,
+   "unite": "g",
+   "cle": "sucre roux"
+  }
+ ],
+ "2 oeufs": [
+  {
+   "nom": "Oeufs",
+   "quantite": 2.0,
+   "cle": "oeuf"
+  }
+ ],
+ "270 gr de farine": [
+  {
+   "nom": "Farine",
+   "quantite": 270.0,
+   "unite": "g",
+   "cle": "farine"
+  }
+ ],
+ "1 sachet de levure chimique": [
+  {
+   "nom": "Levure chimique",
+   "quantite": 1.0,
+   "unite": "sachet",
+   "cle": "levure chimique"
+  }
+ ],
+ "8 mini mars": [
+  {
+   "nom": "Mini mars",
+   "quantite": 8.0,
+   "cle": "mini mars"
+  }
+ ],
+ "200 gr de pépites de chocolat noir": [
+  {
+   "nom": "Pépites de chocolat noir",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "pepite chocolat noir"
+  }
+ ],
+ "1 Œuf": [
+  {
+   "nom": "Œuf",
+   "quantite": 1.0,
+   "cle": "oeuf"
+  }
+ ],
+ "60 g Sucre (en poudre)": [
+  {
+   "nom": "Sucre",
+   "quantite": 60.0,
+   "unite": "g",
+   "cle": "sucre"
+  }
+ ],
+ "200 g Farine de blé": [
+  {
+   "nom": "Farine de blé",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "farine ble"
+  }
+ ],
+ "200 g Chocolat à cuire": [
+  {
+   "nom": "Chocolat à cuire",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "chocolat cuire"
+  }
+ ],
+ "60 g Poudre d'amande": [
+  {
+   "nom": "Poudre d'amande",
+   "quantite": 60.0,
+   "unite": "g",
+   "cle": "amande poudre"
+  }
+ ],
+ "150 g Beurre demi-sel": [
+  {
+   "nom": "Beurre demi-sel",
+   "quantite": 150.0,
+   "unite": "g",
+   "cle": "beurre demi sel"
+  }
+ ],
+ "1 sac. Levure chimique": [
+  {
+   "nom": "Levure chimique",
+   "quantite": 1.0,
+   "unite": "sachet",
+   "cle": "levure chimique"
+  }
+ ],
+ "40 g Sucre de canne": [
+  {
+   "nom": "Sucre de canne",
+   "quantite": 40.0,
+   "unite": "g",
+   "cle": "sucre canne"
+  }
+ ],
+ "2 escalope de dinde": [
+  {
+   "nom": "Escalope de dinde",
+   "quantite": 2.0,
+   "cle": "escalope dinde"
+  }
+ ],
+ "2 tranche jambon": [
+  {
+   "nom": "Jambon",
+   "quantite": 2.0,
+   "unite": "tranche",
+   "cle": "jambon"
+  }
+ ],
+ "2 tranche emmental": [
+  {
+   "nom": "Emmental",
+   "quantite": 2.0,
+   "unite": "tranche",
+   "cle": "emmental"
+  }
+ ],
+ "1 oeuf": [
+  {
+   "nom": "Oeuf",
+   "quantite": 1.0,
+   "cle": "oeuf"
+  }
+ ],
+ "farine": [
+  {
+   "nom": "Farine",
+   "cle": "farine"
+  }
+ ],
+ "chapelure": [
+  {
+   "nom": "Chapelure",
+   "cle": "chapelure"
+  }
+ ],
+ "beurre": [
+  {
+   "nom": "Beurre",
+   "cle": "beurre"
+  }
+ ],
+ "12 merguez": [
+  {
+   "nom": "Merguez",
+   "quantite": 12.0,
+   "cle": "merguez"
+  }
+ ],
+ "1 c.à.c de harissa": [
+  {
+   "nom": "Harissa",
+   "quantite": 1.0,
+   "unite": "c. à c.",
+   "cle": "harissa"
+  }
+ ],
+ "2 cubes de bouillon de boeuf": [
+  {
+   "nom": "Bouillon de boeuf",
+   "quantite": 2.0,
+   "unite": "cube",
+   "cle": "bouillon boeuf"
+  }
+ ],
+ "3 tomates": [
+  {
+   "nom": "Tomates",
+   "quantite": 3.0,
+   "cle": "tomate"
+  }
+ ],
+ "5 carottes": [
+  {
+   "nom": "Carottes",
+   "quantite": 5.0,
+   "cle": "carotte"
+  }
+ ],
+ "2 courgettes": [
+  {
+   "nom": "Courgettes",
+   "quantite": 2.0,
+   "cle": "courgette"
+  }
+ ],
+ "400 g de pois chiches": [
+  {
+   "nom": "Pois chiches",
+   "quantite": 400.0,
+   "unite": "g",
+   "cle": "pois chiche"
+  }
+ ],
+ "8 pilons de poulet (fermier de préférence)": [
+  {
+   "nom": "Pilons de poulet",
+   "quantite": 8.0,
+   "cle": "pilon poulet"
+  }
+ ],
+ "2 boîtes de concentré de tomates": [
+  {
+   "nom": "Concentré de tomates",
+   "quantite": 2.0,
+   "unite": "boîte",
+   "cle": "concentre tomate"
+  }
+ ],
+ "3 c.à.s d'épices à couscous": [
+  {
+   "nom": "Épices à couscous",
+   "quantite": 3.0,
+   "unite": "c. à s.",
+   "cle": "epice couscous"
+  }
+ ],
+ "10 navets": [
+  {
+   "nom": "Navets",
+   "quantite": 10.0,
+   "cle": "navet"
+  }
+ ],
+ "1 kg de pomme": [
+  {
+   "nom": "Pomme",
+   "quantite": 1.0,
+   "unite": "kg",
+   "cle": "pomme"
+  }
+ ],
+ "150 g de farine": [
+  {
+   "nom": "Farine",
+   "quantite": 150.0,
+   "unite": "g",
+   "cle": "farine"
+  }
+ ],
+ "75 g de beurre + une noisette pour beurrer le plat": [
+  {
+   "nom": "Beurre",
+   "quantite": 75.0,
+   "unite": "g",
+   "cle": "beurre"
+  }
+ ],
+ "250 g de sucre semoule": [
+  {
+   "nom": "Sucre semoule",
+   "quantite": 250.0,
+   "unite": "g",
+   "cle": "sucre"
+  }
+ ],
+ "1 cuillères à café rases de cannelle en poudre": [
+  {
+   "nom": "Cannelle en poudre",
+   "quantite": 1.0,
+   "unite": "c. à c.",
+   "cle": "cannelle poudre"
+  }
+ ],
+ "l de glace vanille": [
+  {
+   "nom": "Glace vanille",
+   "unite": "l",
+   "cle": "glace vanille"
+  }
+ ],
+ "250g de farine tamisée": [
+  {
+   "nom": "Farine tamisée",
+   "quantite": 250.0,
+   "unite": "g",
+   "cle": "farine"
+  }
+ ],
+ "500ml de lait": [
+  {
+   "nom": "Lait",
+   "quantite": 500.0,
+   "unite": "ml",
+   "cle": "lait"
+  }
+ ],
+ "4 œufs": [
+  {
+   "nom": "Œufs",
+   "quantite": 4.0,
+   "cle": "oeuf"
+  }
+ ],
+ "50g de beurre": [
+  {
+   "nom": "Beurre",
+   "quantite": 50.0,
+   "unite": "g",
+   "cle": "beurre"
+  }
+ ],
+ "30g de sucre en poudre": [
+  {
+   "nom": "Sucre en poudre",
+   "quantite": 30.0,
+   "unite": "g",
+   "cle": "sucre"
+  }
+ ],
+ "1 pincée de sel": [
+  {
+   "nom": "Sel",
+   "quantite": 1.0,
+   "unite": "pincée",
+   "cle": "sel"
+  }
+ ],
+ "1 sachet de sucre vanillé": [
+  {
+   "nom": "Sucre vanillé",
+   "quantite": 1.0,
+   "unite": "sachet",
+   "cle": "sucre vanille"
+  }
+ ],
+ "1 potimarron": [
+  {
+   "nom": "Potimarron",
+   "quantite": 1.0,
+   "cle": "potimarron"
+  }
+ ],
+ "2 butternuts": [
+  {
+   "nom": "Butternuts",
+   "quantite": 2.0,
+   "cle": "butternut"
+  }
+ ],
+ "2 oignons": [
+  {
+   "nom": "Oignons",
+   "quantite": 2.0,
+   "cle": "oignon"
+  }
+ ],
+ "4 gousses d'ail": [
+  {
+   "nom": "Ail",
+   "quantite": 4.0,
+   "unite": "gousse",
+   "cle": "ail"
+  }
+ ],
+ "1 morceau de gingembre frais (environ 2 cm)": [
+  {
+   "nom": "Gingembre frais",
+   "quantite": 1.0,
+   "unite": "morceau",
+   "cle": "gingembre"
+  }
+ ],
+ "1 boîte de lait de coco (400 ml)": [
+  {
+   "nom": "Lait de coco",
+   "quantite": 1.0,
+   "unite": "boîte",
+   "cle": "lait coco"
+  }
+ ],
+ "2 à 3 cuillères à soupe de pâte de curry rouge ou jaune": [
+  {
+   "nom": "Pâte de curry rouge",
+   "quantite": 2.0,
+   "quantite_max": 3.0,
+   "unite": "c. à s.",
+   "cle": "pate curry rouge"
+  }
+ ],
+ "2 cuillères à soupe d'huile de coco ou d'huile d'olive": [
+  {
+   "nom": "Huile de coco",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "huile coco"
+  }
+ ],
+ "Sel et poivre": [
+  {
+   "nom": "Sel",
+   "cle": "sel"
+  },
+  {
+   "nom": "Poivre",
+   "cle": "poivre"
+  }
+ ],
+ "Coriandre fraîche (facultatif)": [
+  {
+   "nom": "Coriandre fraîche",
+   "cle": "coriandre",
+   "facultatif": true
+  }
+ ],
+ "Légumes supplémentaires si désiré (comme des carottes, des poivrons, des épinards, etc.)": [
+  {
+   "nom": "Légumes supplémentaires",
+   "cle": "legume",
+   "facultatif": true
+  }
+ ],
+ "250 g de pois chiches": [
+  {
+   "nom": "Pois chiches",
+   "quantite": 250.0,
+   "unite": "g",
+   "cle": "pois chiche"
+  }
+ ],
+ "1 oignon": [
+  {
+   "nom": "Oignon",
+   "quantite": 1.0,
+   "cle": "oignon"
+  }
+ ],
+ "1 gousse d'ail": [
+  {
+   "nom": "Ail",
+   "quantite": 1.0,
+   "unite": "gousse",
+   "cle": "ail"
+  }
+ ],
+ "3 cc de curry": [
+  {
+   "nom": "Curry",
+   "quantite": 3.0,
+   "unite": "c. à c.",
+   "cle": "curry"
+  }
+ ],
+ "2 cs de beurre de cacahuète": [
+  {
+   "nom": "Beurre de cacahuète",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "beurre cacahuete"
+  }
+ ],
+ "20 cl de lait de coco": [
+  {
+   "nom": "Lait de coco",
+   "quantite": 20.0,
+   "unite": "cl",
+   "cle": "lait coco"
+  }
+ ],
+ "20 cl de purée de tomate": [
+  {
+   "nom": "Purée de tomate",
+   "quantite": 20.0,
+   "unite": "cl",
+   "cle": "puree tomate"
+  }
+ ],
+ "1 cc de concentré de tomate": [
+  {
+   "nom": "Concentré de tomate",
+   "quantite": 1.0,
+   "unite": "c. à c.",
+   "cle": "concentre tomate"
+  }
+ ],
+ "Cacahuètes": [
+  {
+   "nom": "Cacahuètes",
+   "cle": "cacahuete"
+  }
+ ],
+ "Coriandre fraîche": [
+  {
+   "nom": "Coriandre fraîche",
+   "cle": "coriandre"
+  }
+ ],
+ "Huile d'olive, sel, poivre": [
+  {
+   "nom": "Huile d'olive",
+   "cle": "huile olive"
+  },
+  {
+   "nom": "Sel",
+   "cle": "sel"
+  },
+  {
+   "nom": "Poivre",
+   "cle": "poivre"
+  }
+ ],
+ "30 cl de lentilles corail": [
+  {
+   "nom": "Lentilles corail",
+   "quantite": 30.0,
+   "unite": "cl",
+   "cle": "lentille corail"
+  }
+ ],
+ "5 tomates": [
+  {
+   "nom": "Tomates",
+   "quantite": 5.0,
+   "cle": "tomate"
+  }
+ ],
+ "4 carottes": [
+  {
+   "nom": "Carottes",
+   "quantite": 4.0,
+   "cle": "carotte"
+  }
+ ],
+ "1 c.à.s de curcuma": [
+  {
+   "nom": "Curcuma",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "curcuma"
+  }
+ ],
+ "1/2 c.à.c de cumin": [
+  {
+   "nom": "Cumin",
+   "quantite": 0.5,
+   "unite": "c. à c.",
+   "cle": "cumin"
+  }
+ ],
+ "1/2 c.à.c de gingembre": [
+  {
+   "nom": "Gingembre",
+   "quantite": 0.5,
+   "unite": "c. à c.",
+   "cle": "gingembre"
+  }
+ ],
+ "1 c.à.s d'huile de tournesol (pour la cuisson)": [
+  {
+   "nom": "Huile de tournesol",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "huile tournesol"
+  }
+ ],
+ "25 cl de lait de coco (soit une petite brique)": [
+  {
+   "nom": "Lait de coco",
+   "quantite": 25.0,
+   "unite": "cl",
+   "cle": "lait coco"
+  }
+ ],
+ "1 gousse d'ail hâché": [
+  {
+   "nom": "Ail hâché",
+   "quantite": 1.0,
+   "unite": "gousse",
+   "cle": "ail"
+  }
+ ],
+ "1 c.à.s de concentré de tomates": [
+  {
+   "nom": "Concentré de tomates",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "concentre tomate"
+  }
+ ],
+ "120 g beurre noisette": [
+  {
+   "nom": "Beurre noisette",
+   "quantite": 120.0,
+   "unite": "g",
+   "cle": "beurre noisette"
+  }
+ ],
+ "145 g sucre": [
+  {
+   "nom": "Sucre",
+   "quantite": 145.0,
+   "unite": "g",
+   "cle": "sucre"
+  }
+ ],
+ "75 g poudre d'amande": [
+  {
+   "nom": "Poudre d'amande",
+   "quantite": 75.0,
+   "unite": "g",
+   "cle": "amande poudre"
+  }
+ ],
+ "115 g blanc d'oeuf": [
+  {
+   "nom": "Blanc d'oeuf",
+   "quantite": 115.0,
+   "unite": "g",
+   "cle": "blanc oeuf"
+  }
+ ],
+ "58 g farine": [
+  {
+   "nom": "Farine",
+   "quantite": 58.0,
+   "unite": "g",
+   "cle": "farine"
+  }
+ ],
+ "45 g vermicelles au chocolat": [
+  {
+   "nom": "Vermicelles au chocolat",
+   "quantite": 45.0,
+   "unite": "g",
+   "cle": "vermicelle chocolat"
+  }
+ ],
+ "85 g crème liquide": [
+  {
+   "nom": "Crème liquide",
+   "quantite": 85.0,
+   "unite": "g",
+   "cle": "creme liquide"
+  }
+ ],
+ "70 g chocolat": [
+  {
+   "nom": "Chocolat",
+   "quantite": 70.0,
+   "unite": "g",
+   "cle": "chocolat"
+  }
+ ],
+ "10 g beurre doux": [
+  {
+   "nom": "Beurre doux",
+   "quantite": 10.0,
+   "unite": "g",
+   "cle": "beurre"
+  }
+ ],
+ "250gr de farine ( pâte )": [
+  {
+   "nom": "Farine",
+   "quantite": 250.0,
+   "unite": "g",
+   "cle": "farine"
+  }
+ ],
+ "2.5cl d'huile neutre ( pâte )": [
+  {
+   "nom": "Huile neutre",
+   "quantite": 2.5,
+   "unite": "cl",
+   "cle": "huile"
+  }
+ ],
+ "1 pincée de sel ( pâte )": [
+  {
+   "nom": "Sel",
+   "quantite": 1.0,
+   "unite": "pincée",
+   "cle": "sel"
+  }
+ ],
+ "15cl d'eau ( pâte )": [
+  {
+   "nom": "Eau",
+   "quantite": 15.0,
+   "unite": "cl",
+   "cle": "eau"
+  }
+ ],
+ "200gr de lardons fumés ou allumettes": [
+  {
+   "nom": "Lardons fumés",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "lardon fume"
+  }
+ ],
+ "200gr de crème fraiche épaisse": [
+  {
+   "nom": "Crème fraiche épaisse",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "creme fraiche"
+  }
+ ],
+ "100gr de fromage blanc (40%)": [
+  {
+   "nom": "Fromage blanc",
+   "quantite": 100.0,
+   "unite": "g",
+   "cle": "fromage blanc"
+  }
+ ],
+ "1 pincée de muscade et poivre": [
+  {
+   "nom": "Muscade",
+   "quantite": 1.0,
+   "unite": "pincée",
+   "cle": "muscade"
+  },
+  {
+   "nom": "Poivre",
+   "quantite": 1.0,
+   "unite": "pincée",
+   "cle": "poivre"
+  }
+ ],
+ "500 g de belles fraises mûres": [
+  {
+   "nom": "Belles fraises mûres",
+   "quantite": 500.0,
+   "unite": "g",
+   "cle": "fraise"
+  }
+ ],
+ "sucre glace ou gelée de groseilles": [
+  {
+   "nom": "Sucre glace",
+   "cle": "sucre glace"
+  }
+ ],
+ "Gâteau de Savoie :": [
+  {
+   "nom": "Gâteau de Savoie",
+   "cle": "gateau savoie",
+   "section": true
+  }
+ ],
+ "4 oeufs": [
+  {
+   "nom": "Oeufs",
+   "quantite": 4.0,
+   "cle": "oeuf"
+  }
+ ],
+ "125 g de sucre en poudre": [
+  {
+   "nom": "Sucre en poudre",
+   "quantite": 125.0,
+   "unite": "g",
+   "cle": "sucre"
+  }
+ ],
+ "30 g de fécule": [
+  {
+   "nom": "Fécule",
+   "quantite": 30.0,
+   "unite": "g",
+   "cle": "fecule"
+  }
+ ],
+ "60 g de farine": [
+  {
+   "nom": "Farine",
+   "quantite": 60.0,
+   "unite": "g",
+   "cle": "farine"
+  }
+ ],
+ "Crème mousseline :": [
+  {
+   "nom": "Crème mousseline",
+   "cle": "creme mousseline",
+   "section": true
+  }
+ ],
+ "1/4 de litre de lait": [
+  {
+   "nom": "Lait",
+   "quantite": 0.25,
+   "unite": "l",
+   "cle": "lait"
+  }
+ ],
+ "2 jaunes d'oeufs": [
+  {
+   "nom": "Jaunes d'oeufs",
+   "quantite": 2.0,
+   "cle": "jaune oeuf"
+  }
+ ],
+ "4 cuil. à soupe bombées de sucre": [
+  {
+   "nom": "Sucre",
+   "quantite": 4.0,
+   "unite": "c. à s.",
+   "cle": "sucre"
+  }
+ ],
+ "1 cuil. à soupe bombée de farine": [
+  {
+   "nom": "Farine",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "farine"
+  }
+ ],
+ "125 g de beurre très mou": [
+  {
+   "nom": "Beurre très mou",
+   "quantite": 125.0,
+   "unite": "g",
+   "cle": "beurre"
+  }
+ ],
+ "2 cuil. à soupe de kirsch": [
+  {
+   "nom": "Kirsch",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "kirsch"
+  }
+ ],
+ "Sirop :": [
+  {
+   "nom": "Sirop",
+   "cle": "sirop",
+   "section": true
+  }
+ ],
+ "1/2 verre d'eau, 1/2 verre de sucre": [
+  {
+   "nom": "Eau",
+   "quantite": 0.5,
+   "unite": "verre",
+   "cle": "eau"
+  },
+  {
+   "nom": "Sucre",
+   "quantite": 0.5,
+   "unite": "verre",
+   "cle": "sucre"
+  }
+ ],
+ "1kg de pommes de terre": [
+  {
+   "nom": "Pommes de terre",
+   "quantite": 1.0,
+   "unite": "kg",
+   "cle": "pomme terre"
+  }
+ ],
+ "30g de beurre": [
+  {
+   "nom": "Beurre",
+   "quantite": 30.0,
+   "unite": "g",
+   "cle": "beurre"
+  }
+ ],
+ "50g de gruyère rapé": [
+  {
+   "nom": "Gruyère rapé",
+   "quantite": 50.0,
+   "unite": "g",
+   "cle": "gruyere"
+  }
+ ],
+ "50cl de lait": [
+  {
+   "nom": "Lait",
+   "quantite": 50.0,
+   "unite": "cl",
+   "cle": "lait"
+  }
+ ],
+ "sel, poivre": [
+  {
+   "nom": "Sel",
+   "cle": "sel"
+  },
+  {
+   "nom": "Poivre",
+   "cle": "poivre"
+  }
+ ],
+ "1 kg courgettes": [
+  {
+   "nom": "Courgettes",
+   "quantite": 1.0,
+   "unite": "kg",
+   "cle": "courgette"
+  }
+ ],
+ "250 g crème fraîche": [
+  {
+   "nom": "Crème fraîche",
+   "quantite": 250.0,
+   "unite": "g",
+   "cle": "creme fraiche"
+  }
+ ],
+ "3 oeufs": [
+  {
+   "nom": "Oeufs",
+   "quantite": 3.0,
+   "cle": "oeuf"
+  }
+ ],
+ "50 g beurre": [
+  {
+   "nom": "Beurre",
+   "quantite": 50.0,
+   "unite": "g",
+   "cle": "beurre"
+  }
+ ],
+ "100 g gruyère": [
+  {
+   "nom": "Gruyère",
+   "quantite": 100.0,
+   "unite": "g",
+   "cle": "gruyere"
+  }
+ ],
+ "muscade râpée": [
+  {
+   "nom": "Muscade râpée",
+   "cle": "muscade"
+  }
+ ],
+ "6 courgettes": [
+  {
+   "nom": "Courgettes",
+   "quantite": 6.0,
+   "cle": "courgette"
+  }
+ ],
+ "3 oignons": [
+  {
+   "nom": "Oignons",
+   "quantite": 3.0,
+   "cle": "oignon"
+  }
+ ],
+ "125 g de chair à saucisse": [
+  {
+   "nom": "Chair à saucisse",
+   "quantite": 125.0,
+   "unite": "g",
+   "cle": "chair saucisse"
+  }
+ ],
+ "1 pots de coulis de tomate": [
+  {
+   "nom": "Coulis de tomate",
+   "quantite": 1.0,
+   "unite": "pot",
+   "cle": "coulis tomate"
+  }
+ ],
+ "ail": [
+  {
+   "nom": "Ail",
+   "cle": "ail"
+  }
+ ],
+ "feuille de laurier": [
+  {
+   "nom": "Laurier",
+   "unite": "feuille",
+   "cle": "laurier"
+  }
+ ],
+ "persil": [
+  {
+   "nom": "Persil",
+   "cle": "persil"
+  }
+ ],
+ "herbes de Provence": [
+  {
+   "nom": "Herbes de Provence",
+   "cle": "herbe provence"
+  }
+ ],
+ "poivre et sel": [
+  {
+   "nom": "Poivre",
+   "cle": "poivre"
+  },
+  {
+   "nom": "Sel",
+   "cle": "sel"
+  }
+ ],
+ "fromage râpé": [
+  {
+   "nom": "Fromage râpé",
+   "cle": "fromage"
+  }
+ ],
+ "copeau de beurre": [
+  {
+   "nom": "Copeau de beurre",
+   "cle": "beurre"
+  }
+ ],
+ "huile": [
+  {
+   "nom": "Huile",
+   "cle": "huile"
+  }
+ ],
+ "600 g Emincés Fondants de Poireaux à la Crème Findus": [
+  {
+   "nom": "Emincés Fondants de Poireaux à la Crème Findus",
+   "quantite": 600.0,
+   "unite": "g",
+   "cle": "fondant poireau creme findus"
+  }
+ ],
+ "600 g Pomme(s) de terre": [
+  {
+   "nom": "Pomme de terre",
+   "quantite": 600.0,
+   "unite": "g",
+   "cle": "pomme terre"
+  }
+ ],
+ "15 cl Crème fraîche allégée": [
+  {
+   "nom": "Crème fraîche allégée",
+   "quantite": 15.0,
+   "unite": "cl",
+   "cle": "creme fraiche"
+  }
+ ],
+ "80 g Gruyère": [
+  {
+   "nom": "Gruyère",
+   "quantite": 80.0,
+   "unite": "g",
+   "cle": "gruyere"
+  }
+ ],
+ "Muscade": [
+  {
+   "nom": "Muscade",
+   "cle": "muscade"
+  }
+ ],
+ "Sel poivre": [
+  {
+   "nom": "Sel",
+   "cle": "sel"
+  },
+  {
+   "nom": "Poivre",
+   "cle": "poivre"
+  }
+ ],
+ "2 avocats bien mûrs": [
+  {
+   "nom": "Avocats bien mûrs",
+   "quantite": 2.0,
+   "cle": "avocat"
+  }
+ ],
+ "½ oignon blanc": [
+  {
+   "nom": "Oignon blanc",
+   "quantite": 0.5,
+   "cle": "oignon blanc"
+  }
+ ],
+ "1 cuillère à soupe de jus de citron vert": [
+  {
+   "nom": "Jus de citron vert",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "jus citron vert"
+  }
+ ],
+ "1 tomate moyenne": [
+  {
+   "nom": "Tomate moyenne",
+   "quantite": 1.0,
+   "cle": "tomate"
+  }
+ ],
+ "1 poignée de coriandre fraîche": [
+  {
+   "nom": "Coriandre fraîche",
+   "quantite": 1.0,
+   "unite": "poignée",
+   "cle": "coriandre"
+  }
+ ],
+ "½ piment vert (ou de la sauce piment)": [
+  {
+   "nom": "Piment vert",
+   "quantite": 0.5,
+   "cle": "piment vert"
+  }
+ ],
+ "Sel": [
+  {
+   "nom": "Sel",
+   "cle": "sel"
+  }
+ ],
+ "125g de sucre en poudre": [
+  {
+   "nom": "Sucre en poudre",
+   "quantite": 125.0,
+   "unite": "g",
+   "cle": "sucre"
+  }
+ ],
+ "30g de fécule": [
+  {
+   "nom": "Fécule",
+   "quantite": 30.0,
+   "unite": "g",
+   "cle": "fecule"
+  }
+ ],
+ "60g de farine": [
+  {
+   "nom": "Farine",
+   "quantite": 60.0,
+   "unite": "g",
+   "cle": "farine"
+  }
+ ],
+ "300 g de lentilles vertes": [
+  {
+   "nom": "Lentilles vertes",
+   "quantite": 300.0,
+   "unite": "g",
+   "cle": "lentille verte"
+  }
+ ],
+ "1.8 kg de pommes de terre à chair farineuse": [
+  {
+   "nom": "Pommes de terre à chair farineuse",
+   "quantite": 1.8,
+   "unite": "kg",
+   "cle": "pomme terre"
+  }
+ ],
+ "1 oignon rouge": [
+  {
+   "nom": "Oignon rouge",
+   "quantite": 1.0,
+   "cle": "oignon rouge"
+  }
+ ],
+ "2 c. à s. d'huile d'olive": [
+  {
+   "nom": "Huile d'olive",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "huile olive"
+  }
+ ],
+ "1 carotte": [
+  {
+   "nom": "Carotte",
+   "quantite": 1.0,
+   "cle": "carotte"
+  }
+ ],
+ "400 g de dés de tomates en conserve": [
+  {
+   "nom": "Dés de tomates en conserve",
+   "quantite": 400.0,
+   "unite": "g",
+   "cle": "tomate conserve"
+  }
+ ],
+ "3 gousses d'ail": [
+  {
+   "nom": "Ail",
+   "quantite": 3.0,
+   "unite": "gousse",
+   "cle": "ail"
+  }
+ ],
+ "20 cl de lait végétal": [
+  {
+   "nom": "Lait végétal",
+   "quantite": 20.0,
+   "unite": "cl",
+   "cle": "lait vegetal"
+  }
+ ],
+ "5 c. à s. d'huile de noisette": [
+  {
+   "nom": "Huile de noisette",
+   "quantite": 5.0,
+   "unite": "c. à s.",
+   "cle": "huile noisette"
+  }
+ ],
+ "1 feuille de laurier sauce": [
+  {
+   "nom": "Laurier sauce",
+   "quantite": 1.0,
+   "unite": "feuille",
+   "cle": "laurier sauce"
+  }
+ ],
+ "4 tranches épaisses de jambon à l'os": [
+  {
+   "nom": "Jambon à l'os",
+   "quantite": 4.0,
+   "unite": "tranche",
+   "cle": "jambon os"
+  }
+ ],
+ "30gr de beurre": [
+  {
+   "nom": "Beurre",
+   "quantite": 30.0,
+   "unite": "g",
+   "cle": "beurre"
+  }
+ ],
+ "5cl de crème fraîche": [
+  {
+   "nom": "Crème fraîche",
+   "quantite": 5.0,
+   "unite": "cl",
+   "cle": "creme fraiche"
+  }
+ ],
+ "1 cuillère à soupe de concentré de tomates": [
+  {
+   "nom": "Concentré de tomates",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "concentre tomate"
+  }
+ ],
+ "1 verre 1/2 de vin blanc sec": [
+  {
+   "nom": "Vin blanc sec",
+   "quantite": 1.5,
+   "unite": "verre",
+   "cle": "vin blanc sec"
+  }
+ ],
+ "1 échalote": [
+  {
+   "nom": "Échalote",
+   "quantite": 1.0,
+   "cle": "echalote"
+  }
+ ],
+ "1 cuillère à soupe de sucre en poudre": [
+  {
+   "nom": "Sucre en poudre",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "sucre"
+  }
+ ],
+ "4 cuillères à soupe de vinaigre d'alcool": [
+  {
+   "nom": "Vinaigre d'alcool",
+   "quantite": 4.0,
+   "unite": "c. à s.",
+   "cle": "vinaigre alcool"
+  }
+ ],
+ "1 aubergine": [
+  {
+   "nom": "Aubergine",
+   "quantite": 1.0,
+   "cle": "aubergine"
+  }
+ ],
+ "7-8 champignons": [
+  {
+   "nom": "Champignons",
+   "quantite": 7.0,
+   "quantite_max": 8.0,
+   "cle": "champignon"
+  }
+ ],
+ "lasagnes": [
+  {
+   "nom": "Lasagnes",
+   "cle": "lasagne"
+  }
+ ],
+ "60g de beurre": [
+  {
+   "nom": "Beurre",
+   "quantite": 60.0,
+   "unite": "g",
+   "cle": "beurre"
+  }
+ ],
+ "50cL de lait froid": [
+  {
+   "nom": "Lait froid",
+   "quantite": 50.0,
+   "unite": "cl",
+   "cle": "lait"
+  }
+ ],
+ "muscade": [
+  {
+   "nom": "Muscade",
+   "cle": "muscade"
+  }
+ ],
+ "emmental rapé": [
+  {
+   "nom": "Emmental rapé",
+   "cle": "emmental"
+  }
+ ],
+ "- 10g de bicarbonate de soude linge et maison (optionnel si vous prenez le savon de Marseille de la compagnie du bicarbonate car ce dernier est déjà enrichi en bicarbonate de soude)": [
+  {
+   "nom": "Bicarbonate de soude linge et maison",
+   "quantite": 10.0,
+   "unite": "g",
+   "cle": "bicarbonate soude linge maison",
+   "facultatif": true
+  }
+ ],
+ "- 100g de savon de Marseille (je prends le savon directement coupé de la Compagnie du Bicarbonate, parfumé au lavandin comme ça je n’ai même pas besoin de rajouter des huiles essentielles avec).": [
+  {
+   "nom": "Savon de Marseille",
+   "quantite": 100.0,
+   "unite": "g",
+   "cle": "savon marseille"
+  }
+ ],
+ "- 10g de cristaux de soude": [
+  {
+   "nom": "Cristaux de soude",
+   "quantite": 10.0,
+   "unite": "g",
+   "cle": "cristal soude"
+  }
+ ],
+ "6 cL de vodka": [
+  {
+   "nom": "Vodka",
+   "quantite": 6.0,
+   "unite": "cl",
+   "cle": "vodka"
+  }
+ ],
+ "1.5 cL baby de jus de citron": [
+  {
+   "nom": "Jus de citron",
+   "quantite": 1.5,
+   "unite": "cl",
+   "cle": "jus citron"
+  }
+ ],
+ "1.5 cL baby de jus d'ananas": [
+  {
+   "nom": "Jus d'ananas",
+   "quantite": 1.5,
+   "unite": "cl",
+   "cle": "jus ananas"
+  }
+ ],
+ "1.5 cL baby de jus de fruits de la passion": [
+  {
+   "nom": "Jus de fruits de la passion",
+   "quantite": 1.5,
+   "unite": "cl",
+   "cle": "jus fruit passion"
+  }
+ ],
+ "1.5 cL baby de jus de pamplemousse": [
+  {
+   "nom": "Jus de pamplemousse",
+   "quantite": 1.5,
+   "unite": "cl",
+   "cle": "jus pamplemousse"
+  }
+ ],
+ "2 cuillères à café de grenadine": [
+  {
+   "nom": "Grenadine",
+   "quantite": 2.0,
+   "unite": "c. à c.",
+   "cle": "grenadine"
+  }
+ ],
+ "350 g de sucre glace": [
+  {
+   "nom": "Sucre glace",
+   "quantite": 350.0,
+   "unite": "g",
+   "cle": "sucre glace"
+  }
+ ],
+ "200 g d'amandes en poudre": [
+  {
+   "nom": "Amandes en poudre",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "amande poudre"
+  }
+ ],
+ "4 blancs d'oeuf": [
+  {
+   "nom": "Blancs d'oeuf",
+   "quantite": 4.0,
+   "cle": "blanc oeuf"
+  }
+ ],
+ "100 g de navets": [
+  {
+   "nom": "Navets",
+   "quantite": 100.0,
+   "unite": "g",
+   "cle": "navet"
+  }
+ ],
+ "100 g de vert de poireaux": [
+  {
+   "nom": "Vert de poireaux",
+   "quantite": 100.0,
+   "unite": "g",
+   "cle": "vert poireau"
+  }
+ ],
+ "1 poivron rouge": [
+  {
+   "nom": "Poivron rouge",
+   "quantite": 1.0,
+   "cle": "poivron rouge"
+  }
+ ],
+ "1 poivron vert": [
+  {
+   "nom": "Poivron vert",
+   "quantite": 1.0,
+   "cle": "poivron vert"
+  }
+ ],
+ "250 g de pâte d’arachide": [
+  {
+   "nom": "Pâte d'arachide",
+   "quantite": 250.0,
+   "unite": "g",
+   "cle": "pate arachide"
+  }
+ ],
+ "1,5 L d’eau": [
+  {
+   "nom": "Eau",
+   "quantite": 1.5,
+   "unite": "l",
+   "cle": "eau"
+  }
+ ],
+ "100 g de carottes": [
+  {
+   "nom": "Carottes",
+   "quantite": 100.0,
+   "unite": "g",
+   "cle": "carotte"
+  }
+ ],
+ "2 gousses d’ail": [
+  {
+   "nom": "Ail",
+   "quantite": 2.0,
+   "unite": "gousse",
+   "cle": "ail"
+  }
+ ],
+ "50 g de concentré de tomate": [
+  {
+   "nom": "Concentré de tomate",
+   "quantite": 50.0,
+   "unite": "g",
+   "cle": "concentre tomate"
+  }
+ ],
+ "1 piment": [
+  {
+   "nom": "Piment",
+   "quantite": 1.0,
+   "cle": "piment"
+  }
+ ],
+ "2 feuilles de laurier": [
+  {
+   "nom": "Laurier",
+   "quantite": 2.0,
+   "unite": "feuille",
+   "cle": "laurier"
+  }
+ ],
+ "1 poignée de cacahuètes grillées": [
+  {
+   "nom": "Cacahuètes grillées",
+   "quantite": 1.0,
+   "unite": "poignée",
+   "cle": "cacahuete"
+  }
+ ],
+ "200 g de riz blanc (hom mali)": [
+  {
+   "nom": "Riz blanc",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "riz blanc"
+  }
+ ],
+ "1 feuille de laurier pour le riz": [
+  {
+   "nom": "Laurier",
+   "quantite": 1.0,
+   "unite": "feuille",
+   "cle": "laurier"
+  }
+ ],
+ "125 g farine": [
+  {
+   "nom": "Farine",
+   "quantite": 125.0,
+   "unite": "g",
+   "cle": "farine"
+  }
+ ],
+ "100 g beurre ramolli": [
+  {
+   "nom": "Beurre ramolli",
+   "quantite": 100.0,
+   "unite": "g",
+   "cle": "beurre"
+  }
+ ],
+ "2 œufs": [
+  {
+   "nom": "Œufs",
+   "quantite": 2.0,
+   "cle": "oeuf"
+  }
+ ],
+ "150 g sucre": [
+  {
+   "nom": "Sucre",
+   "quantite": 150.0,
+   "unite": "g",
+   "cle": "sucre"
+  }
+ ],
+ "2 sachets sucre vanillé": [
+  {
+   "nom": "Sucre vanillé",
+   "quantite": 2.0,
+   "unite": "sachet",
+   "cle": "sucre vanille"
+  }
+ ],
+ "3 pommes": [
+  {
+   "nom": "Pommes",
+   "quantite": 3.0,
+   "cle": "pomme"
+  }
+ ],
+ "1/2 sachet levure chimique": [
+  {
+   "nom": "Levure chimique",
+   "quantite": 0.5,
+   "unite": "sachet",
+   "cle": "levure chimique"
+  }
+ ],
+ "6 oeufs": [
+  {
+   "nom": "Oeufs",
+   "quantite": 6.0,
+   "cle": "oeuf"
+  }
+ ],
+ "200 g de chocolat à pâtisser": [
+  {
+   "nom": "Chocolat à pâtisser",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "chocolat patisser"
+  }
+ ],
+ "400 g de crème fraîche": [
+  {
+   "nom": "Crème fraîche",
+   "quantite": 400.0,
+   "unite": "g",
+   "cle": "creme fraiche"
+  }
+ ],
+ "225 g de macarons un peu rassis": [
+  {
+   "nom": "Macarons un peu rassis",
+   "quantite": 225.0,
+   "unite": "g",
+   "cle": "macaron"
+  }
+ ],
+ "160 g de chocolat": [
+  {
+   "nom": "Chocolat",
+   "quantite": 160.0,
+   "unite": "g",
+   "cle": "chocolat"
+  }
+ ],
+ "3 jaunes d'œufs": [
+  {
+   "nom": "Jaunes d'œufs",
+   "quantite": 3.0,
+   "cle": "jaune oeuf"
+  }
+ ],
+ "4 blancs d'œufs": [
+  {
+   "nom": "Blancs d'œufs",
+   "quantite": 4.0,
+   "cle": "blanc oeuf"
+  }
+ ],
+ "1 cuil. de café soluble": [
+  {
+   "nom": "Café soluble",
+   "quantite": 1.0,
+   "unite": "cuillère",
+   "cle": "cafe soluble"
+  }
+ ],
+ "un peu de lait": [
+  {
+   "nom": "Lait",
+   "cle": "lait",
+   "vague": "un peu"
+  }
+ ],
+ "100 g de grains de café en chocolat (ou de pralines brunes)": [
+  {
+   "nom": "Grains de café en chocolat",
+   "quantite": 100.0,
+   "unite": "g",
+   "cle": "grain cafe chocolat"
+  }
+ ],
+ "Pour la pain :": [
+  {
+   "nom": "Pour la pain",
+   "cle": "pour pain",
+   "section": true
+  }
+ ],
+ "2 boîtes de saumon (ou de thon)": [
+  {
+   "nom": "Saumon",
+   "quantite": 2.0,
+   "unite": "boîte",
+   "cle": "saumon"
+  }
+ ],
+ "7 tranches de pain de mie (ou plus)": [
+  {
+   "nom": "Pain de mie",
+   "quantite": 7.0,
+   "unite": "tranche",
+   "cle": "pain mie"
+  }
+ ],
+ "25cL de lait froid": [
+  {
+   "nom": "Lait froid",
+   "quantite": 25.0,
+   "unite": "cl",
+   "cle": "lait"
+  }
+ ],
+ "3 échalotes": [
+  {
+   "nom": "Échalotes",
+   "quantite": 3.0,
+   "cle": "echalote"
+  }
+ ],
+ "2 gousses d'ail": [
+  {
+   "nom": "Ail",
+   "quantite": 2.0,
+   "unite": "gousse",
+   "cle": "ail"
+  }
+ ],
+ "1 bouquet de persil": [
+  {
+   "nom": "Persil",
+   "quantite": 1.0,
+   "unite": "bouquet",
+   "cle": "persil"
+  }
+ ],
+ "Pour la sauce aurore :": [
+  {
+   "nom": "Pour la sauce aurore",
+   "cle": "pour sauce aurore",
+   "section": true
+  }
+ ],
+ "Crevettes": [
+  {
+   "nom": "Crevettes",
+   "cle": "crevette"
+  }
+ ],
+ "Crème": [
+  {
+   "nom": "Crème",
+   "cle": "creme"
+  }
+ ],
+ "Concentré de tomate": [
+  {
+   "nom": "Concentré de tomate",
+   "cle": "concentre tomate"
+  }
+ ],
+ "Un peu de jus de saumon": [
+  {
+   "nom": "Jus de saumon",
+   "cle": "jus saumon",
+   "vague": "un peu"
+  }
+ ],
+ "6 tranche brioche ou toast": [
+  {
+   "nom": "Brioche",
+   "quantite": 6.0,
+   "unite": "tranche",
+   "cle": "brioche"
+  }
+ ],
+ "10 cl lait": [
+  {
+   "nom": "Lait",
+   "quantite": 10.0,
+   "unite": "cl",
+   "cle": "lait"
+  }
+ ],
+ "2 c à s sucre": [
+  {
+   "nom": "Sucre",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "sucre"
+  }
+ ],
+ "1 c à c beurre": [
+  {
+   "nom": "Beurre",
+   "quantite": 1.0,
+   "unite": "c. à c.",
+   "cle": "beurre"
+  }
+ ],
+ "500 g farine pour pizza": [
+  {
+   "nom": "Farine pour pizza",
+   "quantite": 500.0,
+   "unite": "g",
+   "cle": "farine pour pizza"
+  }
+ ],
+ "300 ml eau tiède": [
+  {
+   "nom": "Eau tiède",
+   "quantite": 300.0,
+   "unite": "ml",
+   "cle": "eau"
+  }
+ ],
+ "2 c à s huile d'olive": [
+  {
+   "nom": "Huile d'olive",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "huile olive"
+  }
+ ],
+ "2 c à c sel": [
+  {
+   "nom": "Sel",
+   "quantite": 2.0,
+   "unite": "c. à c.",
+   "cle": "sel"
+  }
+ ],
+ "1 c à s sucre": [
+  {
+   "nom": "Sucre",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "sucre"
+  }
+ ],
+ "14 g levure de boulanger sèche": [
+  {
+   "nom": "Levure de boulanger sèche",
+   "quantite": 14.0,
+   "unite": "g",
+   "cle": "levure boulanger seche"
+  }
+ ],
+ "500 g de ramen (ou nouilles de blé chinoises)": [
+  {
+   "nom": "Ramen",
+   "quantite": 500.0,
+   "unite": "g",
+   "cle": "ramen"
+  }
+ ],
+ "5 morceaux de steak de boeuf": [
+  {
+   "nom": "Steak de boeuf",
+   "quantite": 5.0,
+   "unite": "morceau",
+   "cle": "steak boeuf"
+  }
+ ],
+ "1/2 choux chinois": [
+  {
+   "nom": "Choux chinois",
+   "quantite": 0.5,
+   "cle": "chou chinois"
+  }
+ ],
+ "2 échalotes": [
+  {
+   "nom": "Échalotes",
+   "quantite": 2.0,
+   "cle": "echalote"
+  }
+ ],
+ "6 oignons nouveaux": [
+  {
+   "nom": "Oignons nouveaux",
+   "quantite": 6.0,
+   "cle": "oignon nouveau"
+  }
+ ],
+ "1 grosses poignées de coriandre": [
+  {
+   "nom": "Coriandre",
+   "quantite": 1.0,
+   "unite": "poignée",
+   "cle": "coriandre"
+  }
+ ],
+ "harissa": [
+  {
+   "nom": "Harissa",
+   "cle": "harissa"
+  }
+ ],
+ "sauce soja": [
+  {
+   "nom": "Sauce soja",
+   "cle": "sauce soja"
+  }
+ ],
+ "sauce Yakitori": [
+  {
+   "nom": "Sauce Yakitori",
+   "cle": "sauce yakitori"
+  }
+ ],
+ "2 gingembre frais": [
+  {
+   "nom": "Gingembre frais",
+   "quantite": 2.0,
+   "cle": "gingembre"
+  }
+ ],
+ "2 cubes de bouillon de poule": [
+  {
+   "nom": "Bouillon de poule",
+   "quantite": 2.0,
+   "unite": "cube",
+   "cle": "bouillon poule"
+  }
+ ],
+ "2 courgette": [
+  {
+   "nom": "Courgette",
+   "quantite": 2.0,
+   "cle": "courgette"
+  }
+ ],
+ "3 tomate": [
+  {
+   "nom": "Tomate",
+   "quantite": 3.0,
+   "cle": "tomate"
+  }
+ ],
+ "1 bouquet garni": [
+  {
+   "nom": "Bouquet garni",
+   "quantite": 1.0,
+   "cle": "bouquet garni"
+  }
+ ],
+ "250 g de champignon (des cèpes de préférence)": [
+  {
+   "nom": "Champignon",
+   "quantite": 250.0,
+   "unite": "g",
+   "cle": "champignon"
+  }
+ ],
+ "200 g de riz carnaroli": [
+  {
+   "nom": "Riz carnaroli",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "riz carnaroli"
+  }
+ ],
+ "1 filets d'huile d'olive": [
+  {
+   "nom": "Huile d'olive",
+   "quantite": 1.0,
+   "unite": "filet",
+   "cle": "huile olive"
+  }
+ ],
+ "1 noix de beurre": [
+  {
+   "nom": "Beurre",
+   "quantite": 1.0,
+   "unite": "noix",
+   "cle": "beurre"
+  }
+ ],
+ "1 bouillon de légumes": [
+  {
+   "nom": "Bouillon de légumes",
+   "quantite": 1.0,
+   "cle": "bouillon legume"
+  }
+ ],
+ "20 cl de vin blanc sec": [
+  {
+   "nom": "Vin blanc sec",
+   "quantite": 20.0,
+   "unite": "cl",
+   "cle": "vin blanc sec"
+  }
+ ],
+ "1 cuillères à soupe de Parmesan": [
+  {
+   "nom": "Parmesan",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "parmesan"
+  }
+ ],
+ "1 oignons": [
+  {
+   "nom": "Oignons",
+   "quantite": 1.0,
+   "cle": "oignon"
+  }
+ ],
+ "1 gousses d'ail": [
+  {
+   "nom": "Ail",
+   "quantite": 1.0,
+   "unite": "gousse",
+   "cle": "ail"
+  }
+ ],
+ "1 échalotes": [
+  {
+   "nom": "Échalotes",
+   "quantite": 1.0,
+   "cle": "echalote"
+  }
+ ],
+ "2 brins de persil plat": [
+  {
+   "nom": "Persil plat",
+   "quantite": 2.0,
+   "unite": "brin",
+   "cle": "persil plat"
+  }
+ ],
+ "1 pincées de sel": [
+  {
+   "nom": "Sel",
+   "quantite": 1.0,
+   "unite": "pincée",
+   "cle": "sel"
+  }
+ ],
+ "1 pincées de poivre": [
+  {
+   "nom": "Poivre",
+   "quantite": 1.0,
+   "unite": "pincée",
+   "cle": "poivre"
+  }
+ ],
+ "150 g de lardons fumés": [
+  {
+   "nom": "Lardons fumés",
+   "quantite": 150.0,
+   "unite": "g",
+   "cle": "lardon fume"
+  }
+ ],
+ "150 g de chorizo": [
+  {
+   "nom": "Chorizo",
+   "quantite": 150.0,
+   "unite": "g",
+   "cle": "chorizo"
+  }
+ ],
+ "500 g de blanc de poulet": [
+  {
+   "nom": "Blanc de poulet",
+   "quantite": 500.0,
+   "unite": "g",
+   "cle": "blanc poulet"
+  }
+ ],
+ "2 oignons blancs": [
+  {
+   "nom": "Oignons blancs",
+   "quantite": 2.0,
+   "cle": "oignon blanc"
+  }
+ ],
+ "2 gousses d’ail émincées": [
+  {
+   "nom": "Ail émincées",
+   "quantite": 2.0,
+   "unite": "gousse",
+   "cle": "ail"
+  }
+ ],
+ "5 ml de cumin": [
+  {
+   "nom": "Cumin",
+   "quantite": 5.0,
+   "unite": "ml",
+   "cle": "cumin"
+  }
+ ],
+ "5 ml de paprika": [
+  {
+   "nom": "Paprika",
+   "quantite": 5.0,
+   "unite": "ml",
+   "cle": "paprika"
+  }
+ ],
+ "2 pincées de piment de Cayenne": [
+  {
+   "nom": "Piment de Cayenne",
+   "quantite": 2.0,
+   "unite": "pincée",
+   "cle": "piment cayenne"
+  }
+ ],
+ "quelques pistils de safran": [
+  {
+   "nom": "Pistils de safran",
+   "cle": "pistil safran",
+   "vague": "quelques"
+  }
+ ],
+ "200 g de riz": [
+  {
+   "nom": "Riz",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "riz"
+  }
+ ],
+ "200 ml de bouillon de volaille": [
+  {
+   "nom": "Bouillon de volaille",
+   "quantite": 200.0,
+   "unite": "ml",
+   "cle": "bouillon volaille"
+  }
+ ],
+ "500 g de saucisses": [
+  {
+   "nom": "Saucisses",
+   "quantite": 500.0,
+   "unite": "g",
+   "cle": "saucisse"
+  }
+ ],
+ "500 g d'oignons": [
+  {
+   "nom": "Oignons",
+   "quantite": 500.0,
+   "unite": "g",
+   "cle": "oignon"
+  }
+ ],
+ "250 g de tomates": [
+  {
+   "nom": "Tomates",
+   "quantite": 250.0,
+   "unite": "g",
+   "cle": "tomate"
+  }
+ ],
+ "4 gros piments": [
+  {
+   "nom": "Gros piments",
+   "quantite": 4.0,
+   "cle": "piment"
+  }
+ ],
+ "3 c. à soupe d'huile": [
+  {
+   "nom": "Huile",
+   "quantite": 3.0,
+   "unite": "c. à s.",
+   "cle": "huile"
+  }
+ ],
+ "Pour la salade": [
+  {
+   "nom": "Pour la salade",
+   "cle": "pour salade",
+   "section": true
+  }
+ ],
+ "2 Escalope(s) de poulet": [
+  {
+   "nom": "Escalope de poulet",
+   "quantite": 2.0,
+   "cle": "escalope poulet"
+  }
+ ],
+ "1 Salade verte": [
+  {
+   "nom": "Salade verte",
+   "quantite": 1.0,
+   "cle": "salade"
+  }
+ ],
+ "100 g Parmesan en copeaux": [
+  {
+   "nom": "Parmesan en copeaux",
+   "quantite": 100.0,
+   "unite": "g",
+   "cle": "parmesan"
+  }
+ ],
+ "7 Biscotte(s)": [
+  {
+   "nom": "Biscotte",
+   "quantite": 7.0,
+   "cle": "biscotte"
+  }
+ ],
+ "1 poignée(s) Croûton(s)": [
+  {
+   "nom": "Croûton",
+   "quantite": 1.0,
+   "unite": "poignée",
+   "cle": "crouton"
+  }
+ ],
+ "0,5 Citron(s)": [
+  {
+   "nom": "Citron",
+   "quantite": 0.5,
+   "cle": "citron"
+  }
+ ],
+ "1 Échalote(s)": [
+  {
+   "nom": "Échalote",
+   "quantite": 1.0,
+   "cle": "echalote"
+  }
+ ],
+ "1 pincée(s) Piment d'Espelette": [
+  {
+   "nom": "Piment d'Espelette",
+   "quantite": 1.0,
+   "unite": "pincée",
+   "cle": "piment espelette"
+  }
+ ],
+ "1 noix Beurre allégé": [
+  {
+   "nom": "Beurre allégé",
+   "quantite": 1.0,
+   "unite": "noix",
+   "cle": "beurre"
+  }
+ ],
+ "1 pincée(s) Sel": [
+  {
+   "nom": "Sel",
+   "quantite": 1.0,
+   "unite": "pincée",
+   "cle": "sel"
+  }
+ ],
+ "1 pincée(s) Poivre": [
+  {
+   "nom": "Poivre",
+   "quantite": 1.0,
+   "unite": "pincée",
+   "cle": "poivre"
+  }
+ ],
+ "Pour la sauce": [
+  {
+   "nom": "Pour la sauce",
+   "cle": "pour sauce",
+   "section": true
+  }
+ ],
+ "4 c. à soupe Crème fraîche (légère)": [
+  {
+   "nom": "Crème fraîche",
+   "quantite": 4.0,
+   "unite": "c. à s.",
+   "cle": "creme fraiche"
+  }
+ ],
+ "1 c. à soupe Moutarde": [
+  {
+   "nom": "Moutarde",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "moutarde"
+  }
+ ],
+ "1 c. à café Parmesan râpé": [
+  {
+   "nom": "Parmesan râpé",
+   "quantite": 1.0,
+   "unite": "c. à c.",
+   "cle": "parmesan"
+  }
+ ],
+ "1 c. à café Vinaigre balsamique": [
+  {
+   "nom": "Vinaigre balsamique",
+   "quantite": 1.0,
+   "unite": "c. à c.",
+   "cle": "vinaigre balsamique"
+  }
+ ],
+ "3 salades Sucrine": [
+  {
+   "nom": "Salades Sucrine",
+   "quantite": 3.0,
+   "cle": "salade sucrine"
+  }
+ ],
+ "2 paquets de croûtons à l'ail de 90gr, soit 180gr": [
+  {
+   "nom": "Croûtons à l'ail",
+   "quantite": 2.0,
+   "unite": "paquet",
+   "cle": "crouton ail"
+  }
+ ],
+ "1 barquette de 250gr de tomates cerise mûres": [
+  {
+   "nom": "Tomates cerise mûres",
+   "quantite": 1.0,
+   "unite": "barquette",
+   "cle": "tomate cerise"
+  }
+ ],
+ "140gr de copeaux de parmesan": [
+  {
+   "nom": "Copeaux de parmesan",
+   "quantite": 140.0,
+   "unite": "g",
+   "cle": "parmesan"
+  }
+ ],
+ "280ml d'huile de Tournesol ou colza": [
+  {
+   "nom": "Huile de Tournesol",
+   "quantite": 280.0,
+   "unite": "ml",
+   "cle": "huile tournesol"
+  }
+ ],
+ "2 CàS de moutarde": [
+  {
+   "nom": "Moutarde",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "moutarde"
+  }
+ ],
+ "2 barquettes de 200gr de nuggets VÉGÉTAL au blé, de la marque VÉGÉ de chez Leclerc (pour info, il y a 9 nuggets dans un paquet)": [
+  {
+   "nom": "Nuggets VÉGÉTAL au blé",
+   "quantite": 2.0,
+   "unite": "barquette",
+   "cle": "nugget vegetal ble"
+  }
+ ],
+ "0.5 Fenouil": [
+  {
+   "nom": "Fenouil",
+   "quantite": 0.5,
+   "cle": "fenouil"
+  }
+ ],
+ "1 Orange": [
+  {
+   "nom": "Orange",
+   "quantite": 1.0,
+   "cle": "orange"
+  }
+ ],
+ "0.25 Oignon rouge": [
+  {
+   "nom": "Oignon rouge",
+   "quantite": 0.25,
+   "cle": "oignon rouge"
+  }
+ ],
+ "30 g Radis": [
+  {
+   "nom": "Radis",
+   "quantite": 30.0,
+   "unite": "g",
+   "cle": "radis"
+  }
+ ],
+ "1 càs Vinaigre de cidre": [
+  {
+   "nom": "Vinaigre de cidre",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "vinaigre cidre"
+  }
+ ],
+ "200 g de boulgour cru": [
+  {
+   "nom": "Boulgour cru",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "boulgour"
+  }
+ ],
+ "4 radis roses émincés": [
+  {
+   "nom": "Radis roses émincés",
+   "quantite": 4.0,
+   "cle": "radis rose"
+  }
+ ],
+ "2 carottes moyennes râpées": [
+  {
+   "nom": "Carottes moyennes râpées",
+   "quantite": 2.0,
+   "cle": "carotte"
+  }
+ ],
+ "60 g d'olives noires en rondelles": [
+  {
+   "nom": "Olives noires en rondelles",
+   "quantite": 60.0,
+   "unite": "g",
+   "cle": "olive noire"
+  }
+ ],
+ "120 g de feta émiettée": [
+  {
+   "nom": "Feta émiettée",
+   "quantite": 120.0,
+   "unite": "g",
+   "cle": "feta"
+  }
+ ],
+ "1 oignon nouveau ou 2 c. à s. de ciboulette ciselée (optionnel)": [
+  {
+   "nom": "Oignon nouveau",
+   "quantite": 1.0,
+   "cle": "oignon nouveau",
+   "facultatif": true
+  }
+ ],
+ "1 poignée de persil plat (≈10 g)": [
+  {
+   "nom": "Persil plat",
+   "quantite": 1.0,
+   "unite": "poignée",
+   "cle": "persil plat"
+  }
+ ],
+ "4 c. à s. d'huile d'olive": [
+  {
+   "nom": "Huile d'olive",
+   "quantite": 4.0,
+   "unite": "c. à s.",
+   "cle": "huile olive"
+  }
+ ],
+ "2 c. à s. de jus de citron frais": [
+  {
+   "nom": "Jus de citron frais",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "jus citron"
+  }
+ ],
+ "Zeste de 1/2 citron": [
+  {
+   "nom": "Zeste de 1/2 citron",
+   "cle": "zeste citron"
+  }
+ ],
+ "1 c. à c. de moutarde douce": [
+  {
+   "nom": "Moutarde douce",
+   "quantite": 1.0,
+   "unite": "c. à c.",
+   "cle": "moutarde"
+  }
+ ],
+ "Poivre": [
+  {
+   "nom": "Poivre",
+   "cle": "poivre"
+  }
+ ],
+ "1 boîte de 500gr net égoutté de cocktail pêche, poire, ananas, raisin de St Mamet": [
+  {
+   "nom": "Cocktail pêche",
+   "quantite": 1.0,
+   "unite": "boîte",
+   "cle": "cocktail peche"
+  }
+ ],
+ "1 orange à dessert": [
+  {
+   "nom": "Orange à dessert",
+   "quantite": 1.0,
+   "cle": "orange dessert"
+  }
+ ],
+ "250gr de fraises mûres": [
+  {
+   "nom": "Fraises mûres",
+   "quantite": 250.0,
+   "unite": "g",
+   "cle": "fraise"
+  }
+ ],
+ "250ml de PUR JUS d'orange SANS PULPE": [
+  {
+   "nom": "PUR JUS d'orange SANS PULPE",
+   "quantite": 250.0,
+   "unite": "ml",
+   "cle": "pur jus orange sans pulpe"
+  }
+ ],
+ "800 g de pommes de terre à chair ferme (Charlotte, Amandine)": [
+  {
+   "nom": "Pommes de terre à chair ferme",
+   "quantite": 800.0,
+   "unite": "g",
+   "cle": "pomme terre"
+  }
+ ],
+ "3 œufs": [
+  {
+   "nom": "Œufs",
+   "quantite": 3.0,
+   "cle": "oeuf"
+  }
+ ],
+ "6 cornichons": [
+  {
+   "nom": "Cornichons",
+   "quantite": 6.0,
+   "cle": "cornichon"
+  }
+ ],
+ "3 oignons nouveaux (cébettes)": [
+  {
+   "nom": "Oignons nouveaux",
+   "quantite": 3.0,
+   "cle": "oignon nouveau"
+  }
+ ],
+ "150 g de yaourt grec": [
+  {
+   "nom": "Yaourt grec",
+   "quantite": 150.0,
+   "unite": "g",
+   "cle": "yaourt grec"
+  }
+ ],
+ "2 cuillères à soupe de mayonnaise": [
+  {
+   "nom": "Mayonnaise",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "mayonnaise"
+  }
+ ],
+ "1 cuillère à soupe de moutarde": [
+  {
+   "nom": "Moutarde",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "moutarde"
+  }
+ ],
+ "1 cuillère à soupe de vinaigre de vin blanc": [
+  {
+   "nom": "Vinaigre de vin blanc",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "vinaigre vin blanc"
+  }
+ ],
+ "3 cuillères à soupe de ciboulette ciselée": [
+  {
+   "nom": "Ciboulette ciselée",
+   "quantite": 3.0,
+   "unite": "c. à s.",
+   "cle": "ciboulette"
+  }
+ ],
+ "2 cuillères à soupe de persil plat ciselé": [
+  {
+   "nom": "Persil plat ciselé",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "persil plat"
+  }
+ ],
+ "1 cuillère à soupe de câpres (facultatif)": [
+  {
+   "nom": "Câpres",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "capre",
+   "facultatif": true
+  }
+ ],
+ "1 cuillère à café de sel": [
+  {
+   "nom": "Sel",
+   "quantite": 1.0,
+   "unite": "c. à c.",
+   "cle": "sel"
+  }
+ ],
+ "½ cuillère à café de poivre du moulin": [
+  {
+   "nom": "Poivre du moulin",
+   "quantite": 0.5,
+   "unite": "c. à c.",
+   "cle": "poivre moulin"
+  }
+ ],
+ "1.5 Endives": [
+  {
+   "nom": "Endives",
+   "quantite": 1.5,
+   "cle": "endive"
+  }
+ ],
+ "1/2 Pomme rouge": [
+  {
+   "nom": "Pomme rouge",
+   "quantite": 0.5,
+   "cle": "pomme rouge"
+  }
+ ],
+ "1/2 Avocat": [
+  {
+   "nom": "Avocat",
+   "quantite": 0.5,
+   "cle": "avocat"
+  }
+ ],
+ "40 g Comté": [
+  {
+   "nom": "Comté",
+   "quantite": 40.0,
+   "unite": "g",
+   "cle": "comte"
+  }
+ ],
+ "30 g Noisette": [
+  {
+   "nom": "Noisette",
+   "quantite": 30.0,
+   "unite": "g",
+   "cle": "noisette"
+  }
+ ],
+ "1 càc Moutarde": [
+  {
+   "nom": "Moutarde",
+   "quantite": 1.0,
+   "unite": "c. à c.",
+   "cle": "moutarde"
+  }
+ ],
+ "1/2 càc Vinaigre de cidre": [
+  {
+   "nom": "Vinaigre de cidre",
+   "quantite": 0.5,
+   "unite": "c. à c.",
+   "cle": "vinaigre cidre"
+  }
+ ],
+ "1 oeuf dur": [
+  {
+   "nom": "Oeuf dur",
+   "quantite": 1.0,
+   "cle": "oeuf"
+  }
+ ],
+ "1 Saumon (frais)": [
+  {
+   "nom": "Saumon",
+   "quantite": 1.0,
+   "cle": "saumon"
+  }
+ ],
+ "1 càs Chapelure": [
+  {
+   "nom": "Chapelure",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "chapelure"
+  }
+ ],
+ "1 càc Persil (frais)": [
+  {
+   "nom": "Persil",
+   "quantite": 1.0,
+   "unite": "c. à c.",
+   "cle": "persil"
+  }
+ ],
+ "1 Poireau": [
+  {
+   "nom": "Poireau",
+   "quantite": 1.0,
+   "cle": "poireau"
+  }
+ ],
+ "1/2 càc Moutarde": [
+  {
+   "nom": "Moutarde",
+   "quantite": 0.5,
+   "unite": "c. à c.",
+   "cle": "moutarde"
+  }
+ ],
+ "1/4 gou. Ail": [
+  {
+   "nom": "Ail",
+   "quantite": 0.25,
+   "unite": "gousse",
+   "cle": "ail"
+  }
+ ],
+ "1 pâte feuilletée": [
+  {
+   "nom": "Pâte feuilletée",
+   "quantite": 1.0,
+   "cle": "pate feuilletee"
+  }
+ ],
+ "1 orange pressée": [
+  {
+   "nom": "Orange pressée",
+   "quantite": 1.0,
+   "cle": "orange"
+  }
+ ],
+ "2 c.à.s de miel liquide": [
+  {
+   "nom": "Miel liquide",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "miel liquide"
+  }
+ ],
+ "30 g de beurre": [
+  {
+   "nom": "Beurre",
+   "quantite": 30.0,
+   "unite": "g",
+   "cle": "beurre"
+  }
+ ],
+ "50 g de sucre": [
+  {
+   "nom": "Sucre",
+   "quantite": 50.0,
+   "unite": "g",
+   "cle": "sucre"
+  }
+ ],
+ "80 g de raisins secs": [
+  {
+   "nom": "Raisins secs",
+   "quantite": 80.0,
+   "unite": "g",
+   "cle": "raisin sec"
+  }
+ ],
+ "80 g d'amandes en poudre": [
+  {
+   "nom": "Amandes en poudre",
+   "quantite": 80.0,
+   "unite": "g",
+   "cle": "amande poudre"
+  }
+ ],
+ "1 oeuf battu": [
+  {
+   "nom": "Oeuf battu",
+   "quantite": 1.0,
+   "cle": "oeuf"
+  }
+ ],
+ "1 c.à.c de cannelle": [
+  {
+   "nom": "Cannelle",
+   "quantite": 1.0,
+   "unite": "c. à c.",
+   "cle": "cannelle"
+  }
+ ],
+ "200 g couscous moyen": [
+  {
+   "nom": "Couscous moyen",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "couscous"
+  }
+ ],
+ "400 g tomate roma ou coeur de boeuf": [
+  {
+   "nom": "Tomate roma",
+   "quantite": 400.0,
+   "unite": "g",
+   "cle": "tomate roma"
+  }
+ ],
+ "150 g oignon nouveau": [
+  {
+   "nom": "Oignon nouveau",
+   "quantite": 150.0,
+   "unite": "g",
+   "cle": "oignon nouveau"
+  }
+ ],
+ "½ concombre": [
+  {
+   "nom": "Concombre",
+   "quantite": 0.5,
+   "cle": "concombre"
+  }
+ ],
+ "1 jus de citron": [
+  {
+   "nom": "Jus de citron",
+   "quantite": 1.0,
+   "cle": "jus citron"
+  }
+ ],
+ "3 c à s huile d'olive": [
+  {
+   "nom": "Huile d'olive",
+   "quantite": 3.0,
+   "unite": "c. à s.",
+   "cle": "huile olive"
+  }
+ ],
+ "1 bouquet persil plat": [
+  {
+   "nom": "Persil plat",
+   "quantite": 1.0,
+   "unite": "bouquet",
+   "cle": "persil plat"
+  }
+ ],
+ "1 bouquet coriandre fraîche": [
+  {
+   "nom": "Coriandre fraîche",
+   "quantite": 1.0,
+   "unite": "bouquet",
+   "cle": "coriandre"
+  }
+ ],
+ "1 bouquet menthe": [
+  {
+   "nom": "Menthe",
+   "quantite": 1.0,
+   "unite": "bouquet",
+   "cle": "menthe"
+  }
+ ],
+ "1 pincée sel": [
+  {
+   "nom": "Sel",
+   "quantite": 1.0,
+   "unite": "pincée",
+   "cle": "sel"
+  }
+ ],
+ "1 pincée poivre": [
+  {
+   "nom": "Poivre",
+   "quantite": 1.0,
+   "unite": "pincée",
+   "cle": "poivre"
+  }
+ ],
+ "Pate sablée :": [
+  {
+   "nom": "Pate sablée",
+   "cle": "pate sablee",
+   "section": true
+  }
+ ],
+ "250 g farine": [
+  {
+   "nom": "Farine",
+   "quantite": 250.0,
+   "unite": "g",
+   "cle": "farine"
+  }
+ ],
+ "125 g beurre": [
+  {
+   "nom": "Beurre",
+   "quantite": 125.0,
+   "unite": "g",
+   "cle": "beurre"
+  }
+ ],
+ "70 g sucre": [
+  {
+   "nom": "Sucre",
+   "quantite": 70.0,
+   "unite": "g",
+   "cle": "sucre"
+  }
+ ],
+ "2 jaune d'œuf": [
+  {
+   "nom": "Jaune d'œuf",
+   "quantite": 2.0,
+   "cle": "jaune oeuf"
+  }
+ ],
+ "5 cl eau": [
+  {
+   "nom": "Eau",
+   "quantite": 5.0,
+   "unite": "cl",
+   "cle": "eau"
+  }
+ ],
+ "Crème au citron :": [
+  {
+   "nom": "Crème au citron",
+   "cle": "creme citron",
+   "section": true
+  }
+ ],
+ "2 citron": [
+  {
+   "nom": "Citron",
+   "quantite": 2.0,
+   "cle": "citron"
+  }
+ ],
+ "180 g sucre": [
+  {
+   "nom": "Sucre",
+   "quantite": 180.0,
+   "unite": "g",
+   "cle": "sucre"
+  }
+ ],
+ "2 oeuf": [
+  {
+   "nom": "Oeuf",
+   "quantite": 2.0,
+   "cle": "oeuf"
+  }
+ ],
+ "20 cl crème fraîche": [
+  {
+   "nom": "Crème fraîche",
+   "quantite": 20.0,
+   "unite": "cl",
+   "cle": "creme fraiche"
+  }
+ ],
+ "Meringue :": [
+  {
+   "nom": "Meringue",
+   "cle": "meringue",
+   "section": true
+  }
+ ],
+ "4 blanc d'oeuf": [
+  {
+   "nom": "Blanc d'oeuf",
+   "quantite": 4.0,
+   "cle": "blanc oeuf"
+  }
+ ],
+ "150 g sucre glace": [
+  {
+   "nom": "Sucre glace",
+   "quantite": 150.0,
+   "unite": "g",
+   "cle": "sucre glace"
+  }
+ ],
+ "1 kg de pomme de terre": [
+  {
+   "nom": "Pomme de terre",
+   "quantite": 1.0,
+   "unite": "kg",
+   "cle": "pomme terre"
+  }
+ ],
+ "200 g de lardons fumés": [
+  {
+   "nom": "Lardons fumés",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "lardon fume"
+  }
+ ],
+ "200 g d'oignon émincés": [
+  {
+   "nom": "Oignon émincés",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "oignon"
+  }
+ ],
+ "1 reblochons bien fait (lorsqu'on appuie sur le côté du reblochon, le doigt doit s'enfoncer un peu)": [
+  {
+   "nom": "Reblochons bien fait",
+   "quantite": 1.0,
+   "cle": "reblochon"
+  }
+ ],
+ "2 cuillères à soupe d'huile": [
+  {
+   "nom": "Huile",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "huile"
+  }
+ ],
+ "2 tasses de café très fort": [
+  {
+   "nom": "Café très fort",
+   "quantite": 2.0,
+   "unite": "tasse",
+   "cle": "cafe fort"
+  }
+ ],
+ "2 càs de miel": [
+  {
+   "nom": "Miel",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "miel"
+  }
+ ],
+ "1 boîte de boudoirs": [
+  {
+   "nom": "Boudoirs",
+   "quantite": 1.0,
+   "unite": "boîte",
+   "cle": "boudoir"
+  }
+ ],
+ "250gr de mascarpone": [
+  {
+   "nom": "Mascarpone",
+   "quantite": 250.0,
+   "unite": "g",
+   "cle": "mascarpone"
+  }
+ ],
+ "poudre de cacao non sucrée": [
+  {
+   "nom": "Poudre de cacao non sucrée",
+   "cle": "poudre cacao non sucree"
+  }
+ ],
+ "1 verre (shooter) d'alcool de type Amaretto": [
+  {
+   "nom": "Alcool de type Amaretto",
+   "quantite": 1.0,
+   "unite": "verre",
+   "cle": "alcool type amaretto"
+  }
+ ],
+ "Biscuit :": [
+  {
+   "nom": "Biscuit",
+   "cle": "biscuit",
+   "section": true
+  }
+ ],
+ "60 g de sucre en poudre": [
+  {
+   "nom": "Sucre en poudre",
+   "quantite": 60.0,
+   "unite": "g",
+   "cle": "sucre"
+  }
+ ],
+ "40 g de poudre de noisette (ou, à la limite, de la poudre d'amandes)": [
+  {
+   "nom": "Poudre de noisette",
+   "quantite": 40.0,
+   "unite": "g",
+   "cle": "poudre noisette"
+  }
+ ],
+ "2 cuillères à soupe de farine rases": [
+  {
+   "nom": "Farine",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "farine"
+  }
+ ],
+ "30 g de beurre fondu": [
+  {
+   "nom": "Beurre fondu",
+   "quantite": 30.0,
+   "unite": "g",
+   "cle": "beurre"
+  }
+ ],
+ "1/2 cuillères à café de levure chimique": [
+  {
+   "nom": "Levure chimique",
+   "quantite": 0.5,
+   "unite": "c. à c.",
+   "cle": "levure chimique"
+  }
+ ],
+ "Croustillant :": [
+  {
+   "nom": "Croustillant",
+   "cle": "croustillant",
+   "section": true
+  }
+ ],
+ "200 g de pralinoise (voir la photo...Poulain 1848)": [
+  {
+   "nom": "Pralinoise",
+   "quantite": 200.0,
+   "unite": "g",
+   "cle": "pralinoise"
+  }
+ ],
+ "paquet de crêpe dentelle (\" gavottes \", voir photo) soit 9 petits papiers dorés (il y en a 12 au total et le paquet complet fait 125 g)": [
+  {
+   "nom": "Crêpe dentelle",
+   "unite": "paquet",
+   "cle": "crepe dentelle"
+  }
+ ],
+ "40 g de pralin (marque Vahiné, c'est de la nougatine concassée finement, ce produit n'est pas indispensable)": [
+  {
+   "nom": "Pralin",
+   "quantite": 40.0,
+   "unite": "g",
+   "cle": "pralin"
+  }
+ ],
+ "Mousse au chocolat :": [
+  {
+   "nom": "Mousse au chocolat",
+   "cle": "mousse chocolat",
+   "section": true
+  }
+ ],
+ "400 g Aiguillette(s) de poulet": [
+  {
+   "nom": "Aiguillette de poulet",
+   "quantite": 400.0,
+   "unite": "g",
+   "cle": "aiguillette poulet"
+  }
+ ],
+ "3 Carotte(s)": [
+  {
+   "nom": "Carotte",
+   "quantite": 3.0,
+   "cle": "carotte"
+  }
+ ],
+ "3 Carotte(s) violette(s)": [
+  {
+   "nom": "Carotte violette",
+   "quantite": 3.0,
+   "cle": "carotte violette"
+  }
+ ],
+ "2 Courgette(s)": [
+  {
+   "nom": "Courgette",
+   "quantite": 2.0,
+   "cle": "courgette"
+  }
+ ],
+ "3 Oignon(s) rouge(s)": [
+  {
+   "nom": "Oignon rouge",
+   "quantite": 3.0,
+   "cle": "oignon rouge"
+  }
+ ],
+ "20 cl Lait de coco": [
+  {
+   "nom": "Lait de coco",
+   "quantite": 20.0,
+   "unite": "cl",
+   "cle": "lait coco"
+  }
+ ],
+ "150 g Cacahuète(s)": [
+  {
+   "nom": "Cacahuète",
+   "quantite": 150.0,
+   "unite": "g",
+   "cle": "cacahuete"
+  }
+ ],
+ "1 bouquet(s) Coriandre fraîche": [
+  {
+   "nom": "Coriandre fraîche",
+   "quantite": 1.0,
+   "unite": "bouquet",
+   "cle": "coriandre"
+  }
+ ],
+ "Huile d'olive": [
+  {
+   "nom": "Huile d'olive",
+   "cle": "huile olive"
+  }
+ ],
+ "4 Avocats": [
+  {
+   "nom": "Avocats",
+   "quantite": 4.0,
+   "cle": "avocat"
+  }
+ ],
+ "4 feuilles Laitue": [
+  {
+   "nom": "Laitue",
+   "quantite": 4.0,
+   "unite": "feuille",
+   "cle": "salade"
+  }
+ ],
+ "4 Tortillas": [
+  {
+   "nom": "Tortillas",
+   "quantite": 4.0,
+   "cle": "tortilla"
+  }
+ ],
+ "1 boîte Thon": [
+  {
+   "nom": "Thon",
+   "quantite": 1.0,
+   "unite": "boîte",
+   "cle": "thon"
+  }
+ ],
+ "2 cuillères à soupe Mayonnaise": [
+  {
+   "nom": "Mayonnaise",
+   "quantite": 2.0,
+   "unite": "c. à s.",
+   "cle": "mayonnaise"
+  }
+ ],
+ "1 cuillère à soupe Jus de citron": [
+  {
+   "nom": "Jus de citron",
+   "quantite": 1.0,
+   "unite": "c. à s.",
+   "cle": "jus citron"
+  }
+ ]
+}
