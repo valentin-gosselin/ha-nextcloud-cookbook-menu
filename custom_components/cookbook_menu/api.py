@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
@@ -55,6 +56,12 @@ class Recipe:
     keywords: tuple[str, ...] = field(default_factory=tuple)
     date_modified: datetime | None = None
     url: str | None = None
+    description: str = ""
+    instructions: tuple[str, ...] = field(default_factory=tuple)
+    tools: tuple[str, ...] = field(default_factory=tuple)
+    prep_minutes: int | None = None
+    cook_minutes: int | None = None
+    total_minutes: int | None = None
 
 
 def _parse_datetime(value: Any) -> datetime | None:
@@ -77,6 +84,33 @@ def _parse_servings(value: Any) -> int:
         if chiffres:
             return max(1, int(chiffres))
     return 1
+
+
+def _parse_duree(value: Any) -> int | None:
+    """Durée ISO 8601 (« PT1H30M0S ») en minutes, None si absente ou nulle."""
+    if not isinstance(value, str):
+        return None
+    correspondance = re.fullmatch(r"P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?", value.strip())
+    if correspondance is None:
+        return None
+    jours, heures, minutes, secondes = (int(x) if x else 0 for x in correspondance.groups())
+    total = jours * 1440 + heures * 60 + minutes + (1 if secondes >= 30 else 0)
+    return total or None
+
+
+def _textes(value: Any) -> tuple[str, ...]:
+    """Liste de chaînes non vides. Accepte aussi les étapes schema.org {"text": ...}."""
+    if isinstance(value, str):
+        value = [value]
+    if not isinstance(value, list):
+        return ()
+    resultat = []
+    for element in value:
+        if isinstance(element, dict):
+            element = element.get("text")
+        if isinstance(element, str) and element.strip():
+            resultat.append(element.strip())
+    return tuple(resultat)
 
 
 def _parse_keywords(value: Any) -> tuple[str, ...]:
@@ -103,6 +137,12 @@ def parse_recipe(data: dict[str, Any]) -> Recipe:
         keywords=_parse_keywords(data.get("keywords")),
         date_modified=_parse_datetime(data.get("dateModified")),
         url=data.get("url") or None,
+        description=str(data.get("description") or "").strip(),
+        instructions=_textes(data.get("recipeInstructions")),
+        tools=_textes(data.get("tool")),
+        prep_minutes=_parse_duree(data.get("prepTime")),
+        cook_minutes=_parse_duree(data.get("cookTime")),
+        total_minutes=_parse_duree(data.get("totalTime")),
     )
 
 
@@ -146,6 +186,26 @@ class CookbookClient:
                     return await response.json(content_type=None)
                 except (aiohttp.ContentTypeError, ValueError) as err:
                     raise CookbookConnectionError(f"Réponse non JSON sur {path}") from err
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise CookbookConnectionError(str(err) or type(err).__name__) from err
+
+    async def async_get_image(self, recipe_id: str, taille: str = "full") -> tuple[bytes, str] | None:
+        """Photo d'une recette (octets, type MIME), None si la recette n'en a pas."""
+        try:
+            async with self._session.get(
+                f"{self._base}{API_PREFIX}/recipes/{recipe_id}/image",
+                params={"size": taille},
+                headers={k: v for k, v in self._headers.items() if k != "Accept"},
+                timeout=TIMEOUT,
+            ) as response:
+                if response.status in (401, 403):
+                    raise CookbookAuthError(f"Accès refusé ({response.status})")
+                if response.status >= 400:
+                    return None
+                type_mime = response.headers.get("Content-Type", "image/jpeg").split(";")[0]
+                if not type_mime.startswith("image/"):
+                    return None
+                return await response.read(), type_mime
         except (aiohttp.ClientError, TimeoutError) as err:
             raise CookbookConnectionError(str(err) or type(err).__name__) from err
 

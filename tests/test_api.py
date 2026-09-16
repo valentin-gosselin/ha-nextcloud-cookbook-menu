@@ -208,3 +208,27 @@ async def test_login_flow_v2_erreurs(
     aioclient_mock.post(f"{BASE}/index.php/login/v2", **reponse)
     with pytest.raises(exception):
         await async_demarrer_connexion(async_get_clientsession(hass), BASE)
+
+
+async def test_image(client, aioclient_mock) -> None:
+    url = f"{BASE}{API_PREFIX}/recipes/7/image"
+    aioclient_mock.get(url, content=b"JPEG", headers={"Content-Type": "image/jpeg"})
+    assert await client.async_get_image("7") == (b"JPEG", "image/jpeg")
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(url, text="pas une image", headers={"Content-Type": "text/html"})
+    assert await client.async_get_image("7") is None
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(url, status=404)
+    assert await client.async_get_image("7") is None
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(url, status=401)
+    with pytest.raises(CookbookAuthError):
+        await client.async_get_image("7")
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(url, exc=aiohttp.ClientError())
+    with pytest.raises(CookbookConnectionError):
+        await client.async_get_image("7")

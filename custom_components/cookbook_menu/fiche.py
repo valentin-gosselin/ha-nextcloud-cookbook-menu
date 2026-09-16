@@ -1,0 +1,109 @@
+"""Fiche recette pour la carte : ingrédients analysés, étapes avec minuteurs, photo servie par HA."""
+
+from __future__ import annotations
+
+from datetime import timedelta
+from http import HTTPStatus
+from typing import Any
+
+from aiohttp import web
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.auth import async_sign_path
+from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
+
+from .api import CookbookError, Recipe
+from .const import DOMAIN
+from .ingredients.minuteurs import trouver_minuteurs
+from .ingredients.parser import analyser
+
+URL_IMAGE = "/api/cookbook_menu/image/{entry_id}/{recipe_id}"
+VALIDITE_IMAGE = timedelta(hours=24)
+
+
+def ingredients_structures(recette: Recipe) -> list[dict[str, Any]]:
+    """Lignes d'ingrédients analysées, que la carte remet à l'échelle des couverts choisis."""
+    lignes: list[dict[str, Any]] = []
+    for brut in recette.ingredients:
+        analyses = analyser(brut)
+        if not analyses:
+            continue
+        if len(analyses) == 1 and analyses[0].section:
+            lignes.append({"section": analyses[0].nom})
+            continue
+        for ingredient in analyses:
+            lignes.append(
+                {
+                    "raw": brut,
+                    "name": ingredient.nom,
+                    "quantity": ingredient.quantite,
+                    "quantity_max": ingredient.quantite_max,
+                    "unit": ingredient.unite,
+                    "note": ingredient.note,
+                    "vague": ingredient.vague,
+                    "optional": ingredient.facultatif,
+                }
+            )
+    return lignes
+
+
+def etapes_structurees(recette: Recipe) -> list[dict[str, Any]]:
+    """Étapes avec la position des durées détectées (pour en faire des boutons minuteurs)."""
+    return [
+        {
+            "text": etape,
+            "timers": [
+                {"text": m.texte, "start": m.debut, "end": m.fin, "seconds": m.secondes}
+                for m in trouver_minuteurs(etape)
+            ],
+        }
+        for etape in recette.instructions
+    ]
+
+
+def fiche(hass: HomeAssistant, entry_id: str, recette: Recipe, couverts: int) -> dict[str, Any]:
+    """Tout ce que la fenêtre de recette affiche."""
+    chemin_image = URL_IMAGE.format(entry_id=entry_id, recipe_id=recette.id)
+    entree = hass.config_entries.async_get_entry(entry_id)
+    nextcloud = entree.data[CONF_URL].rstrip("/") if entree else ""
+    return {
+        "id": recette.id,
+        "name": recette.name,
+        "description": recette.description,
+        "category": recette.category,
+        "url": recette.url,
+        "cookbook_url": f"{nextcloud}/apps/cookbook/#/recipe/{recette.id}" if nextcloud else None,
+        "yield": recette.servings,
+        "servings": couverts,
+        "prep_minutes": recette.prep_minutes,
+        "cook_minutes": recette.cook_minutes,
+        "total_minutes": recette.total_minutes,
+        "tools": list(recette.tools),
+        "ingredients": ingredients_structures(recette),
+        "steps": etapes_structurees(recette),
+        "image": async_sign_path(hass, chemin_image, VALIDITE_IMAGE),
+    }
+
+
+class VueImageRecette(HomeAssistantView):
+    """Photo d'une recette relayée depuis Nextcloud (l'accès à Nextcloud exige les identifiants)."""
+
+    url = URL_IMAGE
+    name = "api:cookbook_menu:image"
+    requires_auth = True
+
+    async def get(self, request: web.Request, entry_id: str, recipe_id: str) -> web.Response:
+        hass: HomeAssistant = request.app["hass"]
+        entree = hass.config_entries.async_get_entry(entry_id)
+        if entree is None or entree.domain != DOMAIN or not hasattr(entree, "runtime_data"):
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+        try:
+            image = await entree.runtime_data.client.async_get_image(recipe_id)
+        except CookbookError:
+            return web.Response(status=HTTPStatus.BAD_GATEWAY)
+        if image is None:
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+        contenu, type_mime = image
+        return web.Response(
+            body=contenu, content_type=type_mime, headers={"Cache-Control": "private, max-age=3600"}
+        )

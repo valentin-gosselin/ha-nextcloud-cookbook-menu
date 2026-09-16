@@ -71,6 +71,8 @@ title: Weekly menu   # optional
 
 Type a few letters to find a recipe (accents are ignored), pick the day and the servings, then *Add to menu*. The menu is shown below: check a dish once cooked, or remove it.
 
+Click a dish to open its recipe: photo, times, ingredients scaled to the servings (adjustable), numbered steps you can check off, and **timers**: every duration written in a step ("25 min", "1 h 30") is a button that starts a countdown, which keeps running in the card and rings at the end. A *Keep screen on* button prevents the tablet from sleeping while cooking.
+
 The same can be done without the card with the entities *Recipe to add*, *Day*, *Servings* and the *Add to menu* button.
 
 ## Actions

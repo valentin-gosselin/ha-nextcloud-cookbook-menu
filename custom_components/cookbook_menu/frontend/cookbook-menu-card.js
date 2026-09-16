@@ -32,6 +32,23 @@ const TEXTES = {
     retirer: "Retirer du menu",
     cuisine: "Cuisiné",
     nonConfigure: "Cookbook Menu n'est pas configuré",
+    ouvrir: "Voir la recette",
+    sansRecette: "Ce plat n'est lié à aucune recette",
+    preparation: "Préparation",
+    cuisson: "Cuisson",
+    total: "Total",
+    ingredients: "Ingrédients",
+    etapes: "Étapes",
+    ustensiles: "Ustensiles",
+    fermer: "Fermer",
+    source: "Recette d'origine",
+    cookbook: "Ouvrir dans Cookbook",
+    veille: "Garder l'écran allumé",
+    veilleActive: "Écran maintenu allumé",
+    minuteur: "Lancer un minuteur",
+    termine: "Terminé",
+    arreter: "Arrêter",
+    facultatif: "facultatif",
   },
   en: {
     titre: "Weekly menu",
@@ -52,6 +69,23 @@ const TEXTES = {
     retirer: "Remove from menu",
     cuisine: "Cooked",
     nonConfigure: "Cookbook Menu is not set up",
+    ouvrir: "Open the recipe",
+    sansRecette: "This dish is not linked to a recipe",
+    preparation: "Prep",
+    cuisson: "Cook",
+    total: "Total",
+    ingredients: "Ingredients",
+    etapes: "Steps",
+    ustensiles: "Tools",
+    fermer: "Close",
+    source: "Original recipe",
+    cookbook: "Open in Cookbook",
+    veille: "Keep screen on",
+    veilleActive: "Screen kept on",
+    minuteur: "Start a timer",
+    termine: "Done",
+    arreter: "Stop",
+    facultatif: "optional",
   },
 };
 
@@ -65,6 +99,43 @@ function sansAccents(texte) {
 
 function echapper(texte) {
   return String(texte ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+}
+
+function duree(minutes) {
+  if (!minutes) return "";
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (!h) return `${m} min`;
+  return m ? `${h} h ${String(m).padStart(2, "0")}` : `${h} h`;
+}
+
+function chrono(secondes) {
+  const s = Math.max(0, Math.round(secondes));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const r = String(s % 60).padStart(2, "0");
+  return h ? `${h}:${String(m).padStart(2, "0")}:${r}` : `${m}:${r}`;
+}
+
+const FRACTIONS = { 0.25: "¼", 0.5: "½", 0.75: "¾" };
+const UNITES_CONTINUES = ["g", "kg", "mg", "ml", "cl", "dl", "l"];
+
+function nombre(valeur, unite, langue) {
+  let arrondi;
+  if (UNITES_CONTINUES.includes(unite)) {
+    arrondi = valeur >= 10 ? Math.round(valeur) : Math.round(valeur * 10) / 10;
+    if (unite === "kg" || unite === "l") arrondi = Math.round(valeur * 100) / 100;
+  } else if (valeur >= 2) {
+    // On n'achète ni ne coupe « 3¼ carottes » : au-delà de 2, on arrondit à l'entier.
+    arrondi = Math.round(valeur);
+  } else {
+    arrondi = Math.round(valeur * 4) / 4;
+    if (arrondi === 0) arrondi = 0.25;
+    const entier = Math.floor(arrondi);
+    const reste = arrondi - entier;
+    if (reste && FRACTIONS[reste]) return `${entier || ""}${FRACTIONS[reste]}`;
+  }
+  return String(arrondi).replace(".", langue === "fr" ? "," : ".");
 }
 
 function dateIso(date) {
@@ -88,6 +159,12 @@ class CookbookMenuCard extends HTMLElement {
     this._erreur = "";
     this._chargement = null;
     this._desabonner = null;
+    this._fiche = null;
+    this._couvertsFiche = 2;
+    this._etapesFaites = new Set();
+    this._minuteurs = [];
+    this._tic = null;
+    this._verrou = null;
   }
 
   setConfig(config) {
@@ -122,6 +199,10 @@ class CookbookMenuCard extends HTMLElement {
       this._desabonner = null;
     }
     this._chargement = null;
+    if (this._tic) clearInterval(this._tic);
+    this._tic = null;
+    if (this._verrou) this._verrou.release().catch(() => {});
+    this._verrou = null;
   }
 
   connectedCallback() {
@@ -230,8 +311,70 @@ class CookbookMenuCard extends HTMLElement {
         .plat button { background: transparent; border: none; cursor: pointer; color: var(--secondary-text-color); font-size: 1.1em; padding: 4px 8px; }
         .plat input { width: 18px; height: 18px; accent-color: var(--primary-color); }
         .vide { color: var(--secondary-text-color); font-size: .9em; padding: 6px 0; }
+        .plat .texte { cursor: pointer; }
+        .plat .texte:hover .nom { color: var(--primary-color); }
+        .minuteurs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+        .minuteurs:empty { display: none; }
+        .minuteur {
+          display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 16px;
+          background: var(--secondary-background-color); font-variant-numeric: tabular-nums;
+        }
+        .minuteur.fini { background: var(--error-color); color: #fff; animation: clignote 1s infinite; }
+        .minuteur button { background: transparent; border: none; color: inherit; cursor: pointer; font-size: 1em; padding: 0 2px; }
+        @keyframes clignote { 50% { opacity: .6; } }
+        .voile {
+          position: fixed; inset: 0; z-index: 10; background: rgba(0,0,0,.6);
+          display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;
+        }
+        .fenetre {
+          background: var(--card-background-color); color: var(--primary-text-color); border-radius: 12px;
+          width: 100%; max-width: 760px; max-height: 100%; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,.4);
+        }
+        @media (max-width: 600px) { .voile { padding: 0; } .fenetre { border-radius: 0; height: 100%; } }
+        .entete { position: relative; }
+        .entete img { width: 100%; max-height: 280px; object-fit: cover; display: block; border-radius: 12px 12px 0 0; }
+        .fermer {
+          position: absolute; top: 8px; right: 8px; width: 36px; height: 36px; border-radius: 50%; border: none;
+          background: rgba(0,0,0,.55); color: #fff; font-size: 1.3em; cursor: pointer;
+        }
+        .corps { padding: 16px 20px 24px; }
+        .corps h2 { margin: 0 0 6px; font-size: 1.5em; }
+        .corps .description { color: var(--secondary-text-color); margin: 0 0 12px; line-height: 1.4; }
+        .temps { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+        .temps span { padding: 4px 10px; border-radius: 12px; background: var(--secondary-background-color); font-size: .9em; }
+        .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .actions a, .actions button {
+          border: 1px solid var(--divider-color); border-radius: 16px; padding: 4px 12px; font-size: .9em;
+          color: var(--primary-text-color); background: transparent; text-decoration: none; cursor: pointer;
+        }
+        .actions button.actif { background: var(--primary-color); border-color: var(--primary-color); color: var(--text-primary-color, #fff); }
+        .colonnes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 24px; margin-top: 12px; }
+        @media (max-width: 600px) { .colonnes { grid-template-columns: 1fr; } }
+        .colonnes h3 { margin: 0 0 8px; font-size: 1.1em; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .ingredients { list-style: none; padding: 0; margin: 0; }
+        .ingredients li { padding: 5px 0; border-bottom: 1px solid var(--divider-color); line-height: 1.35; }
+        .ingredients li.section { border: none; font-weight: 500; padding-top: 12px; color: var(--secondary-text-color); }
+        .ingredients .quantite { font-weight: 500; }
+        .ingredients .note { color: var(--secondary-text-color); font-size: .9em; }
+        .etapes { list-style: none; padding: 0; margin: 0; counter-reset: etape; }
+        .etapes li {
+          counter-increment: etape; display: grid; grid-template-columns: 32px 1fr; gap: 8px; padding: 8px 0;
+          border-bottom: 1px solid var(--divider-color); cursor: pointer; line-height: 1.45;
+        }
+        .etapes li::before {
+          content: counter(etape); width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+          background: var(--primary-color); color: var(--text-primary-color, #fff); font-size: .85em; font-weight: 500;
+        }
+        .etapes li.faite { opacity: .45; }
+        .etapes li.faite::before { content: "\\2713"; background: var(--secondary-text-color); }
+        .lancer {
+          border: 1px solid var(--primary-color); color: var(--primary-color); background: transparent;
+          border-radius: 12px; padding: 0 8px; font: inherit; cursor: pointer; white-space: nowrap;
+        }
+        .ustensiles { margin-top: 16px; color: var(--secondary-text-color); font-size: .9em; }
       </style>
-      <ha-card><div id="contenu"></div><div class="menu" id="menu"></div></ha-card>`;
+      <ha-card><div id="contenu"></div><div class="minuteurs" id="minuteurs"></div><div class="menu" id="menu"></div></ha-card>
+      <div id="fenetre"></div>`;
   }
 
   _rendre() {
@@ -402,7 +545,7 @@ class CookbookMenuCard extends HTMLElement {
         const fait = plat.status === "completed";
         return `<div class="plat ${fait ? "fait" : ""}">
           <input type="checkbox" title="${echapper(t.cuisine)}" data-uid="${echapper(plat.uid)}" ${fait ? "checked" : ""}>
-          <div class="texte"><div class="nom">${echapper(plat.summary)}</div><div class="detail">${echapper(detail)}</div></div>
+          <div class="texte" role="button" tabindex="0" title="${echapper(t.ouvrir)}" data-ouvrir="${echapper(plat.uid)}"><div class="nom">${echapper(plat.summary)}</div><div class="detail">${echapper(detail)}</div></div>
           <button title="${echapper(t.retirer)}" aria-label="${echapper(t.retirer)}" data-retirer="${echapper(plat.uid)}">&times;</button>
         </div>`;
       })
@@ -416,11 +559,210 @@ class CookbookMenuCard extends HTMLElement {
         }),
       ),
     );
+    conteneur.querySelectorAll("[data-ouvrir]").forEach((element) => {
+      element.addEventListener("click", () => this._ouvrirFiche(element.dataset.ouvrir));
+      element.addEventListener("keydown", (e) => e.key === "Enter" && this._ouvrirFiche(element.dataset.ouvrir));
+    });
     conteneur.querySelectorAll("button[data-retirer]").forEach((bouton) =>
       bouton.addEventListener("click", () =>
         this._hass.callService("todo", "remove_item", { entity_id: this._entiteMenu, item: [bouton.dataset.retirer] }),
       ),
     );
+  }
+  async _ouvrirFiche(uid) {
+    try {
+      const message = { type: "cookbook_menu/recipe", uid };
+      if (this._entree) message.config_entry_id = this._entree;
+      this._fiche = await this._hass.callWS(message);
+    } catch (err) {
+      this._afficherMessage(this._t.sansRecette, true);
+      return;
+    }
+    this._couvertsFiche = this._fiche.servings;
+    this._etapesFaites = new Set();
+    this._rendreFiche();
+  }
+
+  _fermerFiche() {
+    this._fiche = null;
+    this.shadowRoot.getElementById("fenetre").innerHTML = "";
+    document.removeEventListener("keydown", this._echap);
+  }
+
+  _ligneIngredient(ligne) {
+    const t = this._t;
+    const langue = (this._hass.language || "en").startsWith("fr") ? "fr" : "en";
+    if (ligne.section) return `<li class="section">${echapper(ligne.section)}</li>`;
+    const facteur = this._couvertsFiche / (this._fiche.yield || 1);
+    let quantite = "";
+    if (ligne.quantity) {
+      quantite = nombre(ligne.quantity * facteur, ligne.unit, langue);
+      if (ligne.quantity_max) quantite += `-${nombre(ligne.quantity_max * facteur, ligne.unit, langue)}`;
+      if (ligne.unit) quantite += ` ${ligne.unit}`;
+    } else if (ligne.vague) {
+      quantite = ligne.vague;
+    }
+    const notes = [ligne.note, ligne.optional && !String(ligne.note || "").includes(t.facultatif) ? t.facultatif : ""].filter(Boolean).join(", ");
+    return `<li>${quantite ? `<span class="quantite">${echapper(quantite)}</span> ` : ""}${echapper(ligne.name)}${notes ? ` <span class="note">(${echapper(notes)})</span>` : ""}</li>`;
+  }
+
+  _etape(etape, indice) {
+    let html = "";
+    let position = 0;
+    for (const minuteur of etape.timers) {
+      html += echapper(etape.text.slice(position, minuteur.start));
+      html += `<button class="lancer" title="${echapper(this._t.minuteur)}" data-secondes="${minuteur.seconds}" data-libelle="${echapper(minuteur.text)}">${echapper(minuteur.text)}</button>`;
+      position = minuteur.end;
+    }
+    html += echapper(etape.text.slice(position));
+    return `<li class="${this._etapesFaites.has(indice) ? "faite" : ""}" data-etape="${indice}"><span>${html}</span></li>`;
+  }
+
+  _rendreFiche() {
+    const f = this._fiche;
+    const t = this._t;
+    if (!f) return;
+    const temps = [
+      f.prep_minutes && `${t.preparation} ${duree(f.prep_minutes)}`,
+      f.cook_minutes && `${t.cuisson} ${duree(f.cook_minutes)}`,
+      f.total_minutes && `${t.total} ${duree(f.total_minutes)}`,
+    ].filter(Boolean);
+    const fenetre = this.shadowRoot.getElementById("fenetre");
+    fenetre.innerHTML = `
+      <div class="voile" id="voile">
+        <div class="fenetre" role="dialog" aria-modal="true" aria-label="${echapper(f.name)}">
+          <div class="entete">
+            <img id="photo" src="${echapper(f.image)}" alt="" hidden>
+            <button class="fermer" id="fermer" aria-label="${echapper(t.fermer)}">&times;</button>
+          </div>
+          <div class="corps">
+            <h2>${echapper(f.name)}</h2>
+            ${f.description ? `<p class="description">${echapper(f.description)}</p>` : ""}
+            ${temps.length ? `<div class="temps">${temps.map((x) => `<span>${echapper(x)}</span>`).join("")}</div>` : ""}
+            <div class="actions">
+              <button id="veille" class="${this._verrou ? "actif" : ""}">${echapper(this._verrou ? t.veilleActive : t.veille)}</button>
+              ${f.cookbook_url ? `<a href="${echapper(f.cookbook_url)}" target="_blank" rel="noopener">${echapper(t.cookbook)}</a>` : ""}
+              ${f.url ? `<a href="${echapper(f.url)}" target="_blank" rel="noopener">${echapper(t.source)}</a>` : ""}
+            </div>
+            <div class="colonnes">
+              <div>
+                <h3>${echapper(t.ingredients)}
+                  <span class="compteur">
+                    <button id="fiche-moins" aria-label="-">&minus;</button><span id="nombre">${this._couvertsFiche}</span><button id="fiche-plus" aria-label="+">+</button>
+                  </span>
+                </h3>
+                <ul class="ingredients" id="ingredients">${f.ingredients.map((l) => this._ligneIngredient(l)).join("")}</ul>
+                ${f.tools.length ? `<div class="ustensiles">${echapper(t.ustensiles)} : ${echapper(f.tools.join(", "))}</div>` : ""}
+              </div>
+              <div>
+                <h3>${echapper(t.etapes)}</h3>
+                <ol class="etapes" id="etapes">${f.steps.map((e, i) => this._etape(e, i)).join("")}</ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    const photo = this.shadowRoot.getElementById("photo");
+    photo.addEventListener("load", () => (photo.hidden = false));
+    photo.addEventListener("error", () => photo.remove());
+    this.shadowRoot.getElementById("fermer").addEventListener("click", () => this._fermerFiche());
+    this.shadowRoot.getElementById("voile").addEventListener("click", (e) => e.target.id === "voile" && this._fermerFiche());
+    this._echap = (e) => e.key === "Escape" && this._fermerFiche();
+    document.addEventListener("keydown", this._echap);
+    this.shadowRoot.getElementById("veille").addEventListener("click", () => this._basculerVeille());
+    const changer = (ecart) => {
+      this._couvertsFiche = Math.max(1, Math.min(50, this._couvertsFiche + ecart));
+      this.shadowRoot.querySelector(".fenetre #nombre").textContent = this._couvertsFiche;
+      this.shadowRoot.getElementById("ingredients").innerHTML = f.ingredients.map((l) => this._ligneIngredient(l)).join("");
+    };
+    this.shadowRoot.getElementById("fiche-moins").addEventListener("click", () => changer(-1));
+    this.shadowRoot.getElementById("fiche-plus").addEventListener("click", () => changer(1));
+    this.shadowRoot.getElementById("etapes").addEventListener("click", (e) => {
+      const bouton = e.target.closest(".lancer");
+      if (bouton) {
+        e.stopPropagation();
+        this._lancerMinuteur(Number(bouton.dataset.secondes), `${f.name} : ${bouton.dataset.libelle}`);
+        return;
+      }
+      const li = e.target.closest("li[data-etape]");
+      if (!li) return;
+      const indice = Number(li.dataset.etape);
+      if (this._etapesFaites.has(indice)) this._etapesFaites.delete(indice);
+      else this._etapesFaites.add(indice);
+      li.classList.toggle("faite");
+    });
+  }
+
+  async _basculerVeille() {
+    const t = this._t;
+    const bouton = this.shadowRoot.getElementById("veille");
+    try {
+      if (this._verrou) {
+        await this._verrou.release();
+        this._verrou = null;
+      } else if (navigator.wakeLock) {
+        this._verrou = await navigator.wakeLock.request("screen");
+        this._verrou.addEventListener("release", () => (this._verrou = null));
+      }
+    } catch (err) {
+      this._verrou = null;
+    }
+    if (bouton) {
+      bouton.classList.toggle("actif", Boolean(this._verrou));
+      bouton.textContent = this._verrou ? t.veilleActive : t.veille;
+    }
+  }
+
+  _lancerMinuteur(secondes, libelle) {
+    this._minuteurs.push({ id: Date.now() + Math.random(), libelle, fin: Date.now() + secondes * 1000, sonne: false });
+    if (!this._tic) this._tic = setInterval(() => this._rendreMinuteurs(), 1000);
+    this._rendreMinuteurs();
+  }
+
+  _rendreMinuteurs() {
+    const conteneur = this.shadowRoot.getElementById("minuteurs");
+    if (!conteneur) return;
+    const t = this._t;
+    const maintenant = Date.now();
+    conteneur.innerHTML = this._minuteurs
+      .map((m) => {
+        const restant = (m.fin - maintenant) / 1000;
+        if (restant <= 0 && !m.sonne) {
+          m.sonne = true;
+          this._sonner();
+        }
+        const fini = restant <= 0;
+        return `<div class="minuteur ${fini ? "fini" : ""}"><span>${echapper(m.libelle)}</span><strong>${fini ? echapper(t.termine) : chrono(restant)}</strong><button data-arreter="${m.id}" title="${echapper(t.arreter)}" aria-label="${echapper(t.arreter)}">&times;</button></div>`;
+      })
+      .join("");
+    conteneur.querySelectorAll("button[data-arreter]").forEach((bouton) =>
+      bouton.addEventListener("click", () => {
+        this._minuteurs = this._minuteurs.filter((m) => String(m.id) !== bouton.dataset.arreter);
+        this._rendreMinuteurs();
+      }),
+    );
+    if (!this._minuteurs.length && this._tic) {
+      clearInterval(this._tic);
+      this._tic = null;
+    }
+  }
+
+  _sonner() {
+    try {
+      const contexte = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.4, 0.8].forEach((decalage) => {
+        const oscillateur = contexte.createOscillator();
+        const volume = contexte.createGain();
+        oscillateur.frequency.value = 880;
+        volume.gain.value = 0.25;
+        oscillateur.connect(volume).connect(contexte.destination);
+        oscillateur.start(contexte.currentTime + decalage);
+        oscillateur.stop(contexte.currentTime + decalage + 0.25);
+      });
+    } catch (err) {
+      /* son indisponible : le clignotement suffit */
+    }
+    if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
   }
 }
 

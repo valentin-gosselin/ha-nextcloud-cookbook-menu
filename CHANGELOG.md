@@ -9,6 +9,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [
 - Home Assistant 2026.9.0 minimum.
 
 ### Ajouté
+- Fiche recette dans la carte : photo, temps, ingrédients à l'échelle des couverts, étapes cochables, minuteurs lancés depuis les durées des étapes, écran maintenu allumé.
 - Carte de tableau de bord `custom:cookbook-menu-card`, installée automatiquement : recherche de recette pendant la frappe, jour, couverts, ajout, et menu affiché avec « cuisiné » et suppression.
 - Entités « Recette à ajouter » (toutes les recettes par leur nom), « Jour », « Couverts » et bouton « Ajouter au menu ».
 - Connexion « Se connecter avec Nextcloud » (Login Flow v2) : plus besoin de créer et recopier un mot de passe d'application. La saisie manuelle reste possible.

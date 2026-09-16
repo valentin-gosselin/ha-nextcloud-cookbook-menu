@@ -62,6 +62,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
     async_enregistrer_phrases(hass)
     async_enregistrer_commandes(hass)
+    if getattr(hass, "http", None) is not None:
+        from .fiche import VueImageRecette
+
+        hass.http.register_view(VueImageRecette())
     await async_enregistrer_carte(hass)
     return True
 

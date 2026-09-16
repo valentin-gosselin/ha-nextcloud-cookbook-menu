@@ -10,11 +10,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN
+from .fiche import fiche
 
 
 @callback
 def async_enregistrer_commandes(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_recettes)
+    websocket_api.async_register_command(hass, ws_fiche)
 
 
 @websocket_api.websocket_command(
@@ -49,3 +51,39 @@ def ws_recettes(
             ],
         },
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "cookbook_menu/recipe",
+        vol.Optional("config_entry_id"): str,
+        vol.Exclusive("recipe_id", "cible"): str,
+        vol.Exclusive("uid", "cible"): str,
+    }
+)
+@callback
+def ws_fiche(hass: HomeAssistant, connexion: websocket_api.ActiveConnection, message: dict[str, Any]) -> None:
+    """Fiche d'une recette, par identifiant ou par plat du menu (couverts du plat)."""
+    entrees = [
+        e
+        for e in hass.config_entries.async_loaded_entries(DOMAIN)
+        if message.get("config_entry_id") in (None, e.entry_id)
+    ]
+    if not entrees:
+        connexion.send_error(message["id"], "not_found", "Cookbook Menu is not set up")
+        return
+    entree = entrees[0]
+    planificateur = entree.runtime_data.planner
+    couverts = planificateur.couverts_par_defaut
+    recette = None
+    if "uid" in message:
+        plat = next((p for p in planificateur.menu if p.uid == message["uid"]), None)
+        if plat is not None:
+            recette = planificateur.recette_du_plat(plat)
+            couverts = plat.servings
+    elif "recipe_id" in message:
+        recette = planificateur.recettes.get(message["recipe_id"])
+    if recette is None:
+        connexion.send_error(message["id"], "not_found", "Recipe not found")
+        return
+    connexion.send_result(message["id"], fiche(hass, entree.entry_id, recette, couverts))
