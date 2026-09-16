@@ -11,7 +11,7 @@
           "verify_ssl": "Vérifier le certificat SSL"
         },
         "data_description": {
-          "url": "Adresse de votre serveur Nextcloud, par exemple https://cloud.exemple.fr",
+          "url": "Adresse de votre serveur Nextcloud, la même que dans votre navigateur",
           "username": "Votre identifiant de connexion Nextcloud",
           "password": "Créez un mot de passe d'application dédié plutôt que d'utiliser celui du compte",
           "verify_ssl": "À désactiver uniquement pour un certificat auto-signé"
@@ -36,7 +36,7 @@
           "verify_ssl": "Vérifier le certificat SSL"
         },
         "data_description": {
-          "url": "Adresse de votre serveur Nextcloud, par exemple https://cloud.exemple.fr",
+          "url": "Adresse de votre serveur Nextcloud, la même que dans votre navigateur",
           "username": "Votre identifiant de connexion Nextcloud",
           "password": "Créez un mot de passe d'application dédié plutôt que d'utiliser celui du compte",
           "verify_ssl": "À désactiver uniquement pour un certificat auto-signé"
