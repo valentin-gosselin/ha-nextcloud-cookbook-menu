@@ -10,11 +10,17 @@ import math
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
+from .achats import ALIAS, PROFILS, convertir, fusionner_mesures
 from .aisles import Rayon, rayon
 from .normalize import sans_accents
 from .pantry import est_au_placard
 from .parser import Ingredient, analyser
 from .units import UNITES, Famille
+
+# Clés dont le nom affiché vient d'un alias (« Œufs ») et ne doit pas être remplacé.
+_NOMS_IMPOSES = {cible for cible, _, _ in ALIAS.values()}
+
+_PLURIELS = {"morceau": "morceaux", "noix": "noix", "tête": "têtes", "pincée": "pincées", "boîte": "boîtes"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,9 +115,14 @@ def formater_quantites(quantites: dict[str, float]) -> str:
                 morceaux.append(f"{_nombre(arrondi)} c. à c.")
         elif mesure == "pièce":
             morceaux.append(f"{int(arrondi)}")
+        elif mesure == "gousse" and arrondi >= 10:
+            tetes = math.ceil(arrondi / 10)
+            morceaux.append(f"{tetes} tête{'s' if tetes > 1 else ''}")
         else:
-            pluriel = "s" if arrondi > 1 and not mesure.endswith(("s", "x")) else ""
-            morceaux.append(f"{int(arrondi)} {mesure}{pluriel}")
+            forme = mesure
+            if arrondi > 1:
+                forme = _PLURIELS.get(mesure, mesure if mesure.endswith(("s", "x")) else f"{mesure}s")
+            morceaux.append(f"{int(arrondi)} {forme}")
     return " + ".join(morceaux)
 
 
@@ -135,13 +146,24 @@ def calculer(
                 if ingredient.section or not ingredient.cle:
                     continue
                 cle = ingredient.cle
+                mesure = _mesure_et_valeur(ingredient, contribution.facteur)
+                nom_impose = None
+                if mesure is not None:
+                    cle, unite, valeur, nom_impose = convertir(cle, *mesure)
+                    mesure = (unite, valeur)
+                elif cle in ALIAS:
+                    cle, _, nom_impose = ALIAS[cle]
                 if cle not in epuises and est_au_placard(cle, placard):
                     ecartes.setdefault(cle, ingredient.nom)
                     continue
                 ligne = lignes.get(cle)
                 if ligne is None:
-                    ligne = lignes[cle] = LigneCourses(cle=cle, nom=ingredient.nom, rayon=rayon(cle))
-                elif len(ingredient.nom) < len(ligne.nom):
+                    ligne = lignes[cle] = LigneCourses(
+                        cle=cle, nom=nom_impose or ingredient.nom, rayon=rayon(cle)
+                    )
+                elif nom_impose:
+                    ligne.nom = nom_impose
+                elif len(ingredient.nom) < len(ligne.nom) and ligne.cle not in _NOMS_IMPOSES:
                     ligne.nom = ingredient.nom
                 if cle not in comptees:
                     # Une recette qui cite deux fois un produit (« sel » dans la salade et la sauce)
@@ -150,11 +172,13 @@ def calculer(
                     ligne.sources[contribution.recette] = (
                         ligne.sources.get(contribution.recette, 0) + contribution.couverts
                     )
-                mesure = _mesure_et_valeur(ingredient, contribution.facteur)
                 if mesure is None:
                     ligne.sans_quantite = True
                 else:
                     ligne.quantites[mesure[0]] = ligne.quantites.get(mesure[0], 0) + mesure[1]
+    for ligne in lignes.values():
+        if ligne.cle not in PROFILS:
+            ligne.quantites = fusionner_mesures(ligne.quantites)
     return trier(lignes.values()), sorted(ecartes.values(), key=sans_accents)
 
 

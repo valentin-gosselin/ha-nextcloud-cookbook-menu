@@ -45,7 +45,7 @@ def test_fusion_entre_recettes_et_sources() -> None:
     lignes, _ = calculer([recette("2176038", 2), recette("68238", 2)])
     tomates = par_cle(lignes)["tomate"]
     assert tomates.sources == {"Carry de poulet": 2, "Couscous": 2}
-    assert tomates.libelle == "Tomates (70 g + 1)"
+    assert tomates.libelle == "Tomates (2)"  # 70 g ramenés à la pièce, plus 1
 
 
 def test_ordre_par_rayon_sans_tenir_compte_des_accents() -> None:
@@ -104,8 +104,8 @@ def test_augmentation() -> None:
 
 
 def test_quantite_max_utilisee_pour_les_plages() -> None:
-    lignes, _ = calculer([Contribution("Test", 1, 1, ("7-8 champignons",))])
-    assert lignes[0].libelle == "Champignons (8)"
+    lignes, _ = calculer([Contribution("Test", 1, 1, ("7-8 navets",))])
+    assert lignes[0].libelle == "Navets (8)"
 
 
 @pytest.mark.parametrize(

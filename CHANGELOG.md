@@ -9,6 +9,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [
 - Home Assistant 2026.9.0 minimum.
 
 ### Ajouté
+- Unités d'achat : l'ail en gousses ou en têtes, les herbes en bouquets, les légumes à la pièce, le beurre au poids, les sachets et boîtes. Blancs et jaunes rejoignent les œufs, le jus de citron les citrons. L'eau et le laurier sont au placard par défaut.
 - Fiche recette dans la carte : photo, temps, ingrédients à l'échelle des couverts, étapes cochables, minuteurs lancés depuis les durées des étapes, écran maintenu allumé.
 - Carte de tableau de bord `custom:cookbook-menu-card`, installée automatiquement : recherche de recette pendant la frappe, jour, couverts, ajout, et menu affiché avec « cuisiné » et suppression.
 - Entités « Recette à ajouter » (toutes les recettes par leur nom), « Jour », « Couverts » et bouton « Ajouter au menu ».

@@ -100,7 +100,7 @@ async def test_retirer_et_couverts(hass: HomeAssistant, entree) -> None:
     await appeler(hass, "add_to_menu", recipe="carry", day="jeudi")
     await appeler(hass, "add_to_menu", recipe="tartiflette")
     await appeler(hass, "set_servings", recipe="carry de poulet", servings=6)
-    assert "Tomates (200 g)" in await courses(hass)
+    assert "Tomates (2)" in await courses(hass)
     [carry, tartiflette] = await elements(hass)
     assert carry["description"] == "6 couverts"
 

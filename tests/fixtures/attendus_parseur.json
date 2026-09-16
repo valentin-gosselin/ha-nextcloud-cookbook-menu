@@ -43,7 +43,7 @@
    "nom": "Farine de blé mi-blanche",
    "quantite": 180.0,
    "unite": "g",
-   "cle": "farine ble mi blanche"
+   "cle": "farine"
   }
  ],
  "2 bananes mûres": [
@@ -477,7 +477,7 @@
    "nom": "Farine de blé",
    "quantite": 200.0,
    "unite": "g",
-   "cle": "farine ble"
+   "cle": "farine"
   }
  ],
  "200 g Chocolat à cuire": [
@@ -3151,7 +3151,7 @@
    "nom": "Miel liquide",
    "quantite": 2.0,
    "unite": "c. à s.",
-   "cle": "miel liquide"
+   "cle": "miel"
   }
  ],
  "30 g de beurre": [

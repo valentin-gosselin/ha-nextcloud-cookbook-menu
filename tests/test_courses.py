@@ -73,9 +73,9 @@ async def test_changer_les_couverts_recalcule(hass: HomeAssistant, entree) -> No
 
 async def test_cochage_conserve_si_quantite_stable_ou_en_baisse(hass: HomeAssistant, entree) -> None:
     await ajouter(hass, "carry", description="pour 6")
-    await cocher(hass, "Tomates (200 g)")
+    await cocher(hass, "Tomates (2)")
     await ajouter(hass, "salade cesar")  # ne touche pas aux tomates
-    assert (await courses(hass))["Tomates (200 g)"]["status"] == "completed"
+    assert (await courses(hass))["Tomates (2)"]["status"] == "completed"
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -87,24 +87,24 @@ async def test_cochage_conserve_si_quantite_stable_ou_en_baisse(hass: HomeAssist
         },
         blocking=True,
     )
-    assert (await courses(hass))["Tomates (100 g)"]["status"] == "completed"
+    assert (await courses(hass))["Tomates (1)"]["status"] == "completed"
 
 
 async def test_quantite_en_hausse_decoche_avec_mention(hass: HomeAssistant, entree) -> None:
     await ajouter(hass, "carry", description="pour 6")
-    await cocher(hass, "Tomates (200 g)")
+    await cocher(hass, "Tomates (2)")
     await ajouter(hass, "couscous", description="pour 2")
-    ligne = (await courses(hass))["Tomates (200 g + 1) +1"]
+    ligne = (await courses(hass))["Tomates (3) +1"]
     assert ligne["status"] == "needs_action"
 
-    await cocher(hass, "Tomates (200 g + 1) +1")
-    assert (await courses(hass))["Tomates (200 g + 1)"]["status"] == "completed"
+    await cocher(hass, "Tomates (3) +1")
+    assert (await courses(hass))["Tomates (3)"]["status"] == "completed"
 
 
 async def test_recette_modifiee_apres_cochage(hass: HomeAssistant, entree, mock_client, recettes) -> None:
     """Critère ajouté par le party mode du 16/09 : pas de réapparition silencieuse."""
     await ajouter(hass, "carry", description="pour 6")
-    await cocher(hass, "Oignons (200 g)")
+    await cocher(hass, "Oignons (2)")
     carry = recettes["2176038"]
     recettes["2176038"] = Recipe(
         **{
@@ -116,16 +116,16 @@ async def test_recette_modifiee_apres_cochage(hass: HomeAssistant, entree, mock_
     await coordinateur.async_refresh()
     await hass.async_block_till_done()
     lignes = await courses(hass)
-    assert lignes["Oignons (300 g) +100 g"]["status"] == "needs_action"
-    assert "Tomates (200 g)" not in lignes
+    assert lignes["Oignons (3) +1"]["status"] == "needs_action"
+    assert "Tomates (2)" not in lignes
 
     recettes["2176038"] = Recipe(
         **{**{f: getattr(carry, f) for f in carry.__slots__}, "ingredients": ("100 g d'oignons",)}
     )
-    await cocher(hass, "Oignons (300 g) +100 g")
+    await cocher(hass, "Oignons (3) +1")
     await coordinateur.async_refresh()
     await hass.async_block_till_done()
-    assert (await courses(hass))["Oignons (100 g)"]["status"] == "completed"
+    assert (await courses(hass))["Oignons (1)"]["status"] == "completed"
 
 
 async def test_lignes_manuelles_preservees(hass: HomeAssistant, entree) -> None:
@@ -192,7 +192,7 @@ async def test_supprimer_une_ligne_calculee_la_masque(hass: HomeAssistant, entre
 
 async def test_panne_nextcloud_ne_perd_pas_les_cochages(hass: HomeAssistant, entree, mock_client) -> None:
     await ajouter(hass, "carry", description="pour 6")
-    await cocher(hass, "Tomates (200 g)")
+    await cocher(hass, "Tomates (2)")
     coordinateur = entree.runtime_data.coordinator
     mock_client.async_get_recipes.side_effect = CookbookConnectionError("coupure")
     await coordinateur.async_refresh()
@@ -201,7 +201,7 @@ async def test_panne_nextcloud_ne_perd_pas_les_cochages(hass: HomeAssistant, ent
     mock_client.async_get_recipes.side_effect = None
     await coordinateur.async_refresh()
     await hass.async_block_till_done()
-    assert (await courses(hass))["Tomates (200 g)"]["status"] == "completed"
+    assert (await courses(hass))["Tomates (2)"]["status"] == "completed"
 
 
 async def test_plat_termine_ne_compte_plus(hass: HomeAssistant, entree) -> None:
@@ -218,7 +218,7 @@ async def test_meme_recette_deux_fois(hass: HomeAssistant, entree) -> None:
 
 async def test_semaine_suivante_repart_de_zero(hass: HomeAssistant, entree) -> None:
     await ajouter(hass, "carry", description="pour 6")
-    await cocher(hass, "Tomates (200 g)")
+    await cocher(hass, "Tomates (2)")
     await hass.services.async_call(
         TODO_DOMAIN,
         "remove_item",
@@ -227,4 +227,4 @@ async def test_semaine_suivante_repart_de_zero(hass: HomeAssistant, entree) -> N
     )
     assert await courses(hass) == {}
     await ajouter(hass, "carry", description="pour 6")
-    assert (await courses(hass))["Tomates (200 g)"]["status"] == "needs_action"
+    assert (await courses(hass))["Tomates (2)"]["status"] == "needs_action"

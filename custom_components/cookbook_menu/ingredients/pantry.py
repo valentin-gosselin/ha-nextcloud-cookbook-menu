@@ -25,10 +25,12 @@ PLACARD_PAR_DEFAUT: tuple[str, ...] = (
     "Piment de Cayenne",
     "Herbes de Provence",
     "Origan",
+    "Eau",
+    "Laurier",
 )
 
 # Familles où toute variante reste un produit de placard (« poivre du moulin », « vinaigre de cidre »).
-_FAMILLES = {"sel", "poivre", "huile", "vinaigre"}
+_FAMILLES = {"sel", "poivre", "huile", "vinaigre", "laurier"}
 
 RAPPEL_MAX_CITES = 5
 

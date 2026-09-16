@@ -131,6 +131,10 @@ EQUIVALENCES: dict[str, str] = {
     "salade verte": "salade",
     "laitue": "salade",
     "coriandre fraiche": "coriandre",
+    "miel liquide": "miel",
+    "farine ble": "farine",
+    "farine ble mi blanche": "farine",
+    "oeuf dur": "oeuf",
 }
 
 
