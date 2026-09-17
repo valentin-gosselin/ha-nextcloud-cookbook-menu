@@ -14,14 +14,31 @@ from custom_components.cookbook_menu.ingredients.normalize import cle
 @pytest.mark.parametrize(
     "texte",
     ["Ras el hanout", "ras-el-hanout", "Riz basmati", "riz basmati bio", "Huile d'olive vierge extra",
-     "Pâtes", "des lentilles corail", "Sauce soja", "Levure chimique", "Pignons de pin"],
+     "Pâtes", "des lentilles corail", "ras el anout", "herbes de provance", "Sauce soja", "Levure chimique",
+     "Pignons de pin"],
 )  # fmt: skip
 def test_produits_reconnus(texte: str) -> None:
     assert est_produit_de_placard(cle(texte))
 
 
 @pytest.mark.parametrize(
-    "texte", ["Papier toilette", "Poêle", "Carotte", "Beurre", "Crème fraîche", "Lessive", "Poulet", ""]
+    "texte",
+    [
+        "Papier toilette",
+        "Poêle",
+        "Carotte",
+        "Beurre",
+        "Crème fraîche",
+        "Lessive",
+        "Poulet",
+        "",
+        "Patates",
+        "Poivrons",
+        "Haricots verts",
+        "Crème fraîche épaisse",
+        "Lait demi-écrémé",
+        "Farce",
+    ],
 )
 def test_produits_hors_placard(texte: str) -> None:
     assert not est_produit_de_placard(cle(texte))
