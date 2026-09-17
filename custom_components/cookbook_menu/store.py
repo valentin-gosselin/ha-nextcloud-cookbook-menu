@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
+from .ingredients.catalogue_placard import est_produit_de_placard
 from .ingredients.normalize import cle
 
 VERSION_STOCKAGE = 1
@@ -55,6 +56,10 @@ class DonneesPlanificateur:
     menu: list[PlatMenu] = field(default_factory=list)
     # Produits du placard signalés manquants : clé produit -> nom saisi.
     placard_epuise: dict[str, str] = field(default_factory=dict)
+    # Produits rangés au placard à la main, en plus des options : clé produit -> nom.
+    placard_ajouts: dict[str, str] = field(default_factory=dict)
+    # Produits des options sortis du placard depuis la carte : clés.
+    placard_retires: list[str] = field(default_factory=list)
     # Frigo : clé produit -> {nom, quantites {mesure: valeur}, expire (date ISO)}.
     frigo: dict[str, dict[str, Any]] = field(default_factory=dict)
     # Maison (hors menu et hors placard) : clé -> {nom, present (bool), description}.
@@ -70,6 +75,8 @@ class DonneesPlanificateur:
         return {
             "menu": [p.en_dict() for p in self.menu],
             "placard_epuise": self.placard_epuise,
+            "placard_ajouts": self.placard_ajouts,
+            "placard_retires": self.placard_retires,
             "frigo": self.frigo,
             "maison": self.maison,
             "placard_verifie": self.placard_verifie,
@@ -94,9 +101,19 @@ class DonneesPlanificateur:
                         "description": manuelle.get("description"),
                     },
                 )
+        placard_ajouts = dict(donnees.get("placard_ajouts", {}))
+        placard_epuise = dict(donnees.get("placard_epuise", {}))
+        # Migration : un produit de placard rangé en « maison » avant l'index rejoint le placard.
+        for cle_produit in [c for c in maison if est_produit_de_placard(c)]:
+            produit = maison.pop(cle_produit)
+            placard_ajouts.setdefault(cle_produit, produit["nom"])
+            if not produit.get("present"):
+                placard_epuise.setdefault(cle_produit, produit["nom"])
         return cls(
             menu=[PlatMenu.depuis_dict(p) for p in donnees.get("menu", [])],
-            placard_epuise=dict(donnees.get("placard_epuise", {})),
+            placard_epuise=placard_epuise,
+            placard_ajouts=placard_ajouts,
+            placard_retires=list(donnees.get("placard_retires", [])),
             frigo=dict(donnees.get("frigo", {})),
             maison=maison,
             placard_verifie=bool(donnees.get("placard_verifie", False)),

@@ -90,8 +90,9 @@ def ws_reserve(
     {
         vol.Required("type"): "cookbook_menu/stock/update",
         vol.Optional("config_entry_id"): str,
-        vol.Required("action"): vol.In(["missing", "present", "remove", "check_pantry"]),
+        vol.Required("action"): vol.In(["missing", "present", "remove", "check_pantry", "to_pantry"]),
         vol.Optional("key"): str,
+        vol.Optional("name"): str,
         vol.Optional("missing"): [str],
     }
 )
@@ -99,7 +100,7 @@ def ws_reserve(
 def ws_reserve_modifier(
     hass: HomeAssistant, connexion: websocket_api.ActiveConnection, message: dict[str, Any]
 ) -> None:
-    """« Il n'y en a plus », « j'en ai », « sortir de la réserve », vérification du placard."""
+    """« Il n'y en a plus », « j'en ai », « sortir de la réserve », « au placard », vérification."""
     entree = _entree(hass, message)
     if entree is None:
         connexion.send_error(message["id"], "not_found", "Cookbook Menu is not set up")
@@ -109,6 +110,8 @@ def ws_reserve_modifier(
     try:
         if action == "check_pantry":
             planificateur.async_valider_placard(message.get("missing", []))
+        elif action == "to_pantry" and "name" in message:
+            planificateur.async_reserve_au_placard(nom=message["name"])
         elif "key" not in message:
             connexion.send_error(message["id"], "invalid_format", "key is required")
             return
@@ -116,6 +119,8 @@ def ws_reserve_modifier(
             planificateur.async_reserve_manquant(message["key"])
         elif action == "present":
             planificateur.async_reserve_present(message["key"])
+        elif action == "to_pantry":
+            planificateur.async_reserve_au_placard(cle_produit=message["key"])
         else:
             planificateur.async_reserve_retirer(message["key"])
     except HomeAssistantError as err:

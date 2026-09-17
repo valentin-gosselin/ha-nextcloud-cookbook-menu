@@ -70,7 +70,7 @@ title: Weekly menu   # optional
 
 Type a few letters to find a recipe (accents are ignored), pick the day and the servings, then *Add to menu*. The menu is shown below: check a dish once cooked, or remove it.
 
-Click a dish to open its recipe: photo, times, ingredients scaled to the servings (adjustable), numbered steps you can check off, and **timers**: every duration written in a step ("25 min", "1 h 30") is a button that starts a countdown, which keeps running in the card and rings at the end. A *Keep screen on* button prevents the tablet from sleeping while cooking.
+Click a dish to open its recipe: photo, times, ingredients scaled to the servings (adjustable), numbered steps you can check off, and **timers**: every duration written in a step ("25 min", "1 h 30") is a button that starts a countdown, shown at the top of the recipe and in the card, which rings at the end. A *Keep screen on* button prevents the tablet from sleeping while cooking.
 
 The same can be done without the card with the entities *Recipe to add*, *Day*, *Servings* and the *Add to menu* button.
 
@@ -78,7 +78,7 @@ The same can be done without the card with the entities *Recipe to add*, *Day*, 
 
 Cookbook Menu keeps track of what is at home without asking you to type anything:
 
-- **Pantry** (the staples from the options): either in stock or missing. Say "we're out of olive oil" (or tap it in the stock card) and it goes to the shopping list; check it when bought and it is back in stock.
+- **Pantry** (the staples from the options, plus what you add): either in stock or missing. Say "we're out of olive oil" (or tap it in the stock card) and it goes to the shopping list; check it when bought and it is back in stock. A product added by hand that keeps for more than a week (spices, dried herbs, condiments, pasta, rice, flours, canned food: about 300 known products, variants included) joins the pantry. Any other product can be added to the pantry from the card, and products can be removed from it.
 - **Fridge**: checking a shopping line means you bought it. The quantity goes to the fridge, a line stays checked while the fridge covers the menu, and only what is missing is asked for. A cooked dish (checked in the menu) or a dish whose day has passed uses its share. Leftovers are reused by the next dishes. Fresh products are forgotten after 7 days, groceries after 60.
 - **Household**: items added by hand to the shopping list (toilet paper, a pan) join the stock once checked. They can be marked out of stock again, or removed from the stock.
 
@@ -210,6 +210,7 @@ Settings > Devices & services > Cookbook Menu > menu > Delete. The stored menu, 
 Cookbook Menu relie vos recettes **Nextcloud Cookbook** à Home Assistant.
 - **Menu** : un plat dit ou tapé (« salade césar jeudi pour 4 ») rejoint le menu de la semaine.
 - **Courses** : ses ingrédients arrivent dans la liste de courses, mis à l'échelle, fusionnés, arrondis à l'achat, rangés par rayon, sans les produits du placard.
+- **Réserve** : placard, frigo et maison tenus à jour par les courses et le menu. Un produit qui se garde (ras el hanout, riz, farine...) ajouté à la main rejoint le placard.
 - **Pilotage** : depuis l'interface, les automatisations, Assist (phrases en français) ou un agent LLM.
 - **Synchronisation** : une recopie est possible vers la liste de courses que le foyer utilise déjà.
 

@@ -243,9 +243,16 @@ async def test_cas_limites_de_la_reserve(hass: HomeAssistant, mock_client, confi
     planificateur.async_modifier_plat(plat.uid, fait=True)
     assert "huile olive" in planificateur.stockage.donnees.frigo
 
-    # Produit au frigo qui n'est plus demandé par le menu : signalé manquant, il passe en maison.
+    # Produit de placard au frigo, signalé manquant : il rejoint le placard, à racheter.
     planificateur.async_reserve_manquant("huile olive")
-    assert planificateur.stockage.donnees.maison["huile olive"]["present"] is False
+    donnees = planificateur.stockage.donnees
+    assert "huile olive" not in donnees.frigo and donnees.placard_epuise == {"huile olive": "Huile d'olive"}
+    planificateur.async_reserve_present("huile olive")
+
+    # Autre produit au frigo, plus demandé par le menu : signalé manquant, il passe en maison.
+    donnees.frigo["carotte"] = {"nom": "Carotte", "quantites": {"pièce": 2}, "expire": "2026-09-20"}
+    planificateur.async_reserve_manquant("carotte")
+    assert donnees.maison["carotte"]["present"] is False
 
     # Supprimer une ligne de placard manquant utilisée par le menu : « j'en ai ».
     await ajouter(hass, "carry")
@@ -254,3 +261,68 @@ async def test_cas_limites_de_la_reserve(hass: HomeAssistant, mock_client, confi
         TODO_DOMAIN, "remove_item", {"entity_id": COURSES, "item": "Sel (0,5 c. à c.)"}, blocking=True
     )
     assert planificateur.stockage.donnees.placard_epuise == {}
+
+
+async def test_index_du_placard(hass: HomeAssistant, mock_client, config_entry, hass_ws_client) -> None:
+    """Story 2.11 : un produit de placard ajouté à la main rejoint le placard, pas la maison."""
+    await installer(hass, config_entry, pantry=["Sel"])
+    planificateur = config_entry.runtime_data.planner
+    donnees = planificateur.stockage.donnees
+
+    await ajouter_course(hass, "Ras el hanout")
+    assert (await courses(hass))["Ras el hanout"]["description"] == "manque au placard"
+    assert donnees.maison == {} and donnees.placard_ajouts == {"ras el hanout": "Ras el hanout"}
+    await cocher(hass, "Ras el hanout")
+    assert {"key": "ras el hanout", "name": "Ras el hanout", "missing": False} in planificateur.reserve()[
+        "pantry"
+    ]
+
+    # Désormais au placard : les recettes ne le demandent plus.
+    await ajouter_course(hass, "Huile d'olive")
+    await cocher(hass, "Huile d'olive")
+    await ajouter(hass, "couscous")
+    assert not any(libelle.startswith("Huile") for libelle in await courses(hass))
+
+    # Carte : ajout direct (présent), produit de la maison déplacé, sortie du placard.
+    client = await hass_ws_client(hass)
+    for message in (
+        {"action": "to_pantry", "name": "Sirop de sureau"},
+        {"action": "to_pantry", "name": "  "},
+        {"action": "to_pantry", "key": "inconnu"},
+        {"action": "to_pantry"},
+    ):
+        await client.send_json_auto_id({"type": "cookbook_menu/stock/update", **message})
+        await client.receive_json()
+    assert donnees.placard_ajouts["sirop sureau"] == "Sirop de sureau"
+    assert "sirop sureau" not in donnees.placard_epuise
+
+    await ajouter_course(hass, "Papier toilette")
+    planificateur.async_reserve_au_placard(cle_produit="papier toilette")
+    assert donnees.maison == {} and donnees.placard_epuise["papier toilette"] == "Papier toilette"
+
+    planificateur.async_reserve_retirer("sel")  # produit des options
+    planificateur.async_reserve_retirer("ras el hanout")  # produit rangé à la main
+    cles = {p["key"] for p in planificateur.reserve()["pantry"]}
+    assert "sel" not in cles and "ras el hanout" not in cles
+    assert donnees.placard_retires == ["sel"]
+    # « Il n'y a plus de sel » le remet au placard, à racheter.
+    await ajouter_course(hass, "Sel")
+    assert donnees.placard_retires == [] and donnees.placard_epuise["sel"] == "Sel"
+
+
+async def test_migration_de_la_maison_vers_le_placard() -> None:
+    from custom_components.cookbook_menu.store import DonneesPlanificateur
+
+    donnees = DonneesPlanificateur.depuis_dict(
+        {
+            "maison": {
+                "ras el hanout": {"nom": "Ras el hanout", "present": False, "description": None},
+                "riz basmati": {"nom": "Riz basmati", "present": True, "description": None},
+                "papier toilette": {"nom": "Papier toilette", "present": True, "description": None},
+            }
+        }
+    )
+    assert list(donnees.maison) == ["papier toilette"]
+    assert donnees.placard_ajouts == {"ras el hanout": "Ras el hanout", "riz basmati": "Riz basmati"}
+    assert donnees.placard_epuise == {"ras el hanout": "Ras el hanout"}
+    assert DonneesPlanificateur.depuis_dict(donnees.en_dict()) == donnees

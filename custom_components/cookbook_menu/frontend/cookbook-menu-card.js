@@ -315,6 +315,10 @@ class CookbookMenuCard extends HTMLElement {
         .plat .texte:hover .nom { color: var(--primary-color); }
         .minuteurs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
         .minuteurs:empty { display: none; }
+        .fenetre .minuteurs {
+          position: sticky; top: 0; z-index: 2; margin: 0; padding: 8px 12px;
+          background: var(--card-background-color); border-bottom: 1px solid var(--divider-color);
+        }
         .minuteur {
           display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 16px;
           background: var(--secondary-background-color); font-variant-numeric: tabular-nums;
@@ -631,6 +635,7 @@ class CookbookMenuCard extends HTMLElement {
     fenetre.innerHTML = `
       <div class="voile" id="voile">
         <div class="fenetre" role="dialog" aria-modal="true" aria-label="${echapper(f.name)}">
+          <div class="minuteurs" id="minuteurs-fiche"></div>
           <div class="entete">
             <img id="photo" src="${echapper(f.image)}" alt="" hidden>
             <button class="fermer" id="fermer" aria-label="${echapper(t.fermer)}">&times;</button>
@@ -663,6 +668,7 @@ class CookbookMenuCard extends HTMLElement {
         </div>
       </div>`;
     const photo = this.shadowRoot.getElementById("photo");
+    this._rendreMinuteurs();
     photo.addEventListener("load", () => (photo.hidden = false));
     photo.addEventListener("error", () => photo.remove());
     this.shadowRoot.getElementById("fermer").addEventListener("click", () => this._fermerFiche());
@@ -720,11 +726,12 @@ class CookbookMenuCard extends HTMLElement {
   }
 
   _rendreMinuteurs() {
-    const conteneur = this.shadowRoot.getElementById("minuteurs");
-    if (!conteneur) return;
+    // Barre de la carte, et barre collée en haut de la fiche recette quand elle est ouverte.
+    const conteneurs = ["minuteurs", "minuteurs-fiche"].map((id) => this.shadowRoot.getElementById(id)).filter(Boolean);
+    if (!conteneurs.length) return;
     const t = this._t;
     const maintenant = Date.now();
-    conteneur.innerHTML = this._minuteurs
+    const html = this._minuteurs
       .map((m) => {
         const restant = (m.fin - maintenant) / 1000;
         if (restant <= 0 && !m.sonne) {
@@ -735,12 +742,16 @@ class CookbookMenuCard extends HTMLElement {
         return `<div class="minuteur ${fini ? "fini" : ""}"><span>${echapper(m.libelle)}</span><strong>${fini ? echapper(t.termine) : chrono(restant)}</strong><button data-arreter="${m.id}" title="${echapper(t.arreter)}" aria-label="${echapper(t.arreter)}">&times;</button></div>`;
       })
       .join("");
-    conteneur.querySelectorAll("button[data-arreter]").forEach((bouton) =>
-      bouton.addEventListener("click", () => {
-        this._minuteurs = this._minuteurs.filter((m) => String(m.id) !== bouton.dataset.arreter);
-        this._rendreMinuteurs();
-      }),
-    );
+    for (const conteneur of conteneurs) {
+      conteneur.innerHTML = html;
+      conteneur.querySelectorAll("button[data-arreter]").forEach((bouton) =>
+        bouton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this._minuteurs = this._minuteurs.filter((m) => String(m.id) !== bouton.dataset.arreter);
+          this._rendreMinuteurs();
+        }),
+      );
+    }
     if (!this._minuteurs.length && this._tic) {
       clearInterval(this._tic);
       this._tic = null;
@@ -777,6 +788,12 @@ const TEXTES_RESERVE = {
     rien: "Rien à racheter",
     placard: "Placard",
     placardAide: "Touchez un produit quand il n'y en a plus.",
+    placardGerer: "Gérer",
+    placardFini: "Terminé",
+    placardAideGerer: "Touchez un produit pour le sortir du placard.",
+    ajouterPlacard: "Ajouter au placard",
+    ajouterPlacardExemple: "ras el hanout, riz basmati...",
+    auPlacard: "Au placard",
     frigo: "Frigo",
     frigoVide: "Rien d'acheté pour le menu en ce moment",
     maison: "Maison",
@@ -796,6 +813,12 @@ const TEXTES_RESERVE = {
     rien: "Nothing to buy again",
     placard: "Pantry",
     placardAide: "Tap a product when you run out of it.",
+    placardGerer: "Manage",
+    placardFini: "Done",
+    placardAideGerer: "Tap a product to remove it from the pantry.",
+    ajouterPlacard: "Add to pantry",
+    ajouterPlacardExemple: "ras el hanout, basmati rice...",
+    auPlacard: "To pantry",
     frigo: "Fridge",
     frigoVide: "Nothing bought for the menu right now",
     maison: "Household",
@@ -816,6 +839,7 @@ class CookbookStockCard extends HTMLElement {
     this._manquantsVerification = new Set();
     this._desabonner = null;
     this._erreur = "";
+    this._gererPlacard = false;
   }
 
   setConfig(config) {
@@ -900,6 +924,12 @@ class CookbookStockCard extends HTMLElement {
           border: 1px solid var(--divider-color); border-radius: 12px; background: transparent; cursor: pointer;
           color: var(--primary-text-color); padding: 2px 10px; font-size: .85em;
         }
+        .puce.retirer::after { content: " \\00d7"; }
+        .ajout { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .ajout input {
+          flex: 1; min-width: 160px; padding: 6px 10px; border-radius: 12px; border: 1px solid var(--divider-color);
+          background: transparent; color: var(--primary-text-color); font: inherit;
+        }
         button.principal { background: var(--primary-color); border-color: var(--primary-color); color: var(--text-primary-color, #fff); }
       </style>`;
     if (this._erreur || !r) {
@@ -934,11 +964,20 @@ class CookbookStockCard extends HTMLElement {
             )
             .join("")
         : `<div class="vide">${echapper(t.frigoVide)}</div>`}
-      <h3>${echapper(t.placard)} <small>${echapper(t.placardAide)}</small></h3>
+      <h3>${echapper(t.placard)} <small>${echapper(this._gererPlacard ? t.placardAideGerer : t.placardAide)}</small>
+        <button class="action" id="gerer">${echapper(this._gererPlacard ? t.placardFini : t.placardGerer)}</button></h3>
       <div class="puces">${r.pantry
-        .filter((p) => !p.missing)
-        .map((p) => `<button class="puce" data-manquant="${echapper(p.key)}" title="${echapper(t.plusRien)}">${echapper(p.name)}</button>`)
+        .filter((p) => this._gererPlacard || !p.missing)
+        .map((p) =>
+          this._gererPlacard
+            ? `<button class="puce retirer" data-retirer="${echapper(p.key)}" title="${echapper(t.sortir)}">${echapper(p.name)}</button>`
+            : `<button class="puce" data-manquant="${echapper(p.key)}" title="${echapper(t.plusRien)}">${echapper(p.name)}</button>`,
+        )
         .join("")}</div>
+      <form class="ajout" id="ajout">
+        <input id="nouveau" placeholder="${echapper(t.ajouterPlacardExemple)}" aria-label="${echapper(t.ajouterPlacard)}">
+        <button class="action" type="submit">${echapper(t.ajouterPlacard)}</button>
+      </form>
       <h3>${echapper(t.maison)}</h3>
       ${r.home.some((m) => m.present)
         ? r.home
@@ -946,6 +985,7 @@ class CookbookStockCard extends HTMLElement {
             .map(
               (m) => `<div class="ligne"><span class="nom">${echapper(m.name)}${m.description ? ` <span class="detail">${echapper(m.description)}</span>` : ""}</span>
                 <button class="action" data-manquant="${echapper(m.key)}">${echapper(t.plusRien)}</button>
+                <button class="action" data-placard="${echapper(m.key)}">${echapper(t.auPlacard)}</button>
                 <button class="action" data-retirer="${echapper(m.key)}">${echapper(t.sortir)}</button></div>`,
             )
             .join("")
@@ -954,6 +994,17 @@ class CookbookStockCard extends HTMLElement {
     this.shadowRoot.querySelectorAll("[data-present]").forEach((b) => b.addEventListener("click", () => this._agir("present", b.dataset.present)));
     this.shadowRoot.querySelectorAll("[data-manquant]").forEach((b) => b.addEventListener("click", () => this._agir("missing", b.dataset.manquant)));
     this.shadowRoot.querySelectorAll("[data-retirer]").forEach((b) => b.addEventListener("click", () => this._agir("remove", b.dataset.retirer)));
+    this.shadowRoot.querySelectorAll("[data-placard]").forEach((b) => b.addEventListener("click", () => this._agir("to_pantry", b.dataset.placard)));
+    this.shadowRoot.getElementById("gerer").addEventListener("click", () => {
+      this._gererPlacard = !this._gererPlacard;
+      this._rendre();
+    });
+    this.shadowRoot.getElementById("ajout").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const champ = this.shadowRoot.getElementById("nouveau");
+      const nom = champ.value.trim();
+      if (nom) this._agir("to_pantry", null, { name: nom }).then(() => (champ.value = ""));
+    });
     this.shadowRoot.querySelectorAll("[data-verifier]").forEach((c) =>
       c.addEventListener("change", () => {
         if (c.checked) this._manquantsVerification.delete(c.dataset.verifier);

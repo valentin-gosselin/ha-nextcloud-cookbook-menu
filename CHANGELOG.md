@@ -10,6 +10,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [
 - Home Assistant 2026.9.0 minimum.
 
 ### Ajouté
+- Index d'environ 300 produits de placard (épices, herbes sèches, condiments, pâtes, riz, farines, conserves...) : un produit ajouté à la main qui en fait partie rejoint le placard et non la maison. Carte réserve : ajout au placard, « Au placard » pour un produit de la maison, sortie du placard. Minuteurs visibles dans la fiche recette.
 - Réserve : placard (présent ou manquant), frigo (cocher une ligne de courses, c'est acheter ; les plats cuisinés ou passés consomment ; restes réutilisés ; expiration 7 jours pour le frais, 60 pour l'épicerie) et maison (achats hors menu). Carte `custom:cookbook-stock-card`, phrase « il n'y a plus de... », action `out_of_stock`, outils LLM.
 - Unités d'achat : l'ail en gousses ou en têtes, les herbes en bouquets, les légumes à la pièce, le beurre au poids, les sachets et boîtes. Blancs et jaunes rejoignent les œufs, le jus de citron les citrons. L'eau et le laurier sont au placard par défaut.
 - Fiche recette dans la carte : photo, temps, ingrédients à l'échelle des couverts, étapes cochables, minuteurs lancés depuis les durées des étapes, écran maintenu allumé.

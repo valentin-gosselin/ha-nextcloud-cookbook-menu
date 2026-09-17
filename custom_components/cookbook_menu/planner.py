@@ -28,9 +28,10 @@ from .const import (
 )
 from .ingredients import frigo
 from .ingredients.aisles import Rayon, rayon
+from .ingredients.catalogue_placard import est_produit_de_placard
 from .ingredients.frigo import manque
 from .ingredients.normalize import cle, sans_accents
-from .ingredients.pantry import PLACARD_PAR_DEFAUT, cles_placard, est_au_placard
+from .ingredients.pantry import PLACARD_PAR_DEFAUT, est_au_placard
 from .ingredients.shopping import (
     Contribution,
     LigneCourses,
@@ -438,14 +439,36 @@ class Planificateur:
                 contributions.append(contribution)
         return contributions
 
-    def placard(self) -> set[str]:
-        """Clés des produits du placard réglés dans les options."""
+    def produits_placard(self) -> dict[str, str]:
+        """Placard : produits des options (sauf ceux sortis) et produits rangés à la main, par clé."""
+        donnees = self.stockage.donnees
         options = self.coordinateur.config_entry.options
-        return cles_placard(options.get(CONF_PANTRY, PLACARD_PAR_DEFAUT))
+        produits = {
+            c: nom
+            for nom in options.get(CONF_PANTRY, PLACARD_PAR_DEFAUT)
+            if (c := cle(nom)) and c not in donnees.placard_retires
+        }
+        for c, nom in donnees.placard_ajouts.items():
+            produits.setdefault(c, nom)
+        return produits
 
-    def noms_placard(self) -> list[str]:
-        options = self.coordinateur.config_entry.options
-        return list(options.get(CONF_PANTRY, PLACARD_PAR_DEFAUT))
+    def placard(self) -> set[str]:
+        """Clés des produits du placard."""
+        return set(self.produits_placard())
+
+    def _ranger_au_placard(self, cle_produit: str, nom: str, *, present: bool) -> None:
+        """Le produit rejoint le placard (présent ou à racheter) et quitte le frigo et la maison."""
+        donnees = self.stockage.donnees
+        if cle_produit in donnees.placard_retires:
+            donnees.placard_retires.remove(cle_produit)
+        if not est_au_placard(cle_produit, self.placard()):
+            donnees.placard_ajouts[cle_produit] = nom
+        donnees.frigo.pop(cle_produit, None)
+        donnees.maison.pop(cle_produit, None)
+        if present:
+            donnees.placard_epuise.pop(cle_produit, None)
+        else:
+            donnees.placard_epuise[cle_produit] = nom
 
     @staticmethod
     def _aujourdhui() -> date:
@@ -536,30 +559,30 @@ class Planificateur:
     def async_ajouter_course(self, texte: str, description: str | None = None, fait: bool = False) -> str:
         """Ajout à la main, ou « il n'y en a plus » : le produit rejoint les courses.
 
-        Produit du placard : signalé manquant. Produit au frigo : le frigo est vidé de ce produit.
-        Autre produit (papier toilette, poêle) : produit « maison » manquant, qui rejoindra la
-        réserve une fois acheté.
+        Produit du placard (options, rangé à la main, ou reconnu par l'index des produits qui se
+        gardent) : signalé manquant. Produit au frigo : le frigo est vidé de ce produit. Autre
+        produit (papier toilette, poêle) : produit « maison » manquant, qui rejoindra la réserve
+        une fois acheté.
         """
         texte = texte.strip()
         if not texte:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="empty_dish")
         donnees = self.stockage.donnees
         cle_produit = cle(texte)
-        if est_au_placard(cle_produit, self.placard()):
-            donnees.placard_epuise[cle_produit] = texte
+        if est_au_placard(cle_produit, self.placard()) or est_produit_de_placard(cle_produit):
+            self._ranger_au_placard(cle_produit, texte, present=fait)
             self._signaler_changement()
-            return f"{PREFIXE_PRODUIT}{cle_produit}"
-        donnees.frigo.pop(cle_produit, None)
-        besoins = self._besoins(self._aujourdhui())
-        if cle_produit not in besoins or fait:
-            existant = donnees.maison.get(cle_produit, {})
-            donnees.maison[cle_produit] = {
-                "nom": existant.get("nom") or texte,
-                "present": fait,
-                "description": description if description is not None else existant.get("description"),
-            }
-        self._signaler_changement()
-        prefixe = PREFIXE_PRODUIT if cle_produit in besoins else PREFIXE_RESERVE
+        else:
+            donnees.frigo.pop(cle_produit, None)
+            if cle_produit not in self._besoins(self._aujourdhui()) or fait:
+                existant = donnees.maison.get(cle_produit, {})
+                donnees.maison[cle_produit] = {
+                    "nom": existant.get("nom") or texte,
+                    "present": fait,
+                    "description": description if description is not None else existant.get("description"),
+                }
+            self._signaler_changement()
+        prefixe = PREFIXE_PRODUIT if cle_produit in self._besoins(self._aujourdhui()) else PREFIXE_RESERVE
         return f"{prefixe}{cle_produit}"
 
     @callback
@@ -664,8 +687,8 @@ class Planificateur:
         donnees = self.stockage.donnees
         aujourdhui = self._aujourdhui()
         placard = [
-            {"key": cle(nom), "name": nom, "missing": cle(nom) in donnees.placard_epuise}
-            for nom in self.noms_placard()
+            {"key": c, "name": nom, "missing": c in donnees.placard_epuise}
+            for c, nom in self.produits_placard().items()
         ]
         noms_options = {p["key"] for p in placard}
         placard.extend(
@@ -717,15 +740,19 @@ class Planificateur:
     def async_reserve_manquant(self, cle_produit: str) -> None:
         """« Il n'y en a plus » depuis la carte, par clé de produit."""
         donnees = self.stockage.donnees
-        noms_placard = {cle(n): n for n in self.noms_placard()}
+        produits_placard = self.produits_placard()
         if cle_produit in donnees.maison:
             donnees.maison[cle_produit]["present"] = False
+        elif cle_produit in produits_placard:
+            donnees.placard_epuise[cle_produit] = produits_placard[cle_produit]
         elif cle_produit in donnees.frigo:
-            nom = donnees.frigo.pop(cle_produit)["nom"]
-            if cle_produit not in self._besoins(self._aujourdhui()):
-                donnees.maison[cle_produit] = {"nom": nom, "present": False, "description": None}
-        elif cle_produit in noms_placard:
-            donnees.placard_epuise[cle_produit] = noms_placard[cle_produit]
+            nom = donnees.frigo[cle_produit]["nom"]
+            if est_produit_de_placard(cle_produit):
+                self._ranger_au_placard(cle_produit, nom, present=False)
+            else:
+                del donnees.frigo[cle_produit]
+                if cle_produit not in self._besoins(self._aujourdhui()):
+                    donnees.maison[cle_produit] = {"nom": nom, "present": False, "description": None}
         else:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -736,18 +763,42 @@ class Planificateur:
 
     @callback
     def async_reserve_retirer(self, cle_produit: str) -> None:
-        """Sortir un produit de la réserve (frigo ou maison)."""
+        """Sortir un produit de la réserve (frigo, maison ou placard)."""
         donnees = self.stockage.donnees
         donnees.frigo.pop(cle_produit, None)
         donnees.maison.pop(cle_produit, None)
         donnees.placard_epuise.pop(cle_produit, None)
+        if donnees.placard_ajouts.pop(cle_produit, None) is None and cle_produit in self.placard():
+            donnees.placard_retires.append(cle_produit)
+        self._signaler_changement()
+
+    @callback
+    def async_reserve_au_placard(self, *, nom: str | None = None, cle_produit: str | None = None) -> None:
+        """Ranger au placard un produit saisi dans la carte, ou un produit de la maison."""
+        donnees = self.stockage.donnees
+        if cle_produit is not None:
+            if cle_produit not in donnees.maison:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="item_not_found",
+                    translation_placeholders={"uid": cle_produit},
+                )
+            produit = donnees.maison[cle_produit]
+            nom, present = produit["nom"], bool(produit.get("present"))
+        else:
+            nom = (nom or "").strip()
+            cle_produit = cle(nom)
+            if not cle_produit:
+                raise ServiceValidationError(translation_domain=DOMAIN, translation_key="empty_dish")
+            present = True
+        self._ranger_au_placard(cle_produit, nom, present=present)
         self._signaler_changement()
 
     @callback
     def async_valider_placard(self, manquants: list[str]) -> None:
         """Première vérification du placard : seuls les produits décochés sont à racheter."""
         donnees = self.stockage.donnees
-        noms = {cle(n): n for n in self.noms_placard()}
+        noms = self.produits_placard()
         for cle_produit in manquants:
             if cle_produit in noms:
                 donnees.placard_epuise[cle_produit] = noms[cle_produit]
