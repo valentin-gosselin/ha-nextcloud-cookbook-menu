@@ -18,6 +18,9 @@ jobs:
   hacs:
     name: Validation HACS
     runs-on: ubuntu-latest
+    # Tant que le dépôt est privé, HACS ne peut lire ni hacs.json ni manifest.json (contenu brut
+    # inaccessible). À retirer dès le passage en public, pour que la validation devienne bloquante.
+    continue-on-error: true
     steps:
       - uses: hacs/action@main
         with:
