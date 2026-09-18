@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.cookbook_menu.voix import Demande, analyser_demande, langue
+from custom_components.cookbook_menu.voix import Demande, analyser_demande, detecter_langue, langue
 
 
 @pytest.mark.parametrize(
@@ -40,3 +40,23 @@ def test_langue() -> None:
     assert langue("en") == "en"
     assert langue(None) == "en"
     assert langue("de") == "en"
+
+
+@pytest.mark.parametrize(
+    ("texte", "code_langue", "attendu"),
+    [
+        # La langue de la phrase l'emporte sur celle du pipeline (Home Assistant en anglais).
+        ("Ajoute une salade César au menu jeudi pour quatre", "en", "fr"),
+        ("Add a caesar salad to the menu on thursday for four", "fr", "en"),
+        ("Il n'y a plus d'huile d'olive", "en", "fr"),
+        ("we're out of eggs", "fr", "en"),
+        ("Qu'est-ce qu'on mange ce soir", "en", "fr"),
+        ("what's for dinner", "fr", "en"),
+        # Rien de décisif : on garde la langue du pipeline.
+        ("pizza", "fr", "fr"),
+        ("pizza", "en", "en"),
+        ("", None, "en"),
+    ],
+)
+def test_detecter_langue(texte: str, code_langue: str | None, attendu: str) -> None:
+    assert detecter_langue(texte, code_langue) == attendu

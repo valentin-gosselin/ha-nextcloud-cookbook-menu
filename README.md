@@ -108,7 +108,7 @@ The first time, the card asks you to check the pantry: everything is considered 
 
 ### Default Assist agent
 
-The sentences are registered automatically, no configuration needed.
+The sentences are registered automatically, no configuration needed. French and English sentences both work whatever the language of your Home Assistant: the answer follows the language you spoke.
 
 | Français | English |
 |---|---|

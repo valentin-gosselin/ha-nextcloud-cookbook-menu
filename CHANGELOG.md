@@ -5,6 +5,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [
 
 ## [Unreleased]
 
+### Corrigé
+- Voix : une phrase française dite à un Home Assistant réglé en anglais était analysée avec les règles anglaises (« Ajoute une salade César au menu jeudi pour quatre » devenait un plat libre sans recette, sans jour ni couverts). La langue de la phrase prime désormais sur celle du pipeline. Au passage, l'anglais ne dit plus « on tomorrow ».
+
 ### Modifié
 - La ligne « À vérifier au placard » et son option sont supprimées au profit de la réserve. Les lignes ajoutées à la main deviennent des produits « maison ».
 - Home Assistant 2026.9.0 minimum.

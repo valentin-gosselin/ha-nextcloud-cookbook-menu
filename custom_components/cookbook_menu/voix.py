@@ -44,9 +44,41 @@ class Demande:
     couverts: int | None = None
 
 
+# Mots qui trahissent la langue de la phrase. Les mots communs aux deux langues (« menu »,
+# « salade », les chiffres) sont écartés : seuls les mots outils comptent.
+_MARQUEURS = {
+    "fr": re.compile(
+        r"\b(?:ajoute|ajouter|ajoutes|rajoute|rajouter|mets|met|mettre|prevois|planifie|retire|retirer"
+        r"|enleve|supprime|annule|une|un|des|du|de|la|le|les|au|aux|pour|avec|mange|manger|mangé|mange"
+        r"|cuisine|cuisiné|fait|quoi|quel|quelle|quand|qu|est|ce|on|nous|je|il|plus|prochain|prochaine"
+        r"|lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|demain|aujourd|hui|soir|midi|semaine)\b",
+        re.IGNORECASE,
+    ),
+    "en": re.compile(
+        r"\b(?:add|adds|put|plan|remove|delete|cancel|a|an|the|some|to|on|from|for|with|we|our|what|when"
+        r"|did|eat|ate|eating|have|had|cook|cooked|out|no|more|dinner|lunch|weekly|next|last"
+        r"|monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|tonight)\b",
+        re.IGNORECASE,
+    ),
+}
+
+
 def langue(code: str | None) -> str:
     """« fr » pour toute variante du français, « en » sinon."""
     return "fr" if (code or "").lower().startswith("fr") else "en"
+
+
+def detecter_langue(texte: str | None, code_langue: str | None) -> str:
+    """Langue de la phrase dite, plutôt que celle réglée dans Home Assistant.
+
+    Les phrases sont reconnues quelle que soit la langue du pipeline : une phrase française dite à
+    un Home Assistant en anglais doit être analysée et répondue en français.
+    """
+    texte = (texte or "").replace("’", "'")
+    scores = {cle: len(marqueurs.findall(texte)) for cle, marqueurs in _MARQUEURS.items()}
+    if scores["fr"] != scores["en"]:
+        return "fr" if scores["fr"] > scores["en"] else "en"
+    return langue(code_langue)
 
 
 def analyser_demande(texte: str, code_langue: str | None) -> Demande:

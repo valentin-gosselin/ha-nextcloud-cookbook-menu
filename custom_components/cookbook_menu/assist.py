@@ -19,7 +19,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .jours import lire_jour
-from .voix import analyser_demande, langue
+from .voix import analyser_demande, detecter_langue
 
 if TYPE_CHECKING:
     from hassil.recognize import RecognizeResult
@@ -68,6 +68,7 @@ _REPONSES = {
         "alternative": " Sinon, il y a aussi {autre}.",
         "couverts": " pour {n}",
         "jour": " {jour}",
+        "prefixe_jour": "",
         "menu": "{jour} : {plats}.",
         "menu_vide": "Rien de prévu {jour}.",
         "prochain": " Prochain plat : {plat} {jour}.",
@@ -104,10 +105,11 @@ _REPONSES = {
         "ajout_libre": "Done: {plat}{jour}, with no matching recipe.",
         "alternative": " There is also {autre}.",
         "couverts": " for {n}",
-        "jour": " on {jour}",
+        "jour": " {jour}",
+        "prefixe_jour": "on ",
         "menu": "{jour}: {plats}.",
         "menu_vide": "Nothing planned {jour}.",
-        "prochain": " Next dish: {plat} on {jour}.",
+        "prochain": " Next dish: {plat} {jour}.",
         "retrait": "Done, {plat} was removed from the menu.",
         "introuvable": "I can't find {plat} in the menu.",
         "non_configure": "Cookbook Menu is not configured.",
@@ -143,12 +145,14 @@ def _planificateur(hass: HomeAssistant) -> Planificateur | None:
     return None
 
 
-def _texte_jour(jour: date, aujourdhui: date, textes: dict) -> str:
+def _texte_jour(jour: date, aujourdhui: date, textes: dict, *, dans_phrase: bool = False) -> str:
+    """« jeudi », « demain ». Au fil d'une phrase, l'anglais veut « on Thursday » mais « tomorrow »."""
     if jour == aujourdhui:
         return textes["aujourd_hui"]
     if (jour - aujourdhui).days == 1:
         return textes["demain"]
-    return textes["jours"][jour.weekday()]
+    nom = textes["jours"][jour.weekday()]
+    return f"{textes['prefixe_jour']}{nom}" if dans_phrase else nom
 
 
 def texte_courses(nombre: int, textes: dict) -> str:
@@ -171,20 +175,23 @@ def async_enregistrer_phrases(hass: HomeAssistant) -> CALLBACK_TYPE:
     gestionnaire = get_agent_manager(hass)
 
     async def ajouter(entree: ConversationInput, resultat: RecognizeResult) -> str:
-        textes = _REPONSES[langue(entree.language)]
+        code = detecter_langue(entree.text, entree.language)
+        textes = _REPONSES[code]
         planificateur = _planificateur(hass)
         if planificateur is None:
             return textes["non_configure"]
         aujourdhui = dt_util.now().date()
-        demande = analyser_demande(
-            f"{_valeur(resultat, 'demande')} {_valeur(resultat, 'suite')}", entree.language
-        )
+        demande = analyser_demande(f"{_valeur(resultat, 'demande')} {_valeur(resultat, 'suite')}", code)
         if not demande.plat:
             return textes["plat_vide"]
         # analyser_demande ne renvoie que des jours reconnus : lire_jour ne peut pas échouer ici.
         jour = lire_jour(demande.jour, aujourdhui)
         bilan = planificateur.async_ajouter_au_menu(demande.plat, jour=jour, couverts=demande.couverts)
-        texte_jour = textes["jour"].format(jour=_texte_jour(jour, aujourdhui, textes)) if jour else ""
+        texte_jour = (
+            textes["jour"].format(jour=_texte_jour(jour, aujourdhui, textes, dans_phrase=True))
+            if jour
+            else ""
+        )
         if not bilan["linked"]:
             return textes["ajout_libre"].format(plat=bilan["dish"], jour=texte_jour)
         reponse = textes["ajout"].format(
@@ -198,12 +205,13 @@ def async_enregistrer_phrases(hass: HomeAssistant) -> CALLBACK_TYPE:
         return reponse
 
     async def menu(entree: ConversationInput, resultat: RecognizeResult) -> str:
-        textes = _REPONSES[langue(entree.language)]
+        code = detecter_langue(entree.text, entree.language)
+        textes = _REPONSES[code]
         planificateur = _planificateur(hass)
         if planificateur is None:
             return textes["non_configure"]
         aujourdhui = dt_util.now().date()
-        demande = analyser_demande(_valeur(resultat, "quand"), entree.language)
+        demande = analyser_demande(_valeur(resultat, "quand"), code)
         jour = lire_jour(demande.jour, aujourdhui) or aujourdhui
         texte_jour = _texte_jour(jour, aujourdhui, textes)
         plats = [p.summary for p in planificateur.menu if p.day == jour and not p.done]
@@ -211,22 +219,24 @@ def async_enregistrer_phrases(hass: HomeAssistant) -> CALLBACK_TYPE:
             return textes["menu"].format(
                 jour=texte_jour[0].upper() + texte_jour[1:], plats=textes["et"].join(plats)
             )
-        reponse = textes["menu_vide"].format(jour=texte_jour)
+        reponse = textes["menu_vide"].format(jour=_texte_jour(jour, aujourdhui, textes, dans_phrase=True))
         suivants = sorted(
             (p for p in planificateur.menu if p.day and p.day > jour and not p.done), key=lambda p: p.day
         )
         if suivants:
             reponse += textes["prochain"].format(
-                plat=suivants[0].summary, jour=_texte_jour(suivants[0].day, aujourdhui, textes)
+                plat=suivants[0].summary,
+                jour=_texte_jour(suivants[0].day, aujourdhui, textes, dans_phrase=True),
             )
         return reponse
 
     async def retirer(entree: ConversationInput, resultat: RecognizeResult) -> str:
-        textes = _REPONSES[langue(entree.language)]
+        code = detecter_langue(entree.text, entree.language)
+        textes = _REPONSES[code]
         planificateur = _planificateur(hass)
         if planificateur is None:
             return textes["non_configure"]
-        demande = analyser_demande(_valeur(resultat, "demande"), entree.language)
+        demande = analyser_demande(_valeur(resultat, "demande"), code)
         try:
             plat = planificateur.plat_par_nom(demande.plat)
         except HomeAssistantError:
@@ -235,12 +245,12 @@ def async_enregistrer_phrases(hass: HomeAssistant) -> CALLBACK_TYPE:
         return textes["retrait"].format(plat=plat.summary)
 
     async def historique(entree: ConversationInput, resultat: RecognizeResult) -> str:
-        code = langue(entree.language)
+        code = detecter_langue(entree.text, entree.language)
         textes = _REPONSES[code]
         planificateur = _planificateur(hass)
         if planificateur is None:
             return textes["non_configure"]
-        demande = analyser_demande(_valeur(resultat, "demande"), entree.language)
+        demande = analyser_demande(_valeur(resultat, "demande"), code)
         [dernier, *_] = planificateur.historique(demande.plat, 1) or [None]
         if dernier is None:
             return textes["historique_jamais"].format(plat=demande.plat)
@@ -250,11 +260,12 @@ def async_enregistrer_phrases(hass: HomeAssistant) -> CALLBACK_TYPE:
         return textes["historique"].format(plat=dernier["summary"], date=texte_date)
 
     async def manque(entree: ConversationInput, resultat: RecognizeResult) -> str:
-        textes = _REPONSES[langue(entree.language)]
+        code = detecter_langue(entree.text, entree.language)
+        textes = _REPONSES[code]
         planificateur = _planificateur(hass)
         if planificateur is None:
             return textes["non_configure"]
-        produit = analyser_demande(_valeur(resultat, "demande"), entree.language).plat
+        produit = analyser_demande(_valeur(resultat, "demande"), code).plat
         produit = re.sub(r"^(?:d'|l')", "", produit).strip()
         planificateur.async_ajouter_course(produit[:1].upper() + produit[1:])
         return textes["manque"].format(produit=produit)

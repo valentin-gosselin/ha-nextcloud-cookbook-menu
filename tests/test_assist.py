@@ -94,6 +94,26 @@ async def test_anglais(hass: HomeAssistant, entree) -> None:
     )
 
 
+async def test_phrases_francaises_sur_un_home_assistant_en_anglais(hass: HomeAssistant, entree) -> None:
+    """La langue de la phrase prime sur celle du pipeline (bug vu sur le HA de dev en anglais)."""
+    await hass.config.async_update(language="en")
+    reponse = await dire(hass, "Ajoute une salade César au menu jeudi pour quatre", langue="en")
+    assert reponse.startswith("C'est noté : Salade César au poulet demain pour 4.")
+    [plat] = await elements(hass)
+    # La description suit la langue de Home Assistant, pas celle de la phrase.
+    assert (plat["due"], plat["description"]) == ("2026-09-17", "4 servings")
+    assert (await dire(hass, "Qu'est-ce qu'on mange demain", langue="en")).startswith("Demain : Salade")
+    assert (await dire(hass, "il n'y a plus d'huile d'olive", langue="en")).startswith("C'est noté, huile")
+    assert (await dire(hass, "Retire la salade César du menu", langue="en")) == (
+        "C'est fait, Salade César au poulet est retiré du menu."
+    )
+
+
+async def test_phrases_anglaises_sur_un_home_assistant_en_francais(hass: HomeAssistant, entree) -> None:
+    reponse = await dire(hass, "Add a caesar salad to the menu on thursday for four", langue="fr")
+    assert reponse.startswith("Done: Salade César au poulet tomorrow for 4.")
+
+
 async def test_sans_configuration(hass: HomeAssistant, mock_client, config_entry) -> None:
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
