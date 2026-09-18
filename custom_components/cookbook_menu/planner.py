@@ -28,7 +28,7 @@ from .const import (
 )
 from .ingredients import frigo
 from .ingredients.aisles import Rayon, rayon
-from .ingredients.catalogue_placard import est_produit_de_placard
+from .ingredients.catalogue_placard import est_produit_de_placard, propositions
 from .ingredients.frigo import manque
 from .ingredients.normalize import cle, sans_accents
 from .ingredients.pantry import PLACARD_PAR_DEFAUT, est_au_placard
@@ -772,9 +772,19 @@ class Planificateur:
             donnees.placard_retires.append(cle_produit)
         self._signaler_changement()
 
+    def propositions_placard(self) -> list[dict[str, str]]:
+        """Produits de l'index qui ne sont pas encore au placard, pour la liste de la carte."""
+        placard = self.placard()
+        return sorted(
+            ({"key": c, "name": nom} for c, nom in propositions().items() if not est_au_placard(c, placard)),
+            key=lambda p: sans_accents(p["name"]),
+        )
+
     @callback
-    def async_reserve_au_placard(self, *, nom: str | None = None, cle_produit: str | None = None) -> None:
-        """Ranger au placard un produit saisi dans la carte, ou un produit de la maison."""
+    def async_reserve_au_placard(
+        self, *, noms: list[str] | None = None, cle_produit: str | None = None
+    ) -> None:
+        """Ranger au placard des produits choisis ou saisis dans la carte, ou un produit de la maison."""
         donnees = self.stockage.donnees
         if cle_produit is not None:
             if cle_produit not in donnees.maison:
@@ -784,14 +794,16 @@ class Planificateur:
                     translation_placeholders={"uid": cle_produit},
                 )
             produit = donnees.maison[cle_produit]
-            nom, present = produit["nom"], bool(produit.get("present"))
+            self._ranger_au_placard(cle_produit, produit["nom"], present=bool(produit.get("present")))
         else:
-            nom = (nom or "").strip()
-            cle_produit = cle(nom)
-            if not cle_produit:
+            produits: dict[str, str] = {}
+            for nom in (n.strip() for n in noms or []):
+                if c := cle(nom):
+                    produits.setdefault(c, nom)
+            if not produits:
                 raise ServiceValidationError(translation_domain=DOMAIN, translation_key="empty_dish")
-            present = True
-        self._ranger_au_placard(cle_produit, nom, present=present)
+            for c, nom in produits.items():
+                self._ranger_au_placard(c, nom, present=True)
         self._signaler_changement()
 
     @callback

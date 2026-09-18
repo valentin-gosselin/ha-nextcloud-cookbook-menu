@@ -79,7 +79,9 @@ def ws_reserve(
 
     @callback
     def envoyer() -> None:
-        connexion.send_message(websocket_api.event_message(message["id"], planificateur.reserve()))
+        # Les propositions de l'index ne servent qu'à la carte (pas à l'outil LLM `get_stock`).
+        reserve = {**planificateur.reserve(), "suggestions": planificateur.propositions_placard()}
+        connexion.send_message(websocket_api.event_message(message["id"], reserve))
 
     connexion.subscriptions[message["id"]] = planificateur.async_ecouter(envoyer)
     connexion.send_result(message["id"])
@@ -93,6 +95,7 @@ def ws_reserve(
         vol.Required("action"): vol.In(["missing", "present", "remove", "check_pantry", "to_pantry"]),
         vol.Optional("key"): str,
         vol.Optional("name"): str,
+        vol.Optional("names"): [str],
         vol.Optional("missing"): [str],
     }
 )
@@ -110,8 +113,9 @@ def ws_reserve_modifier(
     try:
         if action == "check_pantry":
             planificateur.async_valider_placard(message.get("missing", []))
-        elif action == "to_pantry" and "name" in message:
-            planificateur.async_reserve_au_placard(nom=message["name"])
+        elif action == "to_pantry" and ("name" in message or "names" in message):
+            noms = message.get("names", []) + ([message["name"]] if "name" in message else [])
+            planificateur.async_reserve_au_placard(noms=noms)
         elif "key" not in message:
             connexion.send_error(message["id"], "invalid_format", "key is required")
             return

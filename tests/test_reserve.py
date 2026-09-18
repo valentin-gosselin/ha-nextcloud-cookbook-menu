@@ -287,6 +287,7 @@ async def test_index_du_placard(hass: HomeAssistant, mock_client, config_entry, 
     client = await hass_ws_client(hass)
     for message in (
         {"action": "to_pantry", "name": "Sirop de sureau"},
+        {"action": "to_pantry", "names": ["Riz basmati", "Quinoa", "riz basmati"]},
         {"action": "to_pantry", "name": "  "},
         {"action": "to_pantry", "key": "inconnu"},
         {"action": "to_pantry"},
@@ -295,6 +296,16 @@ async def test_index_du_placard(hass: HomeAssistant, mock_client, config_entry, 
         await client.receive_json()
     assert donnees.placard_ajouts["sirop sureau"] == "Sirop de sureau"
     assert "sirop sureau" not in donnees.placard_epuise
+    assert (donnees.placard_ajouts["riz basmati"], donnees.placard_ajouts["quinoa"]) == (
+        "Riz basmati",
+        "Quinoa",
+    )
+    # Propositions de l'index : ni ce qui est déjà au placard, ni les variantes d'une famille présente.
+    await client.send_json_auto_id({"type": "cookbook_menu/stock/subscribe"})
+    await client.receive_json()
+    suggestions = {p["name"] for p in (await client.receive_json())["event"]["suggestions"]}
+    assert not {"Ras el hanout", "Quinoa", "Riz basmati", "Huile d'olive", "Sel", "Gros sel"} & suggestions
+    assert {"Cumin", "Pâtes", "Lentilles corail"} <= suggestions
 
     await ajouter_course(hass, "Papier toilette")
     planificateur.async_reserve_au_placard(cle_produit="papier toilette")

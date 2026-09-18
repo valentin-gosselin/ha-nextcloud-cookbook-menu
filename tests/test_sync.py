@@ -81,7 +81,9 @@ async def listes(hass: HomeAssistant) -> tuple[ListeSimulee, ListeSimulee]:
 
 
 @pytest.fixture
-async def entree(hass: HomeAssistant, mock_client, config_entry: MockConfigEntry, listes, freezer):
+async def entree(
+    hass: HomeAssistant, mock_client, config_entry: MockConfigEntry, listes, freezer, date_figee
+):
     await hass.config.async_update(language="fr")
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(

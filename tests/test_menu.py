@@ -20,7 +20,7 @@ MENU = "todo.valentin_cloud_exemple_fr_menu_de_la_semaine"
 
 
 @pytest.fixture(autouse=True)
-async def langue_francaise(hass: HomeAssistant) -> None:
+async def langue_francaise(hass: HomeAssistant, date_figee) -> None:
     await hass.config.async_update(language="fr")
 
 

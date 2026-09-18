@@ -32,6 +32,12 @@ async def auto_enable_custom_integrations(hass, enable_custom_integrations):
 
 
 @pytest.fixture
+def date_figee(freezer) -> None:
+    """Le 16/09/2026 à midi : les plats datés du 17 au 20 restent à venir, quel que soit le jour réel."""
+    freezer.move_to("2026-09-16 12:00:00+02:00")
+
+
+@pytest.fixture
 def corpus() -> list[dict]:
     """Corpus réel des recettes (export du 16/09/2026)."""
     return json.loads((FIXTURES / "corpus_recettes.json").read_text(encoding="utf-8"))

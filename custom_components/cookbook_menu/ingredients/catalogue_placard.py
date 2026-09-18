@@ -99,6 +99,15 @@ def _cles() -> frozenset[str]:
     return frozenset(c for c in (cle(nom) for nom in PRODUITS_PLACARD) if c)
 
 
+def propositions() -> dict[str, str]:
+    """Produits de l'index par clé, dans l'ordre de la liste (le premier nom d'une clé l'emporte)."""
+    produits: dict[str, str] = {}
+    for nom in PRODUITS_PLACARD:
+        if (c := cle(nom)) and c not in produits:
+            produits[c] = nom
+    return produits
+
+
 # Tolérance aux fautes de frappe (« ras el anout ») : noms assez longs et très proches seulement.
 LONGUEUR_MIN_APPROCHE = 8
 SEUIL_APPROCHE = 0.9

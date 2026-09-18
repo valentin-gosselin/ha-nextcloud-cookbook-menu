@@ -792,7 +792,10 @@ const TEXTES_RESERVE = {
     placardFini: "Terminé",
     placardAideGerer: "Touchez un produit pour le sortir du placard.",
     ajouterPlacard: "Ajouter au placard",
-    ajouterPlacardExemple: "ras el hanout, riz basmati...",
+    ajouterPlacardExemple: "Chercher ou saisir un produit (ras el hanout, riz...)",
+    ajouterN: (n) => `Ajouter au placard (${n})`,
+    saisieLibre: (texte) => `Ajouter « ${texte} »`,
+    aucuneProposition: "Aucun produit connu : Entrée pour l'ajouter tel quel",
     auPlacard: "Au placard",
     frigo: "Frigo",
     frigoVide: "Rien d'acheté pour le menu en ce moment",
@@ -817,7 +820,10 @@ const TEXTES_RESERVE = {
     placardFini: "Done",
     placardAideGerer: "Tap a product to remove it from the pantry.",
     ajouterPlacard: "Add to pantry",
-    ajouterPlacardExemple: "ras el hanout, basmati rice...",
+    ajouterPlacardExemple: "Search or type a product (ras el hanout, rice...)",
+    ajouterN: (n) => `Add to pantry (${n})`,
+    saisieLibre: (texte) => `Add "${texte}"`,
+    aucuneProposition: "No known product: press Enter to add it as typed",
     auPlacard: "To pantry",
     frigo: "Fridge",
     frigoVide: "Nothing bought for the menu right now",
@@ -840,6 +846,10 @@ class CookbookStockCard extends HTMLElement {
     this._desabonner = null;
     this._erreur = "";
     this._gererPlacard = false;
+    // Ajout au placard : texte saisi, produits cochés (clé -> nom), popover ouvert ou non.
+    this._saisie = "";
+    this._choisis = new Map();
+    this._popover = false;
   }
 
   setConfig(config) {
@@ -925,11 +935,27 @@ class CookbookStockCard extends HTMLElement {
           color: var(--primary-text-color); padding: 2px 10px; font-size: .85em;
         }
         .puce.retirer::after { content: " \\00d7"; }
-        .ajout { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-        .ajout input {
-          flex: 1; min-width: 160px; padding: 6px 10px; border-radius: 12px; border: 1px solid var(--divider-color);
+        .ajout { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: flex-start; }
+        .champ { position: relative; flex: 1; min-width: 180px; }
+        .champ input {
+          width: 100%; box-sizing: border-box; padding: 6px 10px; border-radius: 12px; border: 1px solid var(--divider-color);
           background: transparent; color: var(--primary-text-color); font: inherit;
         }
+        .propositions {
+          position: absolute; z-index: 5; left: 0; right: 0; max-height: 260px; overflow-y: auto; margin-top: 4px;
+          background: var(--card-background-color); border: 1px solid var(--divider-color); border-radius: 8px;
+          box-shadow: var(--ha-card-box-shadow, 0 2px 8px rgba(0,0,0,.2));
+        }
+        .propositions label, .propositions .libre, .propositions .vide {
+          display: flex; align-items: center; gap: 8px; padding: 6px 12px; cursor: pointer;
+        }
+        .propositions label:hover, .propositions .libre:hover { background: var(--secondary-background-color); }
+        .propositions input { width: 16px; height: 16px; accent-color: var(--primary-color); margin: 0; }
+        .propositions .libre { color: var(--primary-color); font-weight: 500; }
+        .propositions .vide { cursor: default; }
+        .choisis { margin-top: 6px; }
+        .puce.choisie { border-color: var(--primary-color); color: var(--primary-color); }
+        .puce.choisie::after { content: " \\00d7"; }
         button.principal { background: var(--primary-color); border-color: var(--primary-color); color: var(--text-primary-color, #fff); }
       </style>`;
     if (this._erreur || !r) {
@@ -974,10 +1000,15 @@ class CookbookStockCard extends HTMLElement {
             : `<button class="puce" data-manquant="${echapper(p.key)}" title="${echapper(t.plusRien)}">${echapper(p.name)}</button>`,
         )
         .join("")}</div>
-      <form class="ajout" id="ajout">
-        <input id="nouveau" placeholder="${echapper(t.ajouterPlacardExemple)}" aria-label="${echapper(t.ajouterPlacard)}">
-        <button class="action" type="submit">${echapper(t.ajouterPlacard)}</button>
+      <form class="ajout" id="ajout" autocomplete="off">
+        <div class="champ">
+          <input id="nouveau" type="search" role="combobox" aria-expanded="${this._popover}" aria-controls="propositions"
+            placeholder="${echapper(t.ajouterPlacardExemple)}" aria-label="${echapper(t.ajouterPlacard)}" value="${echapper(this._saisie)}">
+          <div class="propositions" id="propositions" role="listbox" aria-multiselectable="true" ${this._popover ? "" : "hidden"}></div>
+        </div>
+        <button class="action principal" type="submit" id="valider-ajout">${echapper(this._choisis.size ? t.ajouterN(this._choisis.size) : t.ajouterPlacard)}</button>
       </form>
+      <div class="puces choisis" id="choisis"></div>
       <h3>${echapper(t.maison)}</h3>
       ${r.home.some((m) => m.present)
         ? r.home
@@ -999,12 +1030,7 @@ class CookbookStockCard extends HTMLElement {
       this._gererPlacard = !this._gererPlacard;
       this._rendre();
     });
-    this.shadowRoot.getElementById("ajout").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const champ = this.shadowRoot.getElementById("nouveau");
-      const nom = champ.value.trim();
-      if (nom) this._agir("to_pantry", null, { name: nom }).then(() => (champ.value = ""));
-    });
+    this._brancherAjout();
     this.shadowRoot.querySelectorAll("[data-verifier]").forEach((c) =>
       c.addEventListener("change", () => {
         if (c.checked) this._manquantsVerification.delete(c.dataset.verifier);
@@ -1013,6 +1039,110 @@ class CookbookStockCard extends HTMLElement {
     );
     const valider = this.shadowRoot.getElementById("valider");
     if (valider) valider.addEventListener("click", () => this._agir("check_pantry", null, { missing: [...this._manquantsVerification] }));
+  }
+
+  _suggestionsFiltrees() {
+    const mots = sansAccents(this._saisie).split(/\s+/).filter(Boolean);
+    const suggestions = (this._reserve && this._reserve.suggestions) || [];
+    return suggestions.filter((p) => {
+      const nom = sansAccents(p.name);
+      return mots.every((m) => nom.includes(m));
+    });
+  }
+
+  _rendrePropositions() {
+    const t = this._t;
+    const liste = this.shadowRoot.getElementById("propositions");
+    const champ = this.shadowRoot.getElementById("nouveau");
+    if (!liste) return;
+    liste.hidden = !this._popover;
+    champ.setAttribute("aria-expanded", String(this._popover));
+    if (this._popover) {
+      const texte = this._saisie.trim();
+      const filtrees = this._suggestionsFiltrees();
+      const exact = filtrees.some((p) => sansAccents(p.name) === sansAccents(texte));
+      const libre = texte && !exact ? `<div class="libre" data-libre>${echapper(t.saisieLibre(texte))}</div>` : "";
+      const options = filtrees
+        .slice(0, 100)
+        .map(
+          (p) => `<label role="option" aria-selected="${this._choisis.has(p.key)}"><input type="checkbox" data-choix="${echapper(p.key)}" data-nom="${echapper(p.name)}" ${this._choisis.has(p.key) ? "checked" : ""}> ${echapper(p.name)}</label>`,
+        )
+        .join("");
+      // Saisie libre en tête si rien ne correspond, en fin de liste sinon.
+      liste.innerHTML = options ? options + libre : libre || `<div class="vide">${echapper(t.aucuneProposition)}</div>`;
+    }
+    const choisis = this.shadowRoot.getElementById("choisis");
+    choisis.innerHTML = [...this._choisis]
+      .map(([cle, nom]) => `<button type="button" class="puce choisie" data-deselection="${echapper(cle)}">${echapper(nom)}</button>`)
+      .join("");
+    this.shadowRoot.getElementById("valider-ajout").textContent = this._choisis.size ? t.ajouterN(this._choisis.size) : t.ajouterPlacard;
+  }
+
+  _brancherAjout() {
+    const champ = this.shadowRoot.getElementById("nouveau");
+    const liste = this.shadowRoot.getElementById("propositions");
+    const ouvrir = () => {
+      this._popover = true;
+      this._rendrePropositions();
+    };
+    champ.addEventListener("focus", ouvrir);
+    champ.addEventListener("click", ouvrir);
+    champ.addEventListener("input", () => {
+      this._saisie = champ.value;
+      ouvrir();
+    });
+    champ.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        this._popover = false;
+        this._rendrePropositions();
+      }
+    });
+    // Garder le focus dans le champ quand on coche : le popover reste ouvert.
+    liste.addEventListener("mousedown", (e) => e.preventDefault());
+    liste.addEventListener("change", (e) => {
+      const case_ = e.target.closest("[data-choix]");
+      if (!case_) return;
+      if (case_.checked) this._choisis.set(case_.dataset.choix, case_.dataset.nom);
+      else this._choisis.delete(case_.dataset.choix);
+      this._rendrePropositions();
+    });
+    liste.addEventListener("click", (e) => {
+      if (!e.target.closest("[data-libre]")) return;
+      const texte = this._saisie.trim();
+      this._choisis.set(`libre:${sansAccents(texte)}`, texte);
+      this._saisie = champ.value = "";
+      this._rendrePropositions();
+    });
+    champ.addEventListener("blur", () => {
+      // Un nouveau rendu retire le champ du DOM : ce n'est pas l'utilisateur qui quitte le champ.
+      if (!champ.isConnected) return;
+      this._popover = false;
+      this._rendrePropositions();
+    });
+    this.shadowRoot.getElementById("choisis").addEventListener("click", (e) => {
+      const puce = e.target.closest("[data-deselection]");
+      if (!puce) return;
+      this._choisis.delete(puce.dataset.deselection);
+      this._rendrePropositions();
+    });
+    this.shadowRoot.getElementById("ajout").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const noms = [...this._choisis.values()];
+      // Rien de coché : le texte saisi est ajouté tel quel.
+      if (!noms.length && this._saisie.trim()) noms.push(this._saisie.trim());
+      if (!noms.length) return;
+      this._agir("to_pantry", null, { names: noms }).then(() => {
+        this._choisis.clear();
+        this._saisie = "";
+        this._popover = false;
+        this._rendre();
+      });
+    });
+    this._rendrePropositions();
+    if (this._popover) {
+      champ.focus();
+      champ.setSelectionRange(champ.value.length, champ.value.length);
+    }
   }
 }
 
