@@ -1,6 +1,6 @@
 {
-  "domain": "cookbook_menu",
-  "name": "Cookbook Menu",
+  "domain": "nextcloud_cookbook_menu",
+  "name": "Nextcloud Cookbook Menu",
   "after_dependencies": [
     "frontend",
     "http",
@@ -18,5 +18,5 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/valentin-gosselin/ha-nextcloud-cookbook-menu/issues",
   "requirements": [],
-  "version": "0.1.0"
+  "version": "1.0.0"
 }

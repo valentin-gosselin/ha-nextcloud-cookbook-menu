@@ -139,9 +139,7 @@ _VARIANTES: list[tuple[str, str]] = [
 ]
 
 _MOTIF = re.compile(
-    r"^(?:"
-    + "|".join(f"(?P<u{i}>{motif})" for i, (motif, _) in enumerate(_VARIANTES))
-    + r")(?=$|[\s.,(')’]|\d)",
+    r"^(?:" + "|".join(f"(?P<u{i}>{motif})" for i, (motif, _) in enumerate(_VARIANTES)) + r")(?=$|[\s.,(')’]|\d)",
     re.IGNORECASE,
 )
 

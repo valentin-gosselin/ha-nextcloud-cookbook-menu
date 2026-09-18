@@ -24,7 +24,7 @@ from pytest_homeassistant_custom_component.common import (
     setup_test_component_platform,
 )
 
-from custom_components.cookbook_menu.sync import Synchroniseur
+from custom_components.nextcloud_cookbook_menu.sync import Synchroniseur
 
 from .test_menu import ajouter
 
@@ -81,9 +81,7 @@ async def listes(hass: HomeAssistant) -> tuple[ListeSimulee, ListeSimulee]:
 
 
 @pytest.fixture
-async def entree(
-    hass: HomeAssistant, mock_client, config_entry: MockConfigEntry, listes, freezer, date_figee
-):
+async def entree(hass: HomeAssistant, mock_client, config_entry: MockConfigEntry, listes, freezer, date_figee):
     await hass.config.async_update(language="fr")
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
@@ -214,9 +212,7 @@ async def test_cible_indisponible_ou_erreur(hass: HomeAssistant, entree, freezer
     synchro: Synchroniseur = entree.runtime_data.sync
     hass.states.async_set(MENU_CIBLE, "unavailable")
     hass.states.async_set("todo.fantome", "0")  # un état sans entité : get_items échoue
-    hass.config_entries.async_update_entry(
-        entree, options={**entree.options, "sync_shopping_entity": "todo.fantome"}
-    )
+    hass.config_entries.async_update_entry(entree, options={**entree.options, "sync_shopping_entity": "todo.fantome"})
     await ajouter(hass, "carry")
     await synchro.async_synchroniser()
     assert "Synchronisation vers todo.fantome impossible" in caplog.text

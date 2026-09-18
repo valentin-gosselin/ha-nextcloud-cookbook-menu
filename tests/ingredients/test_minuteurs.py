@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from custom_components.cookbook_menu.ingredients.minuteurs import trouver_minuteurs
+from custom_components.nextcloud_cookbook_menu.ingredients.minuteurs import trouver_minuteurs
 
 
 @pytest.mark.parametrize(

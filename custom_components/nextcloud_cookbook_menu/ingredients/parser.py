@@ -246,9 +246,7 @@ def _analyser_un(ligne: str, brut: str) -> Ingredient:
 
     nom, autres_notes, facultatif = _extraire_notes(reste)
     notes.extend(autres_notes)
-    facultatif = facultatif or any(
-        re.search(r"facultatif|optionnel", n, re.IGNORECASE) for n in notes_parentheses
-    )
+    facultatif = facultatif or any(re.search(r"facultatif|optionnel", n, re.IGNORECASE) for n in notes_parentheses)
     # R. « bouquet garni » : l'unité fait partie du nom.
     if unite == "bouquet" and nom.lower() == "garni":
         nom, unite = "bouquet garni", None

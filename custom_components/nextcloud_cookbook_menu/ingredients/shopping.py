@@ -158,9 +158,7 @@ def calculer(
                     continue
                 ligne = lignes.get(cle)
                 if ligne is None:
-                    ligne = lignes[cle] = LigneCourses(
-                        cle=cle, nom=nom_impose or ingredient.nom, rayon=rayon(cle)
-                    )
+                    ligne = lignes[cle] = LigneCourses(cle=cle, nom=nom_impose or ingredient.nom, rayon=rayon(cle))
                 elif nom_impose:
                     ligne.nom = nom_impose
                 elif len(ingredient.nom) < len(ligne.nom) and ligne.cle not in _NOMS_IMPOSES:

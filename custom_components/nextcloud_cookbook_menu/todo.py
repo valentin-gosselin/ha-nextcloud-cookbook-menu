@@ -82,9 +82,7 @@ class MenuTodoListEntity(CookbookMenuEntity):
 
     def _description(self, plat: PlatMenu) -> str:
         textes = libelles(self.hass)
-        morceaux = [
-            textes["un_couvert"] if plat.servings == 1 else textes["couverts"].format(n=plat.servings)
-        ]
+        morceaux = [textes["un_couvert"] if plat.servings == 1 else textes["couverts"].format(n=plat.servings)]
         if plat.recipe_id is None:
             morceaux.append(textes["sans_recette"])
         elif self.planificateur.recette_du_plat(plat) is None:

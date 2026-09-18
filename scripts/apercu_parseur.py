@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from custom_components.cookbook_menu.ingredients.parser import analyser
+from custom_components.nextcloud_cookbook_menu.ingredients.parser import analyser
 
 CORPUS = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "corpus_recettes.json"
 

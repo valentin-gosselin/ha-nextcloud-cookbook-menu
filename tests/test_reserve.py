@@ -8,7 +8,7 @@ from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
-from custom_components.cookbook_menu.ingredients.pantry import cles_placard, est_au_placard
+from custom_components.nextcloud_cookbook_menu.ingredients.pantry import cles_placard, est_au_placard
 
 from .test_courses import COURSES, cocher, courses
 from .test_menu import ajouter
@@ -28,9 +28,7 @@ async def installer(hass: HomeAssistant, config_entry, **options) -> None:
 
 
 async def ajouter_course(hass: HomeAssistant, texte: str) -> None:
-    await hass.services.async_call(
-        TODO_DOMAIN, "add_item", {"entity_id": COURSES, "item": texte}, blocking=True
-    )
+    await hass.services.async_call(TODO_DOMAIN, "add_item", {"entity_id": COURSES, "item": texte}, blocking=True)
 
 
 def test_familles_et_cles() -> None:
@@ -101,9 +99,7 @@ async def test_produits_maison(hass: HomeAssistant, mock_client, config_entry) -
     assert planificateur.reserve()["home"] == []
 
     await ajouter_course(hass, "Poêle")
-    await hass.services.async_call(
-        TODO_DOMAIN, "remove_item", {"entity_id": COURSES, "item": "Poêle"}, blocking=True
-    )
+    await hass.services.async_call(TODO_DOMAIN, "remove_item", {"entity_id": COURSES, "item": "Poêle"}, blocking=True)
     assert planificateur.reserve()["home"] == []
 
 
@@ -112,9 +108,7 @@ async def test_produit_au_frigo_signale_manquant(hass: HomeAssistant, mock_clien
     await ajouter(hass, "salade cesar")
     await cocher(hass, "Citron (1)")
     planificateur = config_entry.runtime_data.planner
-    assert planificateur.reserve()["fridge"] == [
-        {"key": "citron", "name": "Citron", "quantity": "1", "days_left": 7}
-    ]
+    assert planificateur.reserve()["fridge"] == [{"key": "citron", "name": "Citron", "quantity": "1", "days_left": 7}]
     await ajouter_course(hass, "citron")  # « il n'y a plus de citron » : le frigo se vide
     assert (await courses(hass))["Citron (1)"]["status"] == "needs_action"
     assert planificateur.reserve()["home"] == []
@@ -152,14 +146,14 @@ async def test_verification_initiale_du_placard(hass: HomeAssistant, mock_client
 async def test_websocket_reserve(hass: HomeAssistant, mock_client, config_entry, hass_ws_client) -> None:
     await installer(hass, config_entry, pantry=["Sel", "Poivre"])
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id({"type": "cookbook_menu/stock/subscribe"})
+    await client.send_json_auto_id({"type": "nextcloud_cookbook_menu/stock/subscribe"})
     assert (await client.receive_json())["success"]
     instantane = (await client.receive_json())["event"]
     assert instantane["pantry_checked"] is False
     assert [p["name"] for p in instantane["pantry"]] == ["Poivre", "Sel"]
 
     await client.send_json_auto_id(
-        {"type": "cookbook_menu/stock/update", "action": "check_pantry", "missing": ["sel"]}
+        {"type": "nextcloud_cookbook_menu/stock/update", "action": "check_pantry", "missing": ["sel"]}
     )
     evenement = await client.receive_json()
     resultat = await client.receive_json()
@@ -169,20 +163,25 @@ async def test_websocket_reserve(hass: HomeAssistant, mock_client, config_entry,
 
     for action, cle_produit in (("present", "sel"), ("missing", "poivre"), ("remove", "poivre")):
         await client.send_json_auto_id(
-            {"type": "cookbook_menu/stock/update", "action": action, "key": cle_produit}
+            {"type": "nextcloud_cookbook_menu/stock/update", "action": action, "key": cle_produit}
         )
         recus = [await client.receive_json(), await client.receive_json()]
         assert any(m.get("type") == "result" and m["success"] for m in recus)
 
-    await client.send_json_auto_id({"type": "cookbook_menu/stock/update", "action": "missing"})
+    await client.send_json_auto_id({"type": "nextcloud_cookbook_menu/stock/update", "action": "missing"})
     assert (await client.receive_json())["error"]["code"] == "invalid_format"
     await client.send_json_auto_id(
-        {"type": "cookbook_menu/stock/update", "action": "missing", "key": "inconnu"}
+        {"type": "nextcloud_cookbook_menu/stock/update", "action": "missing", "key": "inconnu"}
     )
     assert (await client.receive_json())["error"]["code"] == "not_found"
     for message in (
-        {"type": "cookbook_menu/stock/subscribe", "config_entry_id": "x"},
-        {"type": "cookbook_menu/stock/update", "action": "present", "key": "sel", "config_entry_id": "x"},
+        {"type": "nextcloud_cookbook_menu/stock/subscribe", "config_entry_id": "x"},
+        {
+            "type": "nextcloud_cookbook_menu/stock/update",
+            "action": "present",
+            "key": "sel",
+            "config_entry_id": "x",
+        },
     ):
         await client.send_json_auto_id(message)
         assert (await client.receive_json())["error"]["code"] == "not_found"
@@ -195,19 +194,15 @@ async def test_voix_action_et_llm(hass: HomeAssistant, mock_client, config_entry
     from homeassistant.setup import async_setup_component
 
     await installer(hass, config_entry)
-    resultat = await conversation.async_converse(
-        hass, "il n'y a plus d'huile d'olive", None, Context(), language="fr"
-    )
+    resultat = await conversation.async_converse(hass, "il n'y a plus d'huile d'olive", None, Context(), language="fr")
     assert resultat.response.speech["plain"]["speech"] == "C'est noté, huile d'olive est dans les courses."
     assert "Huile d'olive" in await courses(hass)
-    resultat = await conversation.async_converse(
-        hass, "on n'a plus de papier toilette", None, Context(), language="fr"
-    )
+    resultat = await conversation.async_converse(hass, "on n'a plus de papier toilette", None, Context(), language="fr")
     assert "papier toilette" in resultat.response.speech["plain"]["speech"]
     resultat = await conversation.async_converse(hass, "we're out of eggs", None, Context(), language="en")
     assert resultat.response.speech["plain"]["speech"] == "Noted, eggs is on the shopping list."
 
-    await hass.services.async_call("cookbook_menu", "out_of_stock", {"product": "Lessive"}, blocking=True)
+    await hass.services.async_call("nextcloud_cookbook_menu", "out_of_stock", {"product": "Lessive"}, blocking=True)
     assert "Lessive" in await courses(hass)
 
     assert await async_setup_component(hass, "llm", {})
@@ -216,15 +211,15 @@ async def test_voix_action_et_llm(hass: HomeAssistant, mock_client, config_entry
     )
     api = await llm.async_get_api(hass, llm.LLM_API_ASSIST, contexte)
     reponse = await api.async_call_tool(
-        llm.ToolInput(tool_name="cookbook_menu__out_of_stock", tool_args={"product": "Beurre"})
+        llm.ToolInput(tool_name="nextcloud_cookbook_menu__out_of_stock", tool_args={"product": "Beurre"})
     )
     assert reponse == {"success": True, "added_to_shopping_list": "Beurre"}
-    reserve = await api.async_call_tool(llm.ToolInput(tool_name="cookbook_menu__get_stock", tool_args={}))
+    reserve = await api.async_call_tool(llm.ToolInput(tool_name="nextcloud_cookbook_menu__get_stock", tool_args={}))
     assert reserve["success"] and "pantry" in reserve and "fridge" in reserve
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     resultat = await conversation.async_converse(hass, "il n'y a plus de sel", None, Context(), language="fr")
-    assert resultat.response.speech["plain"]["speech"] == "Cookbook Menu n'est pas configuré."
+    assert resultat.response.speech["plain"]["speech"] == "Nextcloud Cookbook Menu n'est pas configuré."
 
 
 async def test_cas_limites_de_la_reserve(hass: HomeAssistant, mock_client, config_entry) -> None:
@@ -273,9 +268,7 @@ async def test_index_du_placard(hass: HomeAssistant, mock_client, config_entry, 
     assert (await courses(hass))["Ras el hanout"]["description"] == "manque au placard"
     assert donnees.maison == {} and donnees.placard_ajouts == {"ras el hanout": "Ras el hanout"}
     await cocher(hass, "Ras el hanout")
-    assert {"key": "ras el hanout", "name": "Ras el hanout", "missing": False} in planificateur.reserve()[
-        "pantry"
-    ]
+    assert {"key": "ras el hanout", "name": "Ras el hanout", "missing": False} in planificateur.reserve()["pantry"]
 
     # Désormais au placard : les recettes ne le demandent plus.
     await ajouter_course(hass, "Huile d'olive")
@@ -292,7 +285,7 @@ async def test_index_du_placard(hass: HomeAssistant, mock_client, config_entry, 
         {"action": "to_pantry", "key": "inconnu"},
         {"action": "to_pantry"},
     ):
-        await client.send_json_auto_id({"type": "cookbook_menu/stock/update", **message})
+        await client.send_json_auto_id({"type": "nextcloud_cookbook_menu/stock/update", **message})
         await client.receive_json()
     assert donnees.placard_ajouts["sirop sureau"] == "Sirop de sureau"
     assert "sirop sureau" not in donnees.placard_epuise
@@ -301,7 +294,7 @@ async def test_index_du_placard(hass: HomeAssistant, mock_client, config_entry, 
         "Quinoa",
     )
     # Propositions de l'index : ni ce qui est déjà au placard, ni les variantes d'une famille présente.
-    await client.send_json_auto_id({"type": "cookbook_menu/stock/subscribe"})
+    await client.send_json_auto_id({"type": "nextcloud_cookbook_menu/stock/subscribe"})
     await client.receive_json()
     suggestions = {p["name"] for p in (await client.receive_json())["event"]["suggestions"]}
     assert not {"Ras el hanout", "Quinoa", "Riz basmati", "Huile d'olive", "Sel", "Gros sel"} & suggestions
@@ -322,7 +315,7 @@ async def test_index_du_placard(hass: HomeAssistant, mock_client, config_entry, 
 
 
 async def test_migration_de_la_maison_vers_le_placard() -> None:
-    from custom_components.cookbook_menu.store import DonneesPlanificateur
+    from custom_components.nextcloud_cookbook_menu.store import DonneesPlanificateur
 
     donnees = DonneesPlanificateur.depuis_dict(
         {

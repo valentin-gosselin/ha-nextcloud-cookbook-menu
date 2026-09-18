@@ -12,9 +12,9 @@ from homeassistant.exceptions import ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 
-from custom_components.cookbook_menu.api import CookbookConnectionError
-from custom_components.cookbook_menu.planner import lire_couverts
-from custom_components.cookbook_menu.store import DonneesPlanificateur, PlatMenu
+from custom_components.nextcloud_cookbook_menu.api import CookbookConnectionError
+from custom_components.nextcloud_cookbook_menu.planner import lire_couverts
+from custom_components.nextcloud_cookbook_menu.store import DonneesPlanificateur, PlatMenu
 
 MENU = "todo.valentin_cloud_exemple_fr_menu_de_la_semaine"
 
@@ -40,9 +40,7 @@ async def elements(hass: HomeAssistant, entite: str = MENU) -> list[dict[str, An
 
 
 async def ajouter(hass: HomeAssistant, texte: str, **extra: Any) -> None:
-    await hass.services.async_call(
-        TODO_DOMAIN, "add_item", {"entity_id": MENU, "item": texte, **extra}, blocking=True
-    )
+    await hass.services.async_call(TODO_DOMAIN, "add_item", {"entity_id": MENU, "item": texte, **extra}, blocking=True)
 
 
 @pytest.mark.parametrize(
@@ -133,9 +131,7 @@ async def test_modification(hass: HomeAssistant, entree) -> None:
     assert plat["description"] == "4 couverts, sans recette"
 
 
-async def test_suppression_et_deplacement(
-    hass: HomeAssistant, entree, hass_ws_client: WebSocketGenerator
-) -> None:
+async def test_suppression_et_deplacement(hass: HomeAssistant, entree, hass_ws_client: WebSocketGenerator) -> None:
     for texte in ("tartiflette", "carry", "chili"):
         await ajouter(hass, texte)
     uids = [p["uid"] for p in await elements(hass)]
@@ -209,7 +205,7 @@ async def test_persistance(hass: HomeAssistant, mock_client, config_entry, hass_
     freezer.tick(5)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    cle = f"cookbook_menu.{config_entry.entry_id}"
+    cle = f"nextcloud_cookbook_menu.{config_entry.entry_id}"
     assert hass_storage[cle]["data"]["menu"][0]["servings"] == 6
 
     assert await hass.config_entries.async_reload(config_entry.entry_id)
@@ -225,9 +221,7 @@ async def test_persistance(hass: HomeAssistant, mock_client, config_entry, hass_
 
 def test_donnees_aller_retour() -> None:
     donnees = DonneesPlanificateur(
-        menu=[
-            PlatMenu(uid="a", summary="Carry", servings=4, recipe_id="1", day=date(2026, 9, 20), done=True)
-        ],
+        menu=[PlatMenu(uid="a", summary="Carry", servings=4, recipe_id="1", day=date(2026, 9, 20), done=True)],
         placard_epuise={"huile olive": "Huile d'olive"},
         frigo={"citron": {"nom": "Citron", "quantites": {"pièce": 1}, "expire": "2026-09-23"}},
         maison={"pain": {"nom": "Pain", "present": False, "description": None}},
@@ -241,6 +235,4 @@ def test_donnees_aller_retour() -> None:
     migre = DonneesPlanificateur.depuis_dict(
         {"courses_manuelles": [{"summary": "Papier toilette", "done": True}, {"summary": " "}]}
     )
-    assert migre.maison == {
-        "papier toilette": {"nom": "Papier toilette", "present": True, "description": None}
-    }
+    assert migre.maison == {"papier toilette": {"nom": "Papier toilette", "present": True, "description": None}}

@@ -299,9 +299,7 @@ class Planificateur:
         resultat = self.async_ajouter_plat(
             texte, jour=jour, couverts=couverts, recipe_id=recipe_id, choisir_meilleure=True
         )
-        modifiees = [
-            ligne.libelle for ligne in self.liste_de_courses() if avant.get(ligne.uid) != ligne.libelle
-        ]
+        modifiees = [ligne.libelle for ligne in self.liste_de_courses() if avant.get(ligne.uid) != ligne.libelle]
         plat = resultat.plat
         return {
             "dish": plat.summary,
@@ -366,11 +364,7 @@ class Planificateur:
         if uid_precedent is not None:
             self._plat(uid_precedent)
         self.menu.remove(plat)
-        index = (
-            0
-            if uid_precedent is None
-            else next(i for i, p in enumerate(self.menu) if p.uid == uid_precedent) + 1
-        )
+        index = 0 if uid_precedent is None else next(i for i, p in enumerate(self.menu) if p.uid == uid_precedent) + 1
         self.menu.insert(index, plat)
         self._signaler_changement()
 
@@ -586,18 +580,14 @@ class Planificateur:
         return f"{prefixe}{cle_produit}"
 
     @callback
-    def async_modifier_course(
-        self, uid: str, *, texte: str | None, description: str | None, fait: bool
-    ) -> None:
+    def async_modifier_course(self, uid: str, *, texte: str | None, description: str | None, fait: bool) -> None:
         """Cocher, c'est acheter : le produit rejoint le frigo, le placard ou la maison."""
         ligne = self._ligne_affichee(uid)
         donnees = self.stockage.donnees
         if ligne.calculee:
             assert ligne.ligne is not None
             if texte is not None and texte != ligne.libelle:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN, translation_key="computed_item_readonly"
-                )
+                raise ServiceValidationError(translation_domain=DOMAIN, translation_key="computed_item_readonly")
             produit = ligne.ligne
             if produit.cle in donnees.placard_epuise:
                 if fait:
@@ -676,9 +666,7 @@ class Planificateur:
             if retirer:
                 frigo.retirer(donnees.frigo, ligne.cle, ligne.quantites)
             elif ligne.cle in donnees.frigo:
-                frigo.ajouter(
-                    donnees.frigo, ligne.cle, ligne.nom, ligne.quantites, ligne.rayon, self._aujourdhui()
-                )
+                frigo.ajouter(donnees.frigo, ligne.cle, ligne.nom, ligne.quantites, ligne.rayon, self._aujourdhui())
 
     # --- Réserve (carte et voix) ----------------------------------------------------
 
@@ -705,9 +693,7 @@ class Planificateur:
                         "key": c,
                         "name": e["nom"],
                         "quantity": formater_quantites(e["quantites"]),
-                        "days_left": (date.fromisoformat(e["expire"]) - aujourdhui).days
-                        if e.get("expire")
-                        else None,
+                        "days_left": (date.fromisoformat(e["expire"]) - aujourdhui).days if e.get("expire") else None,
                     }
                     for c, e in donnees.frigo.items()
                 ),
@@ -781,9 +767,7 @@ class Planificateur:
         )
 
     @callback
-    def async_reserve_au_placard(
-        self, *, noms: list[str] | None = None, cle_produit: str | None = None
-    ) -> None:
+    def async_reserve_au_placard(self, *, noms: list[str] | None = None, cle_produit: str | None = None) -> None:
         """Ranger au placard des produits choisis ou saisis dans la carte, ou un produit de la maison."""
         donnees = self.stockage.donnees
         if cle_produit is not None:

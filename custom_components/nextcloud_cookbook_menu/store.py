@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import json
+import logging
 from dataclasses import asdict, dataclass, field
 from datetime import date
+from pathlib import Path
 from typing import Any
 
 from homeassistant.core import HomeAssistant
@@ -15,6 +18,10 @@ from .ingredients.normalize import cle
 
 VERSION_STOCKAGE = 1
 DELAI_SAUVEGARDE = 2
+# Le domaine s'appelait « cookbook_menu » avant la 1.0.0.
+ANCIEN_DOMAINE = "cookbook_menu"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -126,12 +133,40 @@ class StockagePlanificateur:
     """Enveloppe du `Store` HA, avec sauvegarde différée."""
 
     def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
+        self._hass = hass
         self._store: Store[dict[str, Any]] = Store(hass, VERSION_STOCKAGE, f"{DOMAIN}.{entry_id}")
         self.donnees = DonneesPlanificateur()
 
     async def async_charger(self) -> DonneesPlanificateur:
-        self.donnees = DonneesPlanificateur.depuis_dict(await self._store.async_load())
+        brut = await self._store.async_load()
+        if brut is None and (ancien := await self._async_lire_ancien_domaine()) is not None:
+            brut = ancien
+            self.planifier_sauvegarde()
+        self.donnees = DonneesPlanificateur.depuis_dict(brut)
         return self.donnees
+
+    async def _async_lire_ancien_domaine(self) -> dict[str, Any] | None:
+        """Reprend le menu et la réserve laissés par le domaine « cookbook_menu » (avant la 1.0.0).
+
+        Une seule entrée était possible en pratique : le fichier est repris s'il est unique.
+        """
+        dossier = Path(self._hass.config.path(".storage"))
+
+        def lire() -> dict[str, Any] | None:
+            fichiers = sorted(dossier.glob(f"{ANCIEN_DOMAINE}.*"))
+            if len(fichiers) != 1:
+                return None
+            return json.loads(fichiers[0].read_text(encoding="utf-8"))
+
+        try:
+            contenu = await self._hass.async_add_executor_job(lire)
+        except (OSError, ValueError) as err:
+            _LOGGER.warning("Données de l'ancien domaine illisibles : %s", err)
+            return None
+        if contenu is None:
+            return None
+        _LOGGER.info("Menu et réserve repris depuis l'ancien domaine %s", ANCIEN_DOMAINE)
+        return contenu.get("data")
 
     def planifier_sauvegarde(self) -> None:
         self._store.async_delay_save(self.donnees.en_dict, DELAI_SAUVEGARDE)

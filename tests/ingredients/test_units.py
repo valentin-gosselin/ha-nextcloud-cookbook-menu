@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.cookbook_menu.ingredients.units import UNITES, Famille, famille, lire_unite
+from custom_components.nextcloud_cookbook_menu.ingredients.units import UNITES, Famille, famille, lire_unite
 
 
 @pytest.mark.parametrize(

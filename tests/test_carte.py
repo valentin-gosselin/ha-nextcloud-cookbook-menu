@@ -9,8 +9,8 @@ import pytest
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 
-from custom_components.cookbook_menu import frontend
-from custom_components.cookbook_menu.const import DOMAIN
+from custom_components.nextcloud_cookbook_menu import frontend
+from custom_components.nextcloud_cookbook_menu.const import DOMAIN
 
 from .test_menu import elements
 
@@ -30,7 +30,7 @@ async def entree(hass: HomeAssistant, mock_client, config_entry):
 
 async def test_commande_recettes(hass: HomeAssistant, entree, hass_ws_client: WebSocketGenerator) -> None:
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id({"type": "cookbook_menu/recipes"})
+    await client.send_json_auto_id({"type": "nextcloud_cookbook_menu/recipes"})
     reponse = await client.receive_json()
     assert reponse["success"]
     resultat = reponse["result"]
@@ -41,7 +41,7 @@ async def test_commande_recettes(hass: HomeAssistant, entree, hass_ws_client: We
     assert {"id": "69603", "name": "Salade César au poulet"} in resultat["recipes"]
     assert len(resultat["recipes"]) == 57
 
-    await client.send_json_auto_id({"type": "cookbook_menu/recipes", "config_entry_id": "inconnue"})
+    await client.send_json_auto_id({"type": "nextcloud_cookbook_menu/recipes", "config_entry_id": "inconnue"})
     reponse = await client.receive_json()
     assert not reponse["success"]
     assert reponse["error"]["code"] == "not_found"
@@ -85,14 +85,14 @@ async def test_creation_de_la_ressource() -> None:
     with patch("homeassistant.components.http.StaticPathConfig"):
         await frontend.async_enregistrer_carte(_hass_avec_ressources(ressources))
     ressources.async_create_item.assert_awaited_once_with(
-        {"res_type": "module", "url": "/cookbook_menu_static/cookbook-menu-card.js?v=42"}
+        {"res_type": "module", "url": "/nextcloud_cookbook_menu_static/cookbook-menu-card.js?v=42"}
     )
 
 
 async def test_mise_a_jour_de_la_version() -> None:
     ressources = MagicMock(loaded=True)
     ressources.async_items.return_value = [
-        {"id": "r1", "url": "/cookbook_menu_static/cookbook-menu-card.js?v=1"}
+        {"id": "r1", "url": "/nextcloud_cookbook_menu_static/cookbook-menu-card.js?v=1"}
     ]
     ressources.async_update_item = AsyncMock()
     await frontend.async_enregistrer_carte(_hass_avec_ressources(ressources))
@@ -100,7 +100,7 @@ async def test_mise_a_jour_de_la_version() -> None:
 
     ressources.async_update_item.reset_mock()
     ressources.async_items.return_value = [
-        {"id": "r1", "url": "/cookbook_menu_static/cookbook-menu-card.js?v=42"}
+        {"id": "r1", "url": "/nextcloud_cookbook_menu_static/cookbook-menu-card.js?v=42"}
     ]
     await frontend.async_enregistrer_carte(_hass_avec_ressources(ressources))
     ressources.async_update_item.assert_not_awaited()

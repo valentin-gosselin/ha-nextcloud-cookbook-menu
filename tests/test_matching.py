@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.cookbook_menu.matching import chercher, est_ambigu, lien_automatique, score
+from custom_components.nextcloud_cookbook_menu.matching import chercher, est_ambigu, lien_automatique, score
 
 
 @pytest.mark.parametrize(

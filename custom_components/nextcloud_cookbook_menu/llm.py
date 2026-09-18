@@ -1,7 +1,7 @@
 """Outils pour les agents de conversation LLM (story 3.2).
 
 HA exige que les outils d'une intégration soient préfixés par son domaine (depuis 2026.9) :
-ils se nomment « cookbook_menu__<outil> ».
+ils se nomment « nextcloud_cookbook_menu__<outil> ».
 Chaque outil appelle le planificateur, comme les actions et la voix.
 """
 
@@ -24,12 +24,12 @@ if TYPE_CHECKING:
     from .planner import Planificateur
 
 CONSIGNE = (
-    "Cookbook Menu manages the household weekly menu from the Nextcloud Cookbook recipes. "
+    "Nextcloud Cookbook Menu manages the household weekly menu from the Nextcloud Cookbook recipes. "
     "The shopping list is computed automatically from the menu: "
     "never add a recipe's ingredients to it yourself. "
     "Pantry staples (salt, oil, spices...) are left out on purpose; when the user says one is out of stock, "
-    "call cookbook_menu__out_of_stock. "
-    "When the dish the user names could match several recipes, call cookbook_menu__search_recipes first and "
+    "call nextcloud_cookbook_menu__out_of_stock. "
+    "When the dish the user names could match several recipes, call nextcloud_cookbook_menu__search_recipes first and "
     "ask which one they mean before adding it."
 )
 
@@ -57,12 +57,10 @@ class OutilCookbook(Tool):
         raise NotImplementedError  # pragma: no cover
 
     @override
-    async def async_call(
-        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
+    async def async_call(self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext) -> JsonObjectType:
         planificateur = _planificateur(hass)
         if planificateur is None:
-            return {"success": False, "error": "Cookbook Menu is not set up"}
+            return {"success": False, "error": "Nextcloud Cookbook Menu is not set up"}
         try:
             arguments = self.parameters(tool_input.tool_args)
             return {"success": True, **await self._executer(planificateur, arguments)}
@@ -74,9 +72,7 @@ class OutilCookbook(Tool):
 
 class ChercherRecettes(OutilCookbook):
     name = f"{DOMAIN}__search_recipes"
-    description = (
-        "Search the household recipes by name. Returns the best matches with a similarity score (0 to 1)."
-    )
+    description = "Search the household recipes by name. Returns the best matches with a similarity score (0 to 1)."
     parameters = vol.Schema(
         {
             vol.Required("query", description="Words from the dish name"): str,
@@ -124,9 +120,7 @@ class AjouterAuMenu(OutilCookbook):
                 couverts=arguments.get("servings"),
                 recipe_id=arguments["recipe_id"],
             )
-        return planificateur.async_ajouter_au_menu(
-            arguments["dish"], jour=jour, couverts=arguments.get("servings")
-        )
+        return planificateur.async_ajouter_au_menu(arguments["dish"], jour=jour, couverts=arguments.get("servings"))
 
 
 class RetirerDuMenu(OutilCookbook):
@@ -193,7 +187,7 @@ class LireReserve(OutilCookbook):
 
 @callback
 def async_get_tools(hass: HomeAssistant, llm_context: LLMContext, api_id: str) -> LLMTools | None:
-    """Outils Cookbook Menu pour l'API Assist, si l'intégration est configurée."""
+    """Outils Nextcloud Cookbook Menu pour l'API Assist, si l'intégration est configurée."""
     if api_id != LLM_API_ASSIST or _planificateur(hass) is None:
         return None
     return LLMTools(

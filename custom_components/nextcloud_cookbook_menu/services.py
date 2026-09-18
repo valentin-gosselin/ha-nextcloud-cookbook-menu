@@ -63,9 +63,7 @@ SCHEMA_HISTORY = vol.Schema(
         vol.Optional(ATTR_LIMIT, default=20): vol.All(vol.Coerce(int), vol.Range(min=1, max=500)),
     }
 )
-SCHEMA_OUT_OF_STOCK = vol.Schema(
-    {**_ENTREE, vol.Required(ATTR_PRODUCT): vol.All(cv.string, vol.Length(min=1))}
-)
+SCHEMA_OUT_OF_STOCK = vol.Schema({**_ENTREE, vol.Required(ATTR_PRODUCT): vol.All(cv.string, vol.Length(min=1))})
 SCHEMA_SEARCH = vol.Schema(
     {
         **_ENTREE,

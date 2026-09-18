@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.cookbook_menu.const import DOMAIN
-from custom_components.cookbook_menu.jours import lire_jour
+from custom_components.nextcloud_cookbook_menu.const import DOMAIN
+from custom_components.nextcloud_cookbook_menu.jours import lire_jour
 
 from .test_courses import courses
 from .test_menu import elements
@@ -149,9 +149,7 @@ async def test_chercher(hass: HomeAssistant, entree) -> None:
 
 
 async def test_plusieurs_entrees_exigent_un_identifiant(hass: HomeAssistant, entree, mock_client) -> None:
-    autre = MockConfigEntry(
-        domain=DOMAIN, unique_id="autre", data=dict(entree.data), options=dict(entree.options)
-    )
+    autre = MockConfigEntry(domain=DOMAIN, unique_id="autre", data=dict(entree.data), options=dict(entree.options))
     autre.add_to_hass(hass)
     assert await hass.config_entries.async_setup(autre.entry_id)
     await hass.async_block_till_done()

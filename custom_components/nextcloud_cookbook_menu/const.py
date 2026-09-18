@@ -1,9 +1,9 @@
-"""Constantes de l'intégration Cookbook Menu."""
+"""Constantes de l'intégration Nextcloud Cookbook Menu."""
 
 from datetime import timedelta
 from typing import Final
 
-DOMAIN: Final = "cookbook_menu"
+DOMAIN: Final = "nextcloud_cookbook_menu"
 
 CONF_SERVINGS: Final = "servings"
 CONF_EXCLUDED_CATEGORIES: Final = "excluded_categories"

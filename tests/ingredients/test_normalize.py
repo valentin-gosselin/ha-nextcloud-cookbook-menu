@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.cookbook_menu.ingredients.normalize import cle, singulier
+from custom_components.nextcloud_cookbook_menu.ingredients.normalize import cle, singulier
 
 
 @pytest.mark.parametrize(

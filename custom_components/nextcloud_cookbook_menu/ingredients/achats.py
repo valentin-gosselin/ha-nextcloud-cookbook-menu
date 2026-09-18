@@ -67,9 +67,7 @@ PROFILS: dict[str, Profil] = {
     "gruyere": _poids(**{"c. à s.": 6, "poignée": 30}),
     "cacahuete": _poids(poignée=30, **{"c. à s.": 10}),
     # Ail : acheté en têtes, compté en gousses
-    "ail": Profil(
-        "gousse", {"g": 1 / 5, "ml": 1 / 5, "c. à c.": 0.5, "c. à s.": 1.5, "pièce": 1, "tête": 10}
-    ),
+    "ail": Profil("gousse", {"g": 1 / 5, "ml": 1 / 5, "c. à c.": 0.5, "c. à s.": 1.5, "pièce": 1, "tête": 10}),
     "gingembre": Profil("morceau", {"c. à c.": 0.2, "c. à s.": 0.5, "g": 1 / 50, "pièce": 1}),
     # Conditionnements
     "levure chimique": Profil("sachet", {"g": 1 / 11, "c. à c.": 0.45, "c. à s.": 1.35}),

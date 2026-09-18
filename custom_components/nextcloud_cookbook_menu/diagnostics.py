@@ -13,9 +13,7 @@ from . import CookbookMenuConfigEntry
 A_MASQUER = {CONF_PASSWORD, CONF_USERNAME}
 
 
-async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: CookbookMenuConfigEntry
-) -> dict[str, Any]:
+async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: CookbookMenuConfigEntry) -> dict[str, Any]:
     """Diagnostics d'une entrée."""
     coordinateur = entry.runtime_data.coordinator
     index = coordinateur.data

@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.cookbook_menu.ingredients.catalogue_placard import (
+from custom_components.nextcloud_cookbook_menu.ingredients.catalogue_placard import (
     PRODUITS_PLACARD,
     est_produit_de_placard,
 )
-from custom_components.cookbook_menu.ingredients.normalize import cle
+from custom_components.nextcloud_cookbook_menu.ingredients.normalize import cle
 
 
 @pytest.mark.parametrize(

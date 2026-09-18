@@ -3,14 +3,17 @@
 Toutes les évolutions notables de ce projet sont consignées ici.
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [SemVer](https://semver.org/lang/fr/).
 
-## [Unreleased]
+## [1.0.0] - 2026-09-18
+
+Première version publique.
+
+### Modifié
+- Le domaine devient `nextcloud_cookbook_menu` et l'intégration s'appelle « Nextcloud Cookbook Menu ». Le menu et la réserve d'une installation `cookbook_menu` sont repris automatiquement, mais l'entrée doit être supprimée puis recréée.
+- La ligne « À vérifier au placard » et son option sont supprimées au profit de la réserve. Les lignes ajoutées à la main deviennent des produits « maison ».
+- Home Assistant 2026.9.0 minimum.
 
 ### Corrigé
 - Voix : une phrase française dite à un Home Assistant réglé en anglais était analysée avec les règles anglaises (« Ajoute une salade César au menu jeudi pour quatre » devenait un plat libre sans recette, sans jour ni couverts). La langue de la phrase prime désormais sur celle du pipeline. Au passage, l'anglais ne dit plus « on tomorrow ».
-
-### Modifié
-- La ligne « À vérifier au placard » et son option sont supprimées au profit de la réserve. Les lignes ajoutées à la main deviennent des produits « maison ».
-- Home Assistant 2026.9.0 minimum.
 
 ### Ajouté
 - Voix : beaucoup plus de tournures comprises sans LLM (ajouter au menu, demander le menu, retirer, historique, « il n'y a plus de »), en français et en anglais. 132 phrases réelles sont rejouées à chaque test, contre-exemples compris (« ajoute du beurre à ma liste de courses » ne crée pas de plat).
@@ -35,4 +38,4 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [
 - Options du foyer : couverts par défaut, catégories exclues, intervalle de rafraîchissement.
 - Analyse des lignes d'ingrédients en français (quantités, fractions, plages, unités, sections, notes, lignes multiples) et clé de fusion des produits. Validée sur un corpus réel de 545 lignes.
 - Lecture des recettes Nextcloud Cookbook avec cache (détail rechargé seulement si la recette a changé) et diagnostics sans secret.
-- Squelette de l'intégration `cookbook_menu`, CI (hassfest, HACS, ruff, pytest), release HACS et script de déploiement vers le HA de dev.
+- Squelette de l'intégration `nextcloud_cookbook_menu`, CI (hassfest, HACS, ruff, pytest), release HACS et script de déploiement vers le HA de dev.

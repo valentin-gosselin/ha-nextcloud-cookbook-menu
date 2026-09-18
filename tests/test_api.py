@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
 
-from custom_components.cookbook_menu.api import (
+from custom_components.nextcloud_cookbook_menu.api import (
     API_PREFIX,
     CookbookAuthError,
     CookbookClient,
@@ -170,20 +170,18 @@ async def test_login_flow_v2(hass: HomeAssistant, aioclient_mock: AiohttpClientM
     )
     demande = await async_demarrer_connexion(session, f"{BASE}/")
     assert demande == DemandeConnexion(f"{BASE}/login/v2/flow/x", f"{BASE}/login/v2/poll", "jeton")
-    assert aioclient_mock.mock_calls[0][3]["User-Agent"] == "Cookbook Menu (Home Assistant)"
+    assert aioclient_mock.mock_calls[0][3]["User-Agent"] == "Nextcloud Cookbook Menu (Home Assistant)"
 
     aioclient_mock.post(
         f"{BASE}/login/v2/poll",
         json={"server": f"{BASE}/", "loginName": "valentin", "appPassword": "genere"},
     )
-    with patch("custom_components.cookbook_menu.api.asyncio.sleep"):
+    with patch("custom_components.nextcloud_cookbook_menu.api.asyncio.sleep"):
         identifiants = await async_attendre_connexion(session, demande, intervalle=0)
     assert identifiants == IdentifiantsNextcloud(BASE, "valentin", "genere")
 
 
-async def test_login_flow_v2_attente_puis_expiration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_login_flow_v2_attente_puis_expiration(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     session = async_get_clientsession(hass)
     demande = DemandeConnexion("x", f"{BASE}/login/v2/poll", "jeton")
     aioclient_mock.post(f"{BASE}/login/v2/poll", status=404)

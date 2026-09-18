@@ -12,8 +12,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VER
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.cookbook_menu.api import Recipe, RecipeStub, parse_recipe
-from custom_components.cookbook_menu.const import DOMAIN
+from custom_components.nextcloud_cookbook_menu.api import Recipe, RecipeStub, parse_recipe
+from custom_components.nextcloud_cookbook_menu.const import DOMAIN
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -66,13 +66,11 @@ def recettes(corpus) -> dict[str, Recipe]:
 def mock_client(recettes) -> Generator[AsyncMock]:
     """Client Cookbook simulé, branché sur le corpus réel."""
     with (
-        patch("custom_components.cookbook_menu.CookbookClient", autospec=True) as classe,
-        patch("custom_components.cookbook_menu.config_flow.create_client") as creer_flux,
+        patch("custom_components.nextcloud_cookbook_menu.CookbookClient", autospec=True) as classe,
+        patch("custom_components.nextcloud_cookbook_menu.config_flow.create_client") as creer_flux,
     ):
         client = classe.return_value
-        client.async_get_categories.return_value = sorted(
-            {r.category for r in recettes.values() if r.category}
-        )
+        client.async_get_categories.return_value = sorted({r.category for r in recettes.values() if r.category})
         client.async_get_recipe_stubs.return_value = [
             RecipeStub(id=r.id, name=r.name, date_modified=r.date_modified) for r in recettes.values()
         ]

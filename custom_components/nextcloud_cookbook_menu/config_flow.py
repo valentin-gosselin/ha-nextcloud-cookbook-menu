@@ -1,4 +1,4 @@
-"""Flux de configuration de Cookbook Menu : ajout, réauthentification, reconfiguration et options."""
+"""Flux de configuration de Nextcloud Cookbook Menu : ajout, réauthentification, reconfiguration et options."""
 
 from __future__ import annotations
 
@@ -189,9 +189,7 @@ class CookbookMenuConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Schema(
                     {
                         vol.Required(CONF_USERNAME): TextSelector(),
-                        vol.Required(CONF_PASSWORD): TextSelector(
-                            TextSelectorConfig(type=TextSelectorType.PASSWORD)
-                        ),
+                        vol.Required(CONF_PASSWORD): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
                     }
                 ),
                 {CONF_USERNAME: user_input[CONF_USERNAME]} if user_input else {},
@@ -240,11 +238,7 @@ class CookbookMenuConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_manual",
             data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_PASSWORD): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
-                    )
-                }
+                {vol.Required(CONF_PASSWORD): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))}
             ),
             description_placeholders={
                 CONF_USERNAME: entree.data[CONF_USERNAME],
@@ -302,17 +296,16 @@ class CookbookMenuOptionsFlow(OptionsFlowWithReload):
         choix = sorted({*categories, *options.get(CONF_EXCLUDED_CATEGORIES, [])}, key=str.casefold)
         placard = options.get(CONF_PANTRY, list(PLACARD_PAR_DEFAUT))
         nos_listes = [
-            e.entity_id
-            for e in er.async_entries_for_config_entry(er.async_get(self.hass), self.config_entry.entry_id)
+            e.entity_id for e in er.async_entries_for_config_entry(er.async_get(self.hass), self.config_entry.entry_id)
         ]
         selecteur_liste = EntitySelector(EntitySelectorConfig(domain="todo", exclude_entities=nos_listes))
         choix_placard = list(dict.fromkeys([*PLACARD_PAR_DEFAUT, *placard]))
 
         schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_SERVINGS, default=options.get(CONF_SERVINGS, DEFAULT_SERVINGS)
-                ): NumberSelector(NumberSelectorConfig(min=1, max=30, step=1, mode=NumberSelectorMode.BOX)),
+                vol.Required(CONF_SERVINGS, default=options.get(CONF_SERVINGS, DEFAULT_SERVINGS)): NumberSelector(
+                    NumberSelectorConfig(min=1, max=30, step=1, mode=NumberSelectorMode.BOX)
+                ),
                 vol.Optional(
                     CONF_EXCLUDED_CATEGORIES, default=options.get(CONF_EXCLUDED_CATEGORIES, [])
                 ): SelectSelector(

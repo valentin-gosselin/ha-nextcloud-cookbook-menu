@@ -128,9 +128,7 @@ class Synchroniseur:
         avec_echeance = bool(fonctions & TodoListEntityFeature.SET_DUE_DATE_ON_ITEM)
 
         # Correspondances mémorisées : notre uid -> {uid cible, dernier état poussé}.
-        memoire: dict[str, dict[str, Any]] = self.planificateur.stockage.donnees.synchro.setdefault(
-            entite, {}
-        )
+        memoire: dict[str, dict[str, Any]] = self.planificateur.stockage.donnees.synchro.setdefault(entite, {})
         cible = await self._elements_cible(entite)
         sources = {source.uid: source for source in self._sources(genre)}
         modifie = False
@@ -150,9 +148,7 @@ class Synchroniseur:
             sources = {source.uid: source for source in self._sources(genre)}
 
         # 2. Lignes disparues chez nous : retirées de la cible (seulement celles qu'on a créées).
-        a_retirer = [
-            lien["uid"] for uid, lien in memoire.items() if uid not in sources and lien["uid"] in cible
-        ]
+        a_retirer = [lien["uid"] for uid, lien in memoire.items() if uid not in sources and lien["uid"] in cible]
         if a_retirer:
             await self._appeler("remove_item", entite, {"item": a_retirer})
         for uid in [uid for uid in memoire if uid not in sources]:
@@ -203,11 +199,7 @@ class Synchroniseur:
         if genre == "menu":
             self.planificateur.async_modifier_plat(source.uid, fait=fait)
         else:
-            self.planificateur.async_modifier_course(
-                source.uid, texte=None, description=source.description, fait=fait
-            )
+            self.planificateur.async_modifier_course(source.uid, texte=None, description=source.description, fait=fait)
 
     async def _appeler(self, action: str, entite: str, donnees: dict[str, Any]) -> None:
-        await self.hass.services.async_call(
-            TODO_DOMAIN, action, {"entity_id": entite, **donnees}, blocking=True
-        )
+        await self.hass.services.async_call(TODO_DOMAIN, action, {"entity_id": entite, **donnees}, blocking=True)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.cookbook_menu.ingredients import analyser
+from custom_components.nextcloud_cookbook_menu.ingredients import analyser
 
 
 def un(ligne: str):

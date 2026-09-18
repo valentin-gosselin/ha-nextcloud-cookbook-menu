@@ -18,9 +18,6 @@ jobs:
   hacs:
     name: Validation HACS
     runs-on: ubuntu-latest
-    # Dépôt privé : HACS ne peut pas lire hacs.json ni manifest.json (contenu brut inaccessible),
-    # d'où des échecs « invalid hacs.json » et « manifest None ». À retirer au passage en public (story 5.2).
-    continue-on-error: true
     steps:
       - uses: hacs/action@main
         with:

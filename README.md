@@ -1,4 +1,4 @@
-# Cookbook Menu for Home Assistant
+# Nextcloud Cookbook Menu for Home Assistant
 
 Plan the weekly menu from your **Nextcloud Cookbook** recipes and get the **shopping list built for you**: quantities scaled to the number of servings, identical products merged across recipes, rounded to what you actually buy, sorted by store aisle, without the pantry staples you always have at home.
 
@@ -22,17 +22,17 @@ Nextcloud Cookbook has no shopping list feature ([nextcloud/cookbook#11](https:/
 ### HACS (recommended)
 
 1. HACS > Integrations > menu > Custom repositories > add this repository, category *Integration*.
-2. Install **Cookbook Menu**, then restart Home Assistant.
+2. Install **Nextcloud Cookbook Menu**, then restart Home Assistant.
 
 ### Manual
 
-Copy `custom_components/cookbook_menu` into the `custom_components` folder of your configuration, then restart Home Assistant.
+Copy `custom_components/nextcloud_cookbook_menu` into the `custom_components` folder of your configuration, then restart Home Assistant.
 
 ## Configuration
 
-Settings > Devices & services > Add integration > **Cookbook Menu**, then enter the address of your Nextcloud server and choose:
+Settings > Devices & services > Add integration > **Nextcloud Cookbook Menu**, then enter the address of your Nextcloud server and choose:
 
-- **Sign in with Nextcloud (recommended)**: your Nextcloud login page opens; sign in and grant access. Home Assistant receives its own app password, listed as *Cookbook Menu (Home Assistant)* in Nextcloud Settings > Security, where it can be revoked.
+- **Sign in with Nextcloud (recommended)**: your Nextcloud login page opens; sign in and grant access. Home Assistant receives its own app password, listed as *Nextcloud Cookbook Menu (Home Assistant)* in Nextcloud Settings > Security, where it can be revoked.
 - **Enter an app password**: create one in Nextcloud (Personal settings > Security > Devices & sessions) and enter it with your username.
 
 *Verify SSL certificate* should only be disabled for a self-signed certificate. The connection is tested before the entry is created. If the access is revoked later, Home Assistant asks you to sign in again or enter a new app password (re-authentication). The URL, user and password can be changed with *Reconfigure*.
@@ -76,7 +76,7 @@ The same can be done without the card with the entities *Recipe to add*, *Day*, 
 
 ## Stock: pantry, fridge and household
 
-Cookbook Menu keeps track of what is at home without asking you to type anything:
+Nextcloud Cookbook Menu keeps track of what is at home without asking you to type anything:
 
 - **Pantry** (the staples from the options, plus what you add): either in stock or missing. Say "we're out of olive oil" (or tap it in the stock card) and it goes to the shopping list; check it when bought and it is back in stock. A product added by hand that keeps for more than a week (spices, dried herbs, condiments, pasta, rice, flours, canned food: about 300 known products, variants included) joins the pantry. In the card, the *Add to pantry* field opens the list of known products not yet in the pantry, filtered as you type: check several at once, or add any product as typed. Products can also be removed from the pantry.
 - **Fridge**: checking a shopping line means you bought it. The quantity goes to the fridge, a line stays checked while the fridge covers the menu, and only what is missing is asked for. A cooked dish (checked in the menu) or a dish whose day has passed uses its share. Leftovers are reused by the next dishes. Fresh products are forgotten after 7 days, groceries after 60.
@@ -92,13 +92,13 @@ The first time, the card asks you to check the pantry: everything is considered 
 
 | Action | Fields | Response |
 |---|---|---|
-| `cookbook_menu.add_to_menu` | `recipe` (text), `recipe_id` (exact id, optional), `day` (date, weekday, today, tomorrow), `servings` | dish, linked recipe, alternatives, changed shopping lines |
-| `cookbook_menu.remove_from_menu` | `recipe` or `uid` | |
-| `cookbook_menu.set_servings` | `recipe` or `uid`, `servings` | |
-| `cookbook_menu.new_week` | | archived dishes |
-| `cookbook_menu.get_history` | `recipe` (optional), `limit` | past dishes, most recent first |
-| `cookbook_menu.search_recipes` | `query`, `limit` | recipes with a similarity score |
-| `cookbook_menu.out_of_stock` | `product` | |
+| `nextcloud_cookbook_menu.add_to_menu` | `recipe` (text), `recipe_id` (exact id, optional), `day` (date, weekday, today, tomorrow), `servings` | dish, linked recipe, alternatives, changed shopping lines |
+| `nextcloud_cookbook_menu.remove_from_menu` | `recipe` or `uid` | |
+| `nextcloud_cookbook_menu.set_servings` | `recipe` or `uid`, `servings` | |
+| `nextcloud_cookbook_menu.new_week` | | archived dishes |
+| `nextcloud_cookbook_menu.get_history` | `recipe` (optional), `limit` | past dishes, most recent first |
+| `nextcloud_cookbook_menu.search_recipes` | `query`, `limit` | recipes with a similarity score |
+| `nextcloud_cookbook_menu.out_of_stock` | `product` | |
 
 `config_entry_id` is optional when a single account is configured. Weekdays can be written in French or English ("jeudi", "thursday", "mercredi prochain").
 
@@ -127,11 +127,11 @@ Adding, checking or removing shopping items uses the built-in Home Assistant lis
 
 ### LLM conversation agents
 
-With the Assist API enabled, agents get the tools `cookbook_menu__search_recipes`, `__add_to_menu`, `__remove_from_menu`, `__get_menu`, `__get_history`, `__out_of_stock` and `__get_stock`, and a short instruction: never copy ingredients into the shopping list themselves, ask which recipe is meant when a name is ambiguous.
+With the Assist API enabled, agents get the tools `nextcloud_cookbook_menu__search_recipes`, `__add_to_menu`, `__remove_from_menu`, `__get_menu`, `__get_history`, `__out_of_stock` and `__get_stock`, and a short instruction: never copy ingredients into the shopping list themselves, ask which recipe is meant when a name is ambiguous.
 
 ## Copying to existing lists
 
-If your household already opens another to-do list at the store, choose it in the options. Cookbook Menu stays the source of truth and:
+If your household already opens another to-do list at the store, choose it in the options. Nextcloud Cookbook Menu stays the source of truth and:
 
 - adds, updates and removes only the lines it created there, never the others;
 - sends descriptions and due dates only if the target list supports them (the built-in *Shopping list* does not);
@@ -151,7 +151,7 @@ automation:
       - condition: time
         weekday: mon
     actions:
-      - action: cookbook_menu.new_week
+      - action: nextcloud_cookbook_menu.new_week
 ```
 
 Plan a dish from a script and tell what changed:
@@ -164,7 +164,7 @@ script:
         selector:
           text:
     sequence:
-      - action: cookbook_menu.add_to_menu
+      - action: nextcloud_cookbook_menu.add_to_menu
         data:
           recipe: "{{ dish }}"
           day: tomorrow
@@ -179,7 +179,7 @@ script:
 
 - **Recipes**: the recipe list is polled every 30 minutes (configurable). A recipe's details are only downloaded again when it changed in Nextcloud.
 - **Shopping list**: recomputed locally, instantly, whenever the menu, the options or the recipes change.
-- **Storage**: the menu, check states and history are stored in Home Assistant (`.storage/cookbook_menu.<entry>`), not in Nextcloud.
+- **Storage**: the menu, check states and history are stored in Home Assistant (`.storage/nextcloud_cookbook_menu.<entry>`), not in Nextcloud.
 
 ## Known limitations
 
@@ -194,24 +194,24 @@ script:
 - **"This Nextcloud server does not offer sign-in from applications"**: use an app password instead.
 - **"The Cookbook app was not found"**: check that the Cookbook app is installed and enabled for your user.
 - **A dish is not linked to the right recipe**: rename the menu line with a more precise name, or use `search_recipes` then `add_to_menu`.
-- **Diagnostics**: Settings > Devices & services > Cookbook Menu > menu > Download diagnostics. The password and the username are redacted.
+- **Diagnostics**: Settings > Devices & services > Nextcloud Cookbook Menu > menu > Download diagnostics. The password and the username are redacted.
 - Debug logs:
 
 ```yaml
 logger:
   logs:
-    custom_components.cookbook_menu: debug
+    custom_components.nextcloud_cookbook_menu: debug
 ```
 
 ## Removal
 
-Settings > Devices & services > Cookbook Menu > menu > Delete. The stored menu, shopping states and history are deleted with the entry. Then remove the integration from HACS (or delete `custom_components/cookbook_menu`) and restart Home Assistant. Nothing is changed in Nextcloud.
+Settings > Devices & services > Nextcloud Cookbook Menu > menu > Delete. The stored menu, shopping states and history are deleted with the entry. Then remove the integration from HACS (or delete `custom_components/nextcloud_cookbook_menu`) and restart Home Assistant. Nothing is changed in Nextcloud.
 
 ---
 
 ## En français
 
-Cookbook Menu relie vos recettes **Nextcloud Cookbook** à Home Assistant.
+Nextcloud Cookbook Menu relie vos recettes **Nextcloud Cookbook** à Home Assistant.
 - **Menu** : un plat dit ou tapé (« salade césar jeudi pour 4 ») rejoint le menu de la semaine.
 - **Courses** : ses ingrédients arrivent dans la liste de courses, mis à l'échelle, fusionnés, arrondis à l'achat, rangés par rayon, sans les produits du placard.
 - **Réserve** : placard, frigo et maison tenus à jour par les courses et le menu. Un produit qui se garde (ras el hanout, riz, farine...) ajouté à la main rejoint le placard.

@@ -1,6 +1,6 @@
-/* Carte « Cookbook Menu » pour Home Assistant.
+/* Carte « Nextcloud Cookbook Menu » pour Home Assistant.
  *
- * Servie et enregistrée automatiquement par l'intégration cookbook_menu.
+ * Servie et enregistrée automatiquement par l'intégration nextcloud_cookbook_menu.
  *
  * Configuration :
  *   type: custom:cookbook-menu-card
@@ -31,7 +31,7 @@ const TEXTES = {
       `${plat} ajouté au menu` + (n ? `, ${n} ligne${n > 1 ? "s" : ""} de courses mise${n > 1 ? "s" : ""} à jour` : ""),
     retirer: "Retirer du menu",
     cuisine: "Cuisiné",
-    nonConfigure: "Cookbook Menu n'est pas configuré",
+    nonConfigure: "Nextcloud Cookbook Menu n'est pas configuré",
     ouvrir: "Voir la recette",
     sansRecette: "Ce plat n'est lié à aucune recette",
     preparation: "Préparation",
@@ -68,7 +68,7 @@ const TEXTES = {
     ajoute: (plat, n) => `${plat} added to the menu` + (n ? `, ${n} shopping item${n > 1 ? "s" : ""} updated` : ""),
     retirer: "Remove from menu",
     cuisine: "Cooked",
-    nonConfigure: "Cookbook Menu is not set up",
+    nonConfigure: "Nextcloud Cookbook Menu is not set up",
     ouvrir: "Open the recipe",
     sansRecette: "This dish is not linked to a recipe",
     preparation: "Prep",
@@ -212,7 +212,7 @@ class CookbookMenuCard extends HTMLElement {
   async _charger() {
     this._chargement = (async () => {
       try {
-        const message = { type: "cookbook_menu/recipes" };
+        const message = { type: "nextcloud_cookbook_menu/recipes" };
         if (this._config && this._config.config_entry_id) message.config_entry_id = this._config.config_entry_id;
         const reponse = await this._hass.callWS(message);
         this._entree = reponse.config_entry_id;
@@ -503,7 +503,7 @@ class CookbookMenuCard extends HTMLElement {
     try {
       const resultat = await this._hass.callWS({
         type: "call_service",
-        domain: "cookbook_menu",
+        domain: "nextcloud_cookbook_menu",
         service: "add_to_menu",
         service_data: donnees,
         return_response: true,
@@ -575,7 +575,7 @@ class CookbookMenuCard extends HTMLElement {
   }
   async _ouvrirFiche(uid) {
     try {
-      const message = { type: "cookbook_menu/recipe", uid };
+      const message = { type: "nextcloud_cookbook_menu/recipe", uid };
       if (this._entree) message.config_entry_id = this._entree;
       this._fiche = await this._hass.callWS(message);
     } catch (err) {
@@ -805,7 +805,7 @@ const TEXTES_RESERVE = {
     plusRien: "Il n'y en a plus",
     jEnAi: "J'en ai",
     sortir: "Sortir de la réserve",
-    nonConfigure: "Cookbook Menu n'est pas configuré",
+    nonConfigure: "Nextcloud Cookbook Menu n'est pas configuré",
   },
   en: {
     titre: "Stock",
@@ -833,7 +833,7 @@ const TEXTES_RESERVE = {
     plusRien: "Out of stock",
     jEnAi: "In stock",
     sortir: "Remove from stock",
-    nonConfigure: "Cookbook Menu is not set up",
+    nonConfigure: "Nextcloud Cookbook Menu is not set up",
   },
 };
 
@@ -887,7 +887,7 @@ class CookbookStockCard extends HTMLElement {
   }
 
   _abonner() {
-    const message = { type: "cookbook_menu/stock/subscribe" };
+    const message = { type: "nextcloud_cookbook_menu/stock/subscribe" };
     if (this._config && this._config.config_entry_id) message.config_entry_id = this._config.config_entry_id;
     this._desabonner = this._hass.connection.subscribeMessage((reserve) => {
       this._reserve = reserve;
@@ -901,7 +901,7 @@ class CookbookStockCard extends HTMLElement {
   }
 
   _agir(action, cle, extra = {}) {
-    const message = { type: "cookbook_menu/stock/update", action, ...extra };
+    const message = { type: "nextcloud_cookbook_menu/stock/update", action, ...extra };
     if (cle) message.key = cle;
     if (this._config && this._config.config_entry_id) message.config_entry_id = this._config.config_entry_id;
     return this._hass.callWS(message);
@@ -1151,7 +1151,7 @@ if (!customElements.get("cookbook-menu-card")) {
   window.customCards = window.customCards || [];
   window.customCards.push({
     type: "cookbook-menu-card",
-    name: "Cookbook Menu",
+    name: "Nextcloud Cookbook Menu",
     description: "Weekly menu from Nextcloud Cookbook recipes, with recipe search.",
     preview: false,
   });
@@ -1162,7 +1162,7 @@ if (!customElements.get("cookbook-stock-card")) {
   window.customCards = window.customCards || [];
   window.customCards.push({
     type: "cookbook-stock-card",
-    name: "Cookbook Menu : réserve",
+    name: "Nextcloud Cookbook Menu : réserve",
     description: "Pantry, fridge and household stock kept up to date from the menu and the shopping list.",
     preview: false,
   });

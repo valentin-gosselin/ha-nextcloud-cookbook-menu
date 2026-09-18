@@ -10,7 +10,7 @@ from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
-from custom_components.cookbook_menu.api import CookbookConnectionError, Recipe
+from custom_components.nextcloud_cookbook_menu.api import CookbookConnectionError, Recipe
 
 from .test_menu import ajouter, elements
 

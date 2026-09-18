@@ -17,7 +17,7 @@ from .const import DOMAIN
 from .ingredients.minuteurs import trouver_minuteurs
 from .ingredients.parser import analyser
 
-URL_IMAGE = "/api/cookbook_menu/image/{entry_id}/{recipe_id}"
+URL_IMAGE = "/api/nextcloud_cookbook_menu/image/{entry_id}/{recipe_id}"
 VALIDITE_IMAGE = timedelta(hours=24)
 
 
@@ -89,7 +89,7 @@ class VueImageRecette(HomeAssistantView):
     """Photo d'une recette relayée depuis Nextcloud (l'accès à Nextcloud exige les identifiants)."""
 
     url = URL_IMAGE
-    name = "api:cookbook_menu:image"
+    name = "api:nextcloud_cookbook_menu:image"
     requires_auth = True
 
     async def get(self, request: web.Request, entry_id: str, recipe_id: str) -> web.Response:
@@ -104,6 +104,4 @@ class VueImageRecette(HomeAssistantView):
         if image is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
         contenu, type_mime = image
-        return web.Response(
-            body=contenu, content_type=type_mime, headers={"Cache-Control": "private, max-age=3600"}
-        )
+        return web.Response(body=contenu, content_type=type_mime, headers={"Cache-Control": "private, max-age=3600"})

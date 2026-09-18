@@ -7,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
-from custom_components.cookbook_menu.api import Recipe
+from custom_components.nextcloud_cookbook_menu.api import Recipe
 
 from .test_courses import courses
 from .test_menu import elements
@@ -33,9 +33,7 @@ async def entree(hass: HomeAssistant, mock_client, config_entry):
 
 
 async def choisir(hass: HomeAssistant, entite: str, option: str) -> None:
-    await hass.services.async_call(
-        "select", "select_option", {"entity_id": entite, "option": option}, blocking=True
-    )
+    await hass.services.async_call("select", "select_option", {"entity_id": entite, "option": option}, blocking=True)
 
 
 async def test_liste_des_recettes_par_nom(hass: HomeAssistant, entree) -> None:
@@ -102,7 +100,7 @@ async def test_homonymes_precises(hass: HomeAssistant, entree, recettes) -> None
 
 
 async def test_indisponible_si_nextcloud_hors_ligne(hass: HomeAssistant, entree, mock_client) -> None:
-    from custom_components.cookbook_menu.api import CookbookConnectionError
+    from custom_components.nextcloud_cookbook_menu.api import CookbookConnectionError
 
     mock_client.async_get_recipes.side_effect = CookbookConnectionError("coupure")
     await entree.runtime_data.coordinator.async_refresh()

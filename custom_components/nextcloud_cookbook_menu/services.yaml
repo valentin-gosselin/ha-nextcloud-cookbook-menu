@@ -3,7 +3,7 @@ add_to_menu:
     config_entry_id:
       selector:
         config_entry:
-          integration: cookbook_menu
+          integration: nextcloud_cookbook_menu
     recipe:
       required: true
       example: "salade césar"
@@ -28,7 +28,7 @@ remove_from_menu:
     config_entry_id:
       selector:
         config_entry:
-          integration: cookbook_menu
+          integration: nextcloud_cookbook_menu
     recipe:
       example: "carry"
       selector:
@@ -42,7 +42,7 @@ set_servings:
     config_entry_id:
       selector:
         config_entry:
-          integration: cookbook_menu
+          integration: nextcloud_cookbook_menu
     recipe:
       example: "carry"
       selector:
@@ -63,14 +63,14 @@ new_week:
     config_entry_id:
       selector:
         config_entry:
-          integration: cookbook_menu
+          integration: nextcloud_cookbook_menu
 
 search_recipes:
   fields:
     config_entry_id:
       selector:
         config_entry:
-          integration: cookbook_menu
+          integration: nextcloud_cookbook_menu
     query:
       required: true
       example: "gratin"
@@ -89,7 +89,7 @@ get_history:
     config_entry_id:
       selector:
         config_entry:
-          integration: cookbook_menu
+          integration: nextcloud_cookbook_menu
     recipe:
       example: "carry"
       selector:
@@ -107,7 +107,7 @@ out_of_stock:
     config_entry_id:
       selector:
         config_entry:
-          integration: cookbook_menu
+          integration: nextcloud_cookbook_menu
     product:
       required: true
       example: "huile d'olive"

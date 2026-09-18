@@ -271,7 +271,7 @@ class CookbookClient:
 # L'utilisateur se connecte dans son navigateur et accorde l'accès ; Nextcloud crée alors un mot
 # de passe d'application nommé d'après l'User-Agent, que l'on récupère en interrogeant « poll ».
 
-AGENT_CONNEXION = "Cookbook Menu (Home Assistant)"
+AGENT_CONNEXION = "Nextcloud Cookbook Menu (Home Assistant)"
 
 
 @dataclass(frozen=True, slots=True)

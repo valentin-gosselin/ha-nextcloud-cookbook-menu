@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+import json
 from datetime import timedelta
+from pathlib import Path
 
 import pytest
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from custom_components.cookbook_menu.api import CookbookAuthError, CookbookConnectionError
-from custom_components.cookbook_menu.const import DOMAIN
-from custom_components.cookbook_menu.diagnostics import async_get_config_entry_diagnostics
+from custom_components.nextcloud_cookbook_menu.api import CookbookAuthError, CookbookConnectionError
+from custom_components.nextcloud_cookbook_menu.const import DOMAIN
+from custom_components.nextcloud_cookbook_menu.diagnostics import async_get_config_entry_diagnostics
 
 
 async def test_setup_charge_les_recettes(hass: HomeAssistant, mock_client, config_entry) -> None:
@@ -82,9 +84,51 @@ async def test_client_sans_cookies(hass: HomeAssistant) -> None:
     """Le client ne doit jamais conserver le cookie de session Nextcloud (voir create_client)."""
     import aiohttp
 
-    from custom_components.cookbook_menu import create_client
+    from custom_components.nextcloud_cookbook_menu import create_client
 
     from .conftest import DONNEES_ENTREE
 
     client = create_client(hass, dict(DONNEES_ENTREE))
     assert isinstance(client._session.cookie_jar, aiohttp.DummyCookieJar)
+
+
+def _ecrire(chemin: Path, contenu: str) -> None:
+    chemin.parent.mkdir(parents=True, exist_ok=True)
+    chemin.write_text(contenu, encoding="utf-8")
+
+
+async def test_reprise_de_l_ancien_domaine(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Le renommage du domaine en 1.0.0 ne doit pas perdre le menu ni la réserve."""
+    from custom_components.nextcloud_cookbook_menu.store import ANCIEN_DOMAINE, StockagePlanificateur
+
+    # Dossier de configuration à part : les autres tests partagent celui de la bibliothèque de test.
+    hass.config.config_dir = str(tmp_path)
+    dossier = tmp_path / ".storage"
+    ancien = json.dumps(
+        {
+            "version": 1,
+            "data": {
+                "menu": [{"uid": "u1", "summary": "Carry de poulet", "servings": 4}],
+                "placard_ajouts": {"ras el hanout": "Ras el hanout"},
+            },
+        }
+    )
+    await hass.async_add_executor_job(_ecrire, dossier / f"{ANCIEN_DOMAINE}.abc123", ancien)
+    donnees = await StockagePlanificateur(hass, "nouvelle-entree").async_charger()
+    assert [p.summary for p in donnees.menu] == ["Carry de poulet"]
+    assert donnees.placard_ajouts == {"ras el hanout": "Ras el hanout"}
+
+    # Deux fichiers (ou aucun) : on ne devine pas, on repart de zéro.
+    await hass.async_add_executor_job(_ecrire, dossier / f"{ANCIEN_DOMAINE}.def456", "{}")
+    assert (await StockagePlanificateur(hass, "autre").async_charger()).menu == []
+
+    def nettoyer() -> None:
+        for fichier in dossier.glob(f"{ANCIEN_DOMAINE}.*"):
+            fichier.unlink()
+
+    await hass.async_add_executor_job(nettoyer)
+    assert (await StockagePlanificateur(hass, "encore").async_charger()).menu == []
+
+    # Fichier illisible : on n'empêche pas le démarrage.
+    await hass.async_add_executor_job(_ecrire, dossier / f"{ANCIEN_DOMAINE}.ghi789", "pas du json")
+    assert (await StockagePlanificateur(hass, "malgre-tout").async_charger()).menu == []

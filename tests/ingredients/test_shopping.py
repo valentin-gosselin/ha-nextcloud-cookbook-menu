@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from custom_components.cookbook_menu.ingredients.aisles import Rayon, rayon
-from custom_components.cookbook_menu.ingredients.shopping import (
+from custom_components.nextcloud_cookbook_menu.ingredients.aisles import Rayon, rayon
+from custom_components.nextcloud_cookbook_menu.ingredients.shopping import (
     Contribution,
     augmentation,
     calculer,
@@ -16,8 +16,7 @@ from custom_components.cookbook_menu.ingredients.shopping import (
 )
 
 CORPUS = {
-    str(r["id"]): r
-    for r in json.loads((Path(__file__).parents[1] / "fixtures" / "corpus_recettes.json").read_text())
+    str(r["id"]): r for r in json.loads((Path(__file__).parents[1] / "fixtures" / "corpus_recettes.json").read_text())
 }
 
 
@@ -131,7 +130,5 @@ def test_rayons(cle, attendu) -> None:
 
 def test_aucun_produit_du_corpus_sans_rayon() -> None:
     """Tous les produits alimentaires du corpus réel ont un rayon connu."""
-    lignes, _ = calculer(
-        [recette(i, r["yield"]) for i, r in CORPUS.items() if r["category"] != "Produits Ménagers"]
-    )
+    lignes, _ = calculer([recette(i, r["yield"]) for i, r in CORPUS.items() if r["category"] != "Produits Ménagers"])
     assert [ligne.cle for ligne in lignes if ligne.rayon is Rayon.AUTRE] == []

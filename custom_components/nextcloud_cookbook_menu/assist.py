@@ -50,10 +50,8 @@ PHRASES_AJOUT = [
     f"({_AJOUTER}) {{demande}} {_MENU} [{{suite}}]",
     f"({_AJOUTER}) {_MENU} {{demande}}",
     f"{_MENU} {{suite}} ({_AJOUTER}) {{demande}}",
-    f"(je voudrais|j'aimerais|je veux|il faudrait|faudrait) ({_AJOUTER_INFINITIF}) {{demande}} {_MENU}"
-    " [{suite}]",
-    f"(peux-tu|peux tu|tu peux|pourrais-tu|pourrais tu) ({_AJOUTER_INFINITIF}) {{demande}} {_MENU}"
-    " [{suite}]",
+    f"(je voudrais|j'aimerais|je veux|il faudrait|faudrait) ({_AJOUTER_INFINITIF}) {{demande}} {_MENU} [{{suite}}]",
+    f"(peux-tu|peux tu|tu peux|pourrais-tu|pourrais tu) ({_AJOUTER_INFINITIF}) {{demande}} {_MENU} [{{suite}}]",
     f"({_ON_MANGE}) {{demande}}",
     f"pour {{suite}} ({_AJOUTER}|{_ON_MANGE}) {{demande}} [au menu]",
     # English
@@ -86,8 +84,7 @@ PHRASES_HISTORIQUE = [
     "quand (est-ce qu'on a|est-ce que j'ai|avons-nous|avons nous|a-t-on|a t on|on a|j'ai)"
     f" ({_MANGE_PASSE}) {{demande}}",
     "c'est quand la dernière fois (qu'on a|que j'ai) (mangé|fait|cuisiné) {demande}",
-    "[ça|ca] fait combien de temps (qu'on n'a pas|qu'on a pas|que je n'ai pas)"
-    " (mangé|fait|cuisiné) {demande}",
+    "[ça|ca] fait combien de temps (qu'on n'a pas|qu'on a pas|que je n'ai pas) (mangé|fait|cuisiné) {demande}",
     "la dernière fois (qu'on a|que j'ai) (mangé|fait|cuisiné) {demande} c'était quand",
     # English
     "when did we (last eat|last have|last cook|last make|eat|have|cook|make) {demande}",
@@ -101,8 +98,7 @@ PHRASES_MANQUE = [
     "(on n'a|on a|nous n'avons|j'ai|je n'ai|il ne reste|il reste) plus [de|d'|du|des|le|la|les] {demande}",
     "(on est|je suis|nous sommes) à court [de|d'|du|des] {demande}",
     "(on manque|je manque|nous manquons) [de|d'|du|des] {demande}",
-    "(il faut|faut|il faudrait|faudrait) (racheter|reprendre|rajouter)"
-    " [du|de|de la|des|de l'|le|la|les] {demande}",
+    "(il faut|faut|il faudrait|faudrait) (racheter|reprendre|rajouter) [du|de|de la|des|de l'|le|la|les] {demande}",
     "(note|noter|ajoute|ajouter|marque) qu'il n'y a plus [de|d'|du|des] {demande}",
     "(il me faut|il nous faut|j'ai besoin|on a besoin) [du|de|de la|des|de l'] {demande}",
     # English
@@ -138,7 +134,7 @@ _REPONSES = {
         "prochain": " Prochain plat : {plat} {jour}.",
         "retrait": "C'est fait, {plat} est retiré du menu.",
         "introuvable": "Je ne trouve pas {plat} dans le menu.",
-        "non_configure": "Cookbook Menu n'est pas configuré.",
+        "non_configure": "Nextcloud Cookbook Menu n'est pas configuré.",
         "plat_vide": "Quel plat faut-il ajouter au menu ?",
         "manque": "C'est noté, {produit} est dans les courses.",
         "historique": "La dernière fois : {plat}, le {date}.",
@@ -176,7 +172,7 @@ _REPONSES = {
         "prochain": " Next dish: {plat} {jour}.",
         "retrait": "Done, {plat} was removed from the menu.",
         "introuvable": "I can't find {plat} in the menu.",
-        "non_configure": "Cookbook Menu is not configured.",
+        "non_configure": "Nextcloud Cookbook Menu is not configured.",
         "plat_vide": "Which dish should I add to the menu?",
         "manque": "Noted, {produit} is on the shopping list.",
         "historique": "Last time: {plat}, on {date}.",
@@ -258,11 +254,7 @@ def async_enregistrer_phrases(hass: HomeAssistant) -> CALLBACK_TYPE:
         # analyser_demande ne renvoie que des jours reconnus : lire_jour ne peut pas échouer ici.
         jour = lire_jour(demande.jour, aujourdhui)
         bilan = planificateur.async_ajouter_au_menu(demande.plat, jour=jour, couverts=demande.couverts)
-        texte_jour = (
-            textes["jour"].format(jour=_texte_jour(jour, aujourdhui, textes, dans_phrase=True))
-            if jour
-            else ""
-        )
+        texte_jour = textes["jour"].format(jour=_texte_jour(jour, aujourdhui, textes, dans_phrase=True)) if jour else ""
         if not bilan["linked"]:
             return textes["ajout_libre"].format(plat=bilan["dish"], jour=texte_jour)
         reponse = textes["ajout"].format(
@@ -281,13 +273,9 @@ def async_enregistrer_phrases(hass: HomeAssistant) -> CALLBACK_TYPE:
         texte_jour = _texte_jour(jour, aujourdhui, textes)
         plats = [p.summary for p in planificateur.menu if p.day == jour and not p.done]
         if plats:
-            return textes["menu"].format(
-                jour=texte_jour[0].upper() + texte_jour[1:], plats=textes["et"].join(plats)
-            )
+            return textes["menu"].format(jour=texte_jour[0].upper() + texte_jour[1:], plats=textes["et"].join(plats))
         reponse = textes["menu_vide"].format(jour=_texte_jour(jour, aujourdhui, textes, dans_phrase=True))
-        suivants = sorted(
-            (p for p in planificateur.menu if p.day and p.day > jour and not p.done), key=lambda p: p.day
-        )
+        suivants = sorted((p for p in planificateur.menu if p.day and p.day > jour and not p.done), key=lambda p: p.day)
         if suivants:
             reponse += textes["prochain"].format(
                 plat=suivants[0].summary,

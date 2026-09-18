@@ -10,7 +10,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
-from custom_components.cookbook_menu.llm import async_get_tools
+from custom_components.nextcloud_cookbook_menu.llm import async_get_tools
 
 from .test_courses import courses
 
@@ -23,9 +23,7 @@ async def contexte(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
 
 
 def contexte_llm() -> llm.LLMContext:
-    return llm.LLMContext(
-        platform="test", context=Context(), language="fr", assistant="conversation", device_id=None
-    )
+    return llm.LLMContext(platform="test", context=Context(), language="fr", assistant="conversation", device_id=None)
 
 
 @pytest.fixture
@@ -38,20 +36,20 @@ async def entree(hass: HomeAssistant, mock_client, config_entry):
 
 async def appeler(hass: HomeAssistant, outil: str, **arguments: Any) -> dict[str, Any]:
     api = await llm.async_get_api(hass, llm.LLM_API_ASSIST, contexte_llm())
-    return await api.async_call_tool(llm.ToolInput(tool_name=f"cookbook_menu__{outil}", tool_args=arguments))
+    return await api.async_call_tool(llm.ToolInput(tool_name=f"nextcloud_cookbook_menu__{outil}", tool_args=arguments))
 
 
 async def test_outils_exposes_avec_consigne(hass: HomeAssistant, entree) -> None:
     api = await llm.async_get_api(hass, llm.LLM_API_ASSIST, contexte_llm())
     noms = {outil.name for outil in api.tools}
     assert {
-        "cookbook_menu__search_recipes",
-        "cookbook_menu__add_to_menu",
-        "cookbook_menu__remove_from_menu",
-        "cookbook_menu__get_menu",
-        "cookbook_menu__get_history",
+        "nextcloud_cookbook_menu__search_recipes",
+        "nextcloud_cookbook_menu__add_to_menu",
+        "nextcloud_cookbook_menu__remove_from_menu",
+        "nextcloud_cookbook_menu__get_menu",
+        "nextcloud_cookbook_menu__get_history",
     } <= noms
-    assert "Cookbook Menu manages the household weekly menu" in api.api_prompt
+    assert "Nextcloud Cookbook Menu manages the household weekly menu" in api.api_prompt
 
 
 async def test_pas_d_outils_sans_configuration_ou_autre_api(hass: HomeAssistant) -> None:
@@ -126,7 +124,7 @@ async def test_erreurs_rendues_lisibles(hass: HomeAssistant, entree, outil, argu
 
 async def test_non_configure_au_moment_de_l_appel(hass: HomeAssistant, entree) -> None:
     api = await llm.async_get_api(hass, llm.LLM_API_ASSIST, contexte_llm())
-    outil = next(o for o in api.tools if o.name == "cookbook_menu__get_menu")
+    outil = next(o for o in api.tools if o.name == "nextcloud_cookbook_menu__get_menu")
     await hass.config_entries.async_unload(entree.entry_id)
     resultat = await api.async_call_tool(llm.ToolInput(tool_name=outil.name, tool_args={}))
-    assert resultat == {"success": False, "error": "Cookbook Menu is not set up"}
+    assert resultat == {"success": False, "error": "Nextcloud Cookbook Menu is not set up"}

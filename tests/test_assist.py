@@ -7,7 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 from homeassistant.components import conversation
 from homeassistant.core import Context, HomeAssistant
 
-from custom_components.cookbook_menu.assist import _REPONSES, async_enregistrer_phrases, texte_courses
+from custom_components.nextcloud_cookbook_menu.assist import (
+    _REPONSES,
+    async_enregistrer_phrases,
+    texte_courses,
+)
 
 from .test_courses import courses
 from .test_menu import elements
@@ -119,9 +123,9 @@ async def test_sans_configuration(hass: HomeAssistant, mock_client, config_entry
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     await hass.config_entries.async_unload(config_entry.entry_id)
-    assert await dire(hass, "ajoute du carry au menu") == "Cookbook Menu n'est pas configuré."
-    assert await dire(hass, "qu'est-ce qu'on mange") == "Cookbook Menu n'est pas configuré."
-    assert await dire(hass, "retire le carry du menu") == "Cookbook Menu n'est pas configuré."
+    assert await dire(hass, "ajoute du carry au menu") == "Nextcloud Cookbook Menu n'est pas configuré."
+    assert await dire(hass, "qu'est-ce qu'on mange") == "Nextcloud Cookbook Menu n'est pas configuré."
+    assert await dire(hass, "retire le carry du menu") == "Nextcloud Cookbook Menu n'est pas configuré."
 
 
 async def test_plat_manquant(hass: HomeAssistant, entree) -> None:
@@ -160,9 +164,6 @@ async def test_quand_a_t_on_mange(hass: HomeAssistant, entree) -> None:
     )
     assert await dire(hass, "quand a-t-on fait une tartiflette") == "Pas de tartiflette dans l'historique."
     await hass.config.async_update(language="en")
-    assert (
-        await dire(hass, "when did we last eat carry", "en")
-        == "Last time: Carry de poulet, on August 15, 2026."
-    )
+    assert await dire(hass, "when did we last eat carry", "en") == "Last time: Carry de poulet, on August 15, 2026."
     await hass.config_entries.async_unload(entree.entry_id)
-    assert await dire(hass, "quand a-t-on fait une tartiflette") == "Cookbook Menu n'est pas configuré."
+    assert await dire(hass, "quand a-t-on fait une tartiflette") == "Nextcloud Cookbook Menu n'est pas configuré."

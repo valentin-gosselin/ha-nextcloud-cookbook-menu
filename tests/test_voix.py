@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.cookbook_menu.voix import Demande, analyser_demande, detecter_langue, langue
+from custom_components.nextcloud_cookbook_menu.voix import Demande, analyser_demande, detecter_langue, langue
 
 
 @pytest.mark.parametrize(

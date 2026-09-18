@@ -12,14 +12,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.cookbook_menu.api import (
+from custom_components.nextcloud_cookbook_menu.api import (
     CookbookAuthError,
     CookbookConnectionError,
     CookbookNotFoundError,
     DemandeConnexion,
     IdentifiantsNextcloud,
 )
-from custom_components.cookbook_menu.const import DOMAIN
+from custom_components.nextcloud_cookbook_menu.const import DOMAIN
 
 from .conftest import DONNEES_ENTREE
 
@@ -27,9 +27,7 @@ from .conftest import DONNEES_ENTREE
 async def demarrer(hass: HomeAssistant, url: str = "cloud.exemple.fr/") -> dict:
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
     assert result["type"] is FlowResultType.FORM
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_URL: url, CONF_VERIFY_SSL: True}
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_URL: url, CONF_VERIFY_SSL: True})
     assert result["type"] is FlowResultType.MENU
     assert result["menu_options"] == ["login", "manual"]
     return result
@@ -87,9 +85,7 @@ async def test_ajout_deja_configure(hass, mock_client, config_entry: MockConfigE
     assert result["reason"] == "already_configured"
 
 
-IDENTIFIANTS = IdentifiantsNextcloud(
-    url="https://cloud.exemple.fr/", utilisateur="valentin", mot_de_passe="genere"
-)
+IDENTIFIANTS = IdentifiantsNextcloud(url="https://cloud.exemple.fr/", utilisateur="valentin", mot_de_passe="genere")
 DEMANDE = DemandeConnexion(
     url_connexion="https://cloud.exemple.fr/login/v2/flow/abc",
     url_poll="https://cloud.exemple.fr/login/v2/poll",
@@ -101,12 +97,13 @@ async def suivre_connexion(hass: HomeAssistant, result: dict, identifiants, erre
     """Choisit « Se connecter avec Nextcloud » et simule l'accès accordé dans le navigateur."""
     with (
         patch(
-            "custom_components.cookbook_menu.config_flow.async_demarrer_connexion",
+            "custom_components.nextcloud_cookbook_menu.config_flow.async_demarrer_connexion",
             side_effect=erreur_demarrage,
             return_value=DEMANDE,
         ),
         patch(
-            "custom_components.cookbook_menu.config_flow.async_attendre_connexion", return_value=identifiants
+            "custom_components.nextcloud_cookbook_menu.config_flow.async_attendre_connexion",
+            return_value=identifiants,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "login"})
@@ -168,9 +165,12 @@ async def test_abandon_arrete_l_attente(hass: HomeAssistant, mock_client) -> Non
         await attente.wait()
 
     with (
-        patch("custom_components.cookbook_menu.config_flow.async_demarrer_connexion", return_value=DEMANDE),
         patch(
-            "custom_components.cookbook_menu.config_flow.async_attendre_connexion",
+            "custom_components.nextcloud_cookbook_menu.config_flow.async_demarrer_connexion",
+            return_value=DEMANDE,
+        ),
+        patch(
+            "custom_components.nextcloud_cookbook_menu.config_flow.async_attendre_connexion",
             side_effect=attendre_indefiniment,
         ),
     ):
@@ -204,9 +204,7 @@ async def test_reauth_avec_un_autre_compte(hass, mock_client, config_entry) -> N
 async def test_reauth_manuelle(hass, mock_client, config_entry) -> None:
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reauth_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reauth_manual"}
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "reauth_manual"})
     assert result["step_id"] == "reauth_manual"
 
     mock_client.async_get_categories.side_effect = CookbookAuthError

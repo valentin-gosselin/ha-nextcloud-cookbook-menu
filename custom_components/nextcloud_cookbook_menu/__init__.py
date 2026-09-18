@@ -1,4 +1,4 @@
-"""Intégration Cookbook Menu : menu de la semaine et liste de courses depuis Nextcloud Cookbook."""
+"""Intégration Nextcloud Cookbook Menu : menu de la semaine et liste de courses depuis Nextcloud Cookbook."""
 
 from __future__ import annotations
 
@@ -91,9 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry)
     # Chaque nuit : part des plats de la veille retirée du frigo, produits expirés oubliés.
     planificateur.async_consommer()
     entry.async_on_unload(
-        async_track_time_change(
-            hass, lambda _maintenant: planificateur.async_consommer(), hour=0, minute=1, second=0
-        )
+        async_track_time_change(hass, lambda _maintenant: planificateur.async_consommer(), hour=0, minute=1, second=0)
     )
     return True
 

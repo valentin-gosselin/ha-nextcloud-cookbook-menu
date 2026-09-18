@@ -4,8 +4,8 @@
 set -euo pipefail
 
 racine="$(cd "$(dirname "$0")/.." && pwd)"
-source_composant="$racine/custom_components/cookbook_menu/"
-cible="${HA_DEV_CONFIG:-/docker/homeassistant/config}/custom_components/cookbook_menu/"
+source_composant="$racine/custom_components/nextcloud_cookbook_menu/"
+cible="${HA_DEV_CONFIG:-/docker/homeassistant/config}/custom_components/nextcloud_cookbook_menu/"
 conteneur="${HA_DEV_CONTENEUR:-homeassistant}"
 delai="${HA_DEV_DELAI:-180}"
 
@@ -32,8 +32,8 @@ except urllib.error.HTTPError:
 done
 echo "Home Assistant répond après $(( $(date +%s) - debut )) s"
 
-if docker logs --since "${delai}s" "$conteneur" 2>&1 | grep -i "cookbook_menu" | grep -iE "error|exception"; then
-  echo "ATTENTION : erreurs liées à cookbook_menu dans les journaux (voir ci-dessus)" >&2
+if docker logs --since "${delai}s" "$conteneur" 2>&1 | grep -i "nextcloud_cookbook_menu" | grep -iE "error|exception"; then
+  echo "ATTENTION : erreurs liées à nextcloud_cookbook_menu dans les journaux (voir ci-dessus)" >&2
   exit 2
 fi
-echo "Aucune erreur liée à cookbook_menu dans les journaux"
+echo "Aucune erreur liée à nextcloud_cookbook_menu dans les journaux"

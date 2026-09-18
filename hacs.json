@@ -1,7 +1,7 @@
 {
-  "name": "Cookbook Menu",
+  "name": "Nextcloud Cookbook Menu",
   "render_readme": true,
   "homeassistant": "2026.9.0",
   "zip_release": true,
-  "filename": "cookbook_menu.zip"
+  "filename": "nextcloud_cookbook_menu.zip"
 }

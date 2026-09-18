@@ -10,7 +10,7 @@ import json
 import time
 from pathlib import Path
 
-from custom_components.cookbook_menu.ingredients import analyser
+from custom_components.nextcloud_cookbook_menu.ingredients import analyser
 
 FIXTURES = Path(__file__).parents[1] / "fixtures"
 SEUIL = 0.95
@@ -38,9 +38,7 @@ def _resume(ligne: str) -> list[dict]:
 
 def test_precision_sur_le_corpus_reel() -> None:
     attendus = json.loads((FIXTURES / "attendus_parseur.json").read_text(encoding="utf-8"))
-    rates = {
-        ligne: (_resume(ligne), attendu) for ligne, attendu in attendus.items() if _resume(ligne) != attendu
-    }
+    rates = {ligne: (_resume(ligne), attendu) for ligne, attendu in attendus.items() if _resume(ligne) != attendu}
     precision = 1 - len(rates) / len(attendus)
     detail = "\n".join(f"{ligne!r}\n  obtenu : {o}\n  attendu : {a}" for ligne, (o, a) in rates.items())
     assert precision >= SEUIL, f"précision {precision:.1%} < {SEUIL:.0%}\n{detail}"

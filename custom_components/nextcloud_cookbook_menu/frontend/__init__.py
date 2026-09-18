@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
-CHEMIN_BASE = "/cookbook_menu_static"
+CHEMIN_BASE = "/nextcloud_cookbook_menu_static"
 FICHIER = "cookbook-menu-card.js"
 URL_CARTE = f"{CHEMIN_BASE}/{FICHIER}"
 
@@ -32,9 +32,7 @@ async def async_enregistrer_carte(hass: HomeAssistant) -> None:
     from homeassistant.components.http import StaticPathConfig
 
     try:
-        await hass.http.async_register_static_paths(
-            [StaticPathConfig(CHEMIN_BASE, str(Path(__file__).parent), False)]
-        )
+        await hass.http.async_register_static_paths([StaticPathConfig(CHEMIN_BASE, str(Path(__file__).parent), False)])
     except (RuntimeError, ValueError) as err:
         _LOGGER.debug("Chemin statique de la carte déjà enregistré ou impossible : %s", err)
     url = f"{URL_CARTE}?v={await hass.async_add_executor_job(version_carte)}"
@@ -53,4 +51,4 @@ async def async_enregistrer_carte(hass: HomeAssistant) -> None:
                 return
         await ressources.async_create_item({"res_type": "module", "url": url})
     except Exception as err:
-        _LOGGER.warning("Impossible d'enregistrer la carte Cookbook Menu comme ressource : %s", err)
+        _LOGGER.warning("Impossible d'enregistrer la carte Nextcloud Cookbook Menu comme ressource : %s", err)

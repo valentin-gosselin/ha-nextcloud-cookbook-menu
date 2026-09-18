@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from custom_components.cookbook_menu.ingredients.achats import convertir, fusionner_mesures
-from custom_components.cookbook_menu.ingredients.pantry import PLACARD_PAR_DEFAUT, cles_placard
-from custom_components.cookbook_menu.ingredients.shopping import Contribution, calculer
+from custom_components.nextcloud_cookbook_menu.ingredients.achats import convertir, fusionner_mesures
+from custom_components.nextcloud_cookbook_menu.ingredients.pantry import PLACARD_PAR_DEFAUT, cles_placard
+from custom_components.nextcloud_cookbook_menu.ingredients.shopping import Contribution, calculer
 
 CORPUS = json.loads((Path(__file__).parents[1] / "fixtures" / "corpus_recettes.json").read_text())
 

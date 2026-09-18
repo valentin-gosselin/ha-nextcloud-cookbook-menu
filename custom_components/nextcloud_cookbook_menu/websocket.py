@@ -23,12 +23,10 @@ def async_enregistrer_commandes(hass: HomeAssistant) -> None:
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "cookbook_menu/recipes", vol.Optional("config_entry_id"): str}
+    {vol.Required("type"): "nextcloud_cookbook_menu/recipes", vol.Optional("config_entry_id"): str}
 )
 @callback
-def ws_recettes(
-    hass: HomeAssistant, connexion: websocket_api.ActiveConnection, message: dict[str, Any]
-) -> None:
+def ws_recettes(hass: HomeAssistant, connexion: websocket_api.ActiveConnection, message: dict[str, Any]) -> None:
     """Recettes proposables (libellé et identifiant) et entités de l'entrée, pour la carte."""
     entrees = [
         e
@@ -36,7 +34,7 @@ def ws_recettes(
         if message.get("config_entry_id") in (None, e.entry_id)
     ]
     if not entrees:
-        connexion.send_error(message["id"], "not_found", "Cookbook Menu is not set up")
+        connexion.send_error(message["id"], "not_found", "Nextcloud Cookbook Menu is not set up")
         return
     entree = entrees[0]
     planificateur = entree.runtime_data.planner
@@ -49,8 +47,7 @@ def ws_recettes(
             "menu_entity": registre.async_get_entity_id("todo", DOMAIN, f"{entree.entry_id}_menu"),
             "shopping_entity": registre.async_get_entity_id("todo", DOMAIN, f"{entree.entry_id}_shopping"),
             "recipes": [
-                {"id": identifiant, "name": libelle}
-                for libelle, identifiant in planificateur.choix_recettes().items()
+                {"id": identifiant, "name": libelle} for libelle, identifiant in planificateur.choix_recettes().items()
             ],
         },
     )
@@ -64,16 +61,14 @@ def _entree(hass: HomeAssistant, message: dict[str, Any]) -> Any:
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "cookbook_menu/stock/subscribe", vol.Optional("config_entry_id"): str}
+    {vol.Required("type"): "nextcloud_cookbook_menu/stock/subscribe", vol.Optional("config_entry_id"): str}
 )
 @callback
-def ws_reserve(
-    hass: HomeAssistant, connexion: websocket_api.ActiveConnection, message: dict[str, Any]
-) -> None:
+def ws_reserve(hass: HomeAssistant, connexion: websocket_api.ActiveConnection, message: dict[str, Any]) -> None:
     """Réserve (placard, frigo, maison), puis chaque changement."""
     entree = _entree(hass, message)
     if entree is None:
-        connexion.send_error(message["id"], "not_found", "Cookbook Menu is not set up")
+        connexion.send_error(message["id"], "not_found", "Nextcloud Cookbook Menu is not set up")
         return
     planificateur = entree.runtime_data.planner
 
@@ -90,7 +85,7 @@ def ws_reserve(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "cookbook_menu/stock/update",
+        vol.Required("type"): "nextcloud_cookbook_menu/stock/update",
         vol.Optional("config_entry_id"): str,
         vol.Required("action"): vol.In(["missing", "present", "remove", "check_pantry", "to_pantry"]),
         vol.Optional("key"): str,
@@ -106,7 +101,7 @@ def ws_reserve_modifier(
     """« Il n'y en a plus », « j'en ai », « sortir de la réserve », « au placard », vérification."""
     entree = _entree(hass, message)
     if entree is None:
-        connexion.send_error(message["id"], "not_found", "Cookbook Menu is not set up")
+        connexion.send_error(message["id"], "not_found", "Nextcloud Cookbook Menu is not set up")
         return
     planificateur = entree.runtime_data.planner
     action = message["action"]
@@ -135,7 +130,7 @@ def ws_reserve_modifier(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "cookbook_menu/recipe",
+        vol.Required("type"): "nextcloud_cookbook_menu/recipe",
         vol.Optional("config_entry_id"): str,
         vol.Exclusive("recipe_id", "cible"): str,
         vol.Exclusive("uid", "cible"): str,
@@ -150,7 +145,7 @@ def ws_fiche(hass: HomeAssistant, connexion: websocket_api.ActiveConnection, mes
         if message.get("config_entry_id") in (None, e.entry_id)
     ]
     if not entrees:
-        connexion.send_error(message["id"], "not_found", "Cookbook Menu is not set up")
+        connexion.send_error(message["id"], "not_found", "Nextcloud Cookbook Menu is not set up")
         return
     entree = entrees[0]
     planificateur = entree.runtime_data.planner
