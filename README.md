@@ -112,12 +112,16 @@ The sentences are registered automatically, no configuration needed. French and 
 
 | Français | English |
 |---|---|
-| Ajoute une salade César au menu jeudi pour quatre | Add a caesar salad to the menu on thursday for four |
-| Au menu dimanche mets une tartiflette | Put a tartiflette on the menu tomorrow |
-| Qu'est-ce qu'on mange ce soir / vendredi | What's for dinner / What are we eating on friday |
-| Retire le carry du menu | Remove the curry from the menu |
-| Quand est-ce qu'on a mangé du carry | When did we last eat curry |
-| Il n'y a plus d'huile d'olive | We're out of olive oil |
+| Ajoute / mets / prévois / planifie / note une salade César au menu jeudi pour quatre | Add / put / plan / schedule a caesar salad on the menu thursday for four |
+| Au menu dimanche mets une tartiflette | On the menu sunday add a tartiflette |
+| On mange un couscous jeudi / On se fait un carry samedi | We're having a couscous on sunday / Let's have the carry tomorrow |
+| Je voudrais ajouter un carry au menu vendredi | Can you add a tartiflette to the menu for four |
+| Qu'est-ce qu'on mange ce soir / On mange quoi vendredi / C'est quoi le menu demain | What's for dinner / What are we eating friday / What's on the menu tomorrow |
+| Retire / enlève / supprime / annule le carry du menu | Remove / delete / cancel / drop the carry from the menu |
+| Quand est-ce qu'on a mangé du carry / Ça fait combien de temps qu'on n'a pas fait de carry | When did we last eat curry / How long since we had curry |
+| Il n'y a plus d'huile d'olive / On est à court de sel / Il faut racheter du poivre | We're out of olive oil / We're running low on coffee / We need more rice |
+
+Each line is a family of wordings, not a magic sentence: 132 real sentences are replayed by the test suite, in both languages.
 
 Adding, checking or removing shopping items uses the built-in Home Assistant list sentences ("add eggs to my shopping list").
 

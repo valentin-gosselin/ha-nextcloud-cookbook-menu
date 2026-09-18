@@ -1,0 +1,377 @@
+{
+ "ajout": [
+  {
+   "texte": "Ajoute une salade César au menu jeudi pour quatre",
+   "plat": "Salade César au poulet",
+   "jour": "2026-09-17",
+   "couverts": 4
+  },
+  {
+   "texte": "ajoute du carry au menu",
+   "plat": "Carry de poulet"
+  },
+  {
+   "texte": "ajoutes une tartiflette au menu vendredi",
+   "plat": "Tartiflette",
+   "jour": "2026-09-18"
+  },
+  {
+   "texte": "rajoute un couscous au menu de la semaine",
+   "plat": "Couscous"
+  },
+  {
+   "texte": "mets le couscous au menu samedi",
+   "plat": "Couscous",
+   "jour": "2026-09-19"
+  },
+  {
+   "texte": "met une salade césar au menu demain",
+   "plat": "Salade César au poulet",
+   "jour": "2026-09-17"
+  },
+  {
+   "texte": "mettre le carry au menu dimanche",
+   "plat": "Carry de poulet",
+   "jour": "2026-09-20"
+  },
+  {
+   "texte": "note un couscous au menu pour six",
+   "plat": "Couscous",
+   "couverts": 6
+  },
+  {
+   "texte": "inscris la tartiflette au menu de la semaine jeudi",
+   "plat": "Tartiflette",
+   "jour": "2026-09-17"
+  },
+  {
+   "texte": "programme un carry au menu pour trois",
+   "plat": "Carry de poulet",
+   "couverts": 3
+  },
+  {
+   "texte": "planifie une tartiflette au menu vendredi",
+   "plat": "Tartiflette",
+   "jour": "2026-09-18"
+  },
+  {
+   "texte": "prévois du couscous au menu ce soir",
+   "plat": "Couscous",
+   "jour": "2026-09-16"
+  },
+  {
+   "texte": "prepare une salade césar au menu demain",
+   "plat": "Salade César au poulet",
+   "jour": "2026-09-17"
+  },
+  {
+   "texte": "ajoute une tartiflette dans le menu",
+   "plat": "Tartiflette"
+  },
+  {
+   "texte": "mets dans le menu un couscous",
+   "plat": "Couscous"
+  },
+  {
+   "texte": "ajoute au menu de la semaine le carry",
+   "plat": "Carry de poulet"
+  },
+  {
+   "texte": "au menu de la semaine jeudi ajoute une tartiflette",
+   "plat": "Tartiflette",
+   "jour": "2026-09-17"
+  },
+  {
+   "texte": "au menu samedi mets un couscous",
+   "plat": "Couscous",
+   "jour": "2026-09-19"
+  },
+  {
+   "texte": "je voudrais ajouter un carry au menu vendredi",
+   "plat": "Carry de poulet",
+   "jour": "2026-09-18"
+  },
+  {
+   "texte": "j'aimerais mettre une tartiflette au menu pour quatre",
+   "plat": "Tartiflette",
+   "couverts": 4
+  },
+  {
+   "texte": "il faudrait prévoir du couscous au menu dimanche",
+   "plat": "Couscous",
+   "jour": "2026-09-20"
+  },
+  {
+   "texte": "peux-tu ajouter une salade césar au menu jeudi",
+   "plat": "Salade César au poulet",
+   "jour": "2026-09-17"
+  },
+  {
+   "texte": "tu peux mettre le carry au menu de la semaine",
+   "plat": "Carry de poulet"
+  },
+  {
+   "texte": "pourrais-tu prévoir une tartiflette au menu samedi",
+   "plat": "Tartiflette",
+   "jour": "2026-09-19"
+  },
+  {
+   "texte": "on mange du couscous jeudi",
+   "plat": "Couscous",
+   "jour": "2026-09-17"
+  },
+  {
+   "texte": "on va manger une tartiflette vendredi",
+   "plat": "Tartiflette",
+   "jour": "2026-09-18"
+  },
+  {
+   "texte": "on se fait un carry samedi",
+   "plat": "Carry de poulet",
+   "jour": "2026-09-19"
+  },
+  {
+   "texte": "on fait une salade césar demain",
+   "plat": "Salade César au poulet",
+   "jour": "2026-09-17"
+  },
+  {
+   "texte": "je cuisine un couscous dimanche",
+   "plat": "Couscous",
+   "jour": "2026-09-20"
+  },
+  {
+   "texte": "pour jeudi ajoute un carry au menu",
+   "plat": "Carry de poulet",
+   "jour": "2026-09-17"
+  },
+  {
+   "texte": "pour vendredi on mange une tartiflette",
+   "plat": "Tartiflette",
+   "jour": "2026-09-18"
+  },
+  {
+   "texte": "add a caesar salad to the menu on thursday for four",
+   "plat": "Salade César au poulet",
+   "jour": "2026-09-17",
+   "couverts": 4
+  },
+  {
+   "texte": "put the couscous on the menu tomorrow",
+   "plat": "Couscous",
+   "jour": "2026-09-17"
+  },
+  {
+   "texte": "plan a tartiflette on the weekly menu friday",
+   "plat": "Tartiflette",
+   "jour": "2026-09-18"
+  },
+  {
+   "texte": "schedule the carry on the menu saturday",
+   "plat": "Carry de poulet",
+   "jour": "2026-09-19"
+  },
+  {
+   "texte": "add the couscous to the meal plan",
+   "plat": "Couscous"
+  },
+  {
+   "texte": "on the menu thursday add a tartiflette",
+   "plat": "Tartiflette",
+   "jour": "2026-09-17"
+  },
+  {
+   "texte": "we're having a couscous on sunday",
+   "plat": "Couscous",
+   "jour": "2026-09-20"
+  },
+  {
+   "texte": "let's have the carry tomorrow",
+   "plat": "Carry de poulet",
+   "jour": "2026-09-17"
+  },
+  {
+   "texte": "can you add a tartiflette to the menu for four",
+   "plat": "Tartiflette",
+   "couverts": 4
+  },
+  {
+   "texte": "please put a caesar salad on the menu thursday",
+   "plat": "Salade César au poulet",
+   "jour": "2026-09-17"
+  }
+ ],
+ "menu": [
+  "qu'est-ce qu'on mange demain",
+  "qu'est-ce qu'on cuisine demain",
+  "qu'est-ce qu'on se fait demain",
+  "on mange quoi demain",
+  "on cuisine quoi demain",
+  "on a prévu quoi demain",
+  "qu'est-ce qu'il y a au menu demain",
+  "qu'y a-t-il au menu demain",
+  "qu'est-ce qui est prévu demain",
+  "qu'est-ce qui est prévu au menu demain",
+  "c'est quoi le menu demain",
+  "quel est le menu demain",
+  "donne-moi le menu demain",
+  "rappelle-moi le menu demain",
+  "c'est quoi le repas demain",
+  "quel est le dîner demain",
+  "le menu de demain",
+  "menu demain",
+  "what's for dinner tomorrow",
+  "what is for lunch tomorrow",
+  "what are we eating tomorrow",
+  "what are we cooking tomorrow",
+  "what's on the menu tomorrow",
+  "what's for the menu tomorrow",
+  "what's the menu tomorrow",
+  "what's planned for tomorrow",
+  "tell me the menu tomorrow",
+  "qu'est-ce qu'on mange",
+  "on mange quoi",
+  "c'est quoi le menu",
+  "what's for dinner"
+ ],
+ "retrait": [
+  "retire le carry du menu",
+  "retirer le carry du menu",
+  "enlève le carry du menu",
+  "enleve le carry du menu de la semaine",
+  "supprime le carry du menu",
+  "annule le carry du menu",
+  "vire le carry du menu",
+  "efface le carry du menu",
+  "je ne veux plus de carry au menu",
+  "peux-tu retirer le carry du menu",
+  "tu peux supprimer le carry du menu",
+  "remove the carry from the menu",
+  "delete the carry from the menu",
+  "cancel the carry from the weekly menu",
+  "drop the carry from the menu",
+  "take the carry off the menu",
+  "i don't want the carry on the menu anymore"
+ ],
+ "historique": [
+  "quand est-ce qu'on a mangé du carry",
+  "quand avons-nous mangé du carry",
+  "quand a-t-on mangé du carry",
+  "quand est-ce que j'ai cuisiné du carry",
+  "quand on a mangé du carry",
+  "c'est quand la dernière fois qu'on a mangé du carry",
+  "c'est quand la dernière fois qu'on a fait du carry",
+  "ça fait combien de temps qu'on n'a pas mangé du carry",
+  "ça fait combien de temps qu'on a pas fait du carry",
+  "la dernière fois qu'on a mangé du carry c'était quand",
+  "when did we last eat carry",
+  "when did we eat carry",
+  "when was the last time we had carry",
+  "how long since we ate carry"
+ ],
+ "manque": [
+  {
+   "texte": "il n'y a plus d'huile d'olive",
+   "produit": "Huile d'olive"
+  },
+  {
+   "texte": "il y a plus de beurre",
+   "produit": "Beurre"
+  },
+  {
+   "texte": "y'a plus de lait",
+   "produit": "Lait"
+  },
+  {
+   "texte": "on n'a plus de papier toilette",
+   "produit": "Papier toilette"
+  },
+  {
+   "texte": "on a plus de riz",
+   "produit": "Riz"
+  },
+  {
+   "texte": "nous n'avons plus de farine",
+   "produit": "Farine"
+  },
+  {
+   "texte": "je n'ai plus de sucre",
+   "produit": "Sucre"
+  },
+  {
+   "texte": "il ne reste plus de café",
+   "produit": "Café"
+  },
+  {
+   "texte": "on est à court de sel",
+   "produit": "Sel"
+  },
+  {
+   "texte": "je suis à court de pâtes",
+   "produit": "Pâtes"
+  },
+  {
+   "texte": "on manque de lessive",
+   "produit": "Lessive"
+  },
+  {
+   "texte": "il faut racheter du poivre",
+   "produit": "Poivre"
+  },
+  {
+   "texte": "faudrait reprendre du vinaigre",
+   "produit": "Vinaigre"
+  },
+  {
+   "texte": "note qu'il n'y a plus de cumin",
+   "produit": "Cumin"
+  },
+  {
+   "texte": "il me faut du curry",
+   "produit": "Curry"
+  },
+  {
+   "texte": "on a besoin de moutarde",
+   "produit": "Moutarde"
+  },
+  {
+   "texte": "we're out of eggs",
+   "produit": "Eggs"
+  },
+  {
+   "texte": "we ran out of butter",
+   "produit": "Butter"
+  },
+  {
+   "texte": "we have no more milk",
+   "produit": "Milk"
+  },
+  {
+   "texte": "there's no more sugar",
+   "produit": "Sugar"
+  },
+  {
+   "texte": "we're running low on coffee",
+   "produit": "Coffee"
+  },
+  {
+   "texte": "we need more rice",
+   "produit": "Rice"
+  },
+  {
+   "texte": "il n'y a plus de ras el hanout",
+   "produit": "Ras el hanout"
+  },
+  {
+   "texte": "on n'a plus de liquide vaisselle",
+   "produit": "Liquide vaisselle"
+  }
+ ],
+ "hors_menu": [
+  "ajoute du beurre à ma liste de courses",
+  "ajoute des piles à ma liste de courses",
+  "add butter to my shopping list",
+  "allume la lumière du salon",
+  "quelle heure est-il"
+ ]
+}

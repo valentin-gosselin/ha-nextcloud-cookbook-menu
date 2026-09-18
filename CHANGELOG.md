@@ -13,6 +13,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [
 - Home Assistant 2026.9.0 minimum.
 
 ### Ajouté
+- Voix : beaucoup plus de tournures comprises sans LLM (ajouter au menu, demander le menu, retirer, historique, « il n'y a plus de »), en français et en anglais. 132 phrases réelles sont rejouées à chaque test, contre-exemples compris (« ajoute du beurre à ma liste de courses » ne crée pas de plat).
 - Carte réserve : le champ « Ajouter au placard » ouvre la liste des produits de l'index pas encore au placard, filtrée pendant la frappe, avec sélection multiple. La saisie libre reste possible.
 - Index d'environ 300 produits de placard (épices, herbes sèches, condiments, pâtes, riz, farines, conserves...) : un produit ajouté à la main qui en fait partie rejoint le placard et non la maison. Carte réserve : ajout au placard, « Au placard » pour un produit de la maison, sortie du placard. Minuteurs visibles dans la fiche recette.
 - Réserve : placard (présent ou manquant), frigo (cocher une ligne de courses, c'est acheter ; les plats cuisinés ou passés consomment ; restes réutilisés ; expiration 7 jours pour le frais, 60 pour l'épicerie) et maison (achats hors menu). Carte `custom:cookbook-stock-card`, phrase « il n'y a plus de... », action `out_of_stock`, outils LLM.

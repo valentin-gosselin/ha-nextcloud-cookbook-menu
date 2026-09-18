@@ -26,37 +26,101 @@ if TYPE_CHECKING:
 
     from .planner import Planificateur
 
+# Groupes de verbes, pour garder les motifs lisibles.
+_AJOUTER = (
+    "ajoute|ajoutes|ajouter|rajoute|rajoutes|rajouter|mets|met|mettre|note|inscris|programme"
+    "|planifie|prévois|prevois|prépare|prepare"
+)
+_AJOUTER_INFINITIF = "ajouter|mettre|prévoir|prevoir|noter|programmer|planifier"
+_ON_MANGE = (
+    "on mange|on va manger|on mangera|on se fait|on fait|on fera|on cuisine|on prend"
+    "|je fais|je cuisine|je prépare|je prepare"
+)
+_WE_HAVE = (
+    "we're having|we are having|we'll have|we will have|let's have|lets have"
+    "|i'm making|i am making|i'll cook|we're cooking|we are cooking"
+)
+_MANGE_PASSE = "mangé|mange|fait|cuisiné|cuisine|préparé|prepare"
+_RETIRER = "retire|retirer|enlève|enleve|enlever|supprime|supprimer|annule|annuler|vire|efface"
+_MENU = "(au|dans le) menu [de la semaine]"
+_THE_MENU = "[the] [weekly] (menu|meal plan)"
+
 PHRASES_AJOUT = [
     # Français
-    "(ajoute|ajouter|rajoute|mets|met|mettre|prévois|planifie) {demande} au menu [de la semaine] [{suite}]",
-    "au menu [de la semaine] {suite} (ajoute|mets|prévois) {demande}",
+    f"({_AJOUTER}) {{demande}} {_MENU} [{{suite}}]",
+    f"({_AJOUTER}) {_MENU} {{demande}}",
+    f"{_MENU} {{suite}} ({_AJOUTER}) {{demande}}",
+    f"(je voudrais|j'aimerais|je veux|il faudrait|faudrait) ({_AJOUTER_INFINITIF}) {{demande}} {_MENU}"
+    " [{suite}]",
+    f"(peux-tu|peux tu|tu peux|pourrais-tu|pourrais tu) ({_AJOUTER_INFINITIF}) {{demande}} {_MENU}"
+    " [{suite}]",
+    f"({_ON_MANGE}) {{demande}}",
+    f"pour {{suite}} ({_AJOUTER}|{_ON_MANGE}) {{demande}} [au menu]",
     # English
-    "(add|put|plan) {demande} (to|on) [the] [weekly] menu [{suite}]",
+    f"(add|adds|put|plan|schedule|book) {{demande}} (to|on|in) {_THE_MENU} [{{suite}}]",
+    f"(add|put|plan|schedule) (to|on) {_THE_MENU} {{demande}}",
+    f"(on|in) {_THE_MENU} {{suite}} (add|put|plan) {{demande}}",
+    f"({_WE_HAVE}) {{demande}}",
+    f"(can you|could you|please) (add|put|plan|schedule) {{demande}} (to|on) {_THE_MENU} [{{suite}}]",
 ]
 PHRASES_MENU = [
-    "qu'est-ce qu'on mange [{quand}]",
-    "on mange quoi [{quand}]",
-    "qu'est-ce qu'il y a au menu [{quand}]",
-    "(c'est quoi|quel est) le menu [{quand}]",
-    "what's for (dinner|lunch) [{quand}]",
-    "what are we eating [{quand}]",
-    "what's on the menu [{quand}]",
+    # Français
+    "qu'est-ce qu'on (mange|cuisine|se fait|a prévu|a prevu) [{quand}]",
+    "on (mange|cuisine|se fait) quoi [{quand}]",
+    "on a prévu quoi [{quand}]",
+    "(qu'est-ce qu'il y a|qu'y a-t-il|qu'y a t il) au menu [{quand}]",
+    "qu'est-ce qui est prévu [au menu] [{quand}]",
+    "(c'est quoi|quel est|donne-moi|donne moi|rappelle-moi|rappelle moi) le menu [{quand}]",
+    "(c'est quoi|quel est) le (repas|dîner|diner|déjeuner|dejeuner) [{quand}]",
+    "[le] menu [de|du|pour] {quand}",
+    # English
+    "(what's|what is) for (dinner|lunch|supper|tea) [{quand}]",
+    "what are we (eating|having|cooking|making) [{quand}]",
+    "what's (on|for) [the] (menu|meal plan) [{quand}]",
+    "what's the (menu|meal plan) [{quand}]",
+    "what's planned [for] [{quand}]",
+    "(tell me|give me|remind me) [about] the (menu|meal plan) [{quand}]",
 ]
 PHRASES_HISTORIQUE = [
-    "quand (est-ce qu'on a|avons-nous|a-t-on) (mangé|fait|cuisiné) {demande}",
-    "c'est quand la dernière fois qu'on a (mangé|fait) {demande}",
-    "when did we (last eat|last have|last cook|eat|have) {demande}",
+    # Français
+    "quand (est-ce qu'on a|est-ce que j'ai|avons-nous|avons nous|a-t-on|a t on|on a|j'ai)"
+    f" ({_MANGE_PASSE}) {{demande}}",
+    "c'est quand la dernière fois (qu'on a|que j'ai) (mangé|fait|cuisiné) {demande}",
+    "[ça|ca] fait combien de temps (qu'on n'a pas|qu'on a pas|que je n'ai pas)"
+    " (mangé|fait|cuisiné) {demande}",
+    "la dernière fois (qu'on a|que j'ai) (mangé|fait|cuisiné) {demande} c'était quand",
+    # English
+    "when did we (last eat|last have|last cook|last make|eat|have|cook|make) {demande}",
+    "when was the last time we (ate|had|cooked|made) {demande}",
+    "how long since we (ate|had|cooked|made) {demande}",
 ]
 PHRASES_MANQUE = [
-    "il (n'y a|y a) plus [de|d'|du|des] {demande}",
-    "(on n'a|on a) plus [de|d'|du|des] {demande}",
-    "(nous n'avons|j'ai|je n'ai) plus [de|d'|du|des] {demande}",
-    "(we're|we are|we ran) out of {demande}",
-    "we have no more {demande}",
+    # Français
+    "il (n'y a|y a|n'y avait) plus [de|d'|du|des|le|la|les] {demande}",
+    "(y'a|y a) plus [de|d'|du|des] {demande}",
+    "(on n'a|on a|nous n'avons|j'ai|je n'ai|il ne reste|il reste) plus [de|d'|du|des|le|la|les] {demande}",
+    "(on est|je suis|nous sommes) à court [de|d'|du|des] {demande}",
+    "(on manque|je manque|nous manquons) [de|d'|du|des] {demande}",
+    "(il faut|faut|il faudrait|faudrait) (racheter|reprendre|rajouter)"
+    " [du|de|de la|des|de l'|le|la|les] {demande}",
+    "(note|noter|ajoute|ajouter|marque) qu'il n'y a plus [de|d'|du|des] {demande}",
+    "(il me faut|il nous faut|j'ai besoin|on a besoin) [du|de|de la|des|de l'] {demande}",
+    # English
+    "(we're|we are|we ran|we've run|i'm|i am|i ran) out of {demande}",
+    "(we have|there's|there is) no more {demande}",
+    "(we're|we are) running low on {demande}",
+    "we need [some|more] {demande}",
 ]
 PHRASES_RETRAIT = [
-    "(retire|enlève|supprime|annule) {demande} du menu",
-    "remove {demande} from [the] menu",
+    # Français
+    f"({_RETIRER}) {{demande}} du menu [de la semaine]",
+    f"({_RETIRER}) {{demande}} de la semaine",
+    "(je ne veux plus|on ne veut plus|je veux plus) [de|d'|du|des] {demande} (au|dans le) menu",
+    "(peux-tu|tu peux|peux tu) (retirer|enlever|supprimer|annuler) {demande} du menu [de la semaine]",
+    # English
+    f"(remove|delete|cancel|drop) {{demande}} (from|off) {_THE_MENU}",
+    f"take {{demande}} (off|out of) {_THE_MENU}",
+    "(i don't want|we don't want) {demande} (on|in) [the] menu [anymore]",
 ]
 
 _REPONSES = {
@@ -164,6 +228,10 @@ def texte_courses(nombre: int, textes: dict) -> str:
     return textes["ajout_courses"].format(n=nombre)
 
 
+# « on mange quoi demain » ressemble à « on mange des pâtes demain » : c'est une question.
+_INTERROGATIF = re.compile(r"^(?:quoi|qu'est-ce|que|quel|quelle|combien|what|which)\b", re.IGNORECASE)
+
+
 def _valeur(resultat: RecognizeResult, nom: str) -> str:
     entite = resultat.entities.get(nom)
     return str(entite.value).strip() if entite is not None else ""
@@ -182,6 +250,9 @@ def async_enregistrer_phrases(hass: HomeAssistant) -> CALLBACK_TYPE:
             return textes["non_configure"]
         aujourdhui = dt_util.now().date()
         demande = analyser_demande(f"{_valeur(resultat, 'demande')} {_valeur(resultat, 'suite')}", code)
+        if _INTERROGATIF.match(demande.plat):
+            # « on mange quoi demain » : c'est la question du menu, pas un plat à ajouter.
+            return reponse_menu(planificateur, textes, demande.jour)
         if not demande.plat:
             return textes["plat_vide"]
         # analyser_demande ne renvoie que des jours reconnus : lire_jour ne peut pas échouer ici.
@@ -204,15 +275,9 @@ def async_enregistrer_phrases(hass: HomeAssistant) -> CALLBACK_TYPE:
             reponse += textes["alternative"].format(autre=bilan["alternatives"][0])
         return reponse
 
-    async def menu(entree: ConversationInput, resultat: RecognizeResult) -> str:
-        code = detecter_langue(entree.text, entree.language)
-        textes = _REPONSES[code]
-        planificateur = _planificateur(hass)
-        if planificateur is None:
-            return textes["non_configure"]
+    def reponse_menu(planificateur: Planificateur, textes: dict, jour_dit: str | None) -> str:
         aujourdhui = dt_util.now().date()
-        demande = analyser_demande(_valeur(resultat, "quand"), code)
-        jour = lire_jour(demande.jour, aujourdhui) or aujourdhui
+        jour = lire_jour(jour_dit, aujourdhui) or aujourdhui
         texte_jour = _texte_jour(jour, aujourdhui, textes)
         plats = [p.summary for p in planificateur.menu if p.day == jour and not p.done]
         if plats:
@@ -229,6 +294,14 @@ def async_enregistrer_phrases(hass: HomeAssistant) -> CALLBACK_TYPE:
                 jour=_texte_jour(suivants[0].day, aujourdhui, textes, dans_phrase=True),
             )
         return reponse
+
+    async def menu(entree: ConversationInput, resultat: RecognizeResult) -> str:
+        code = detecter_langue(entree.text, entree.language)
+        textes = _REPONSES[code]
+        planificateur = _planificateur(hass)
+        if planificateur is None:
+            return textes["non_configure"]
+        return reponse_menu(planificateur, textes, analyser_demande(_valeur(resultat, "quand"), code).jour)
 
     async def retirer(entree: ConversationInput, resultat: RecognizeResult) -> str:
         code = detecter_langue(entree.text, entree.language)
