@@ -111,6 +111,24 @@ async def test_creation_de_la_ressource() -> None:
     )
 
 
+async def test_ancienne_ressource_supprimee() -> None:
+    """Renommage du domaine : la ressource du domaine cookbook_menu est retirée (story 2.13)."""
+    ressources = MagicMock(loaded=True)
+    ressources.async_items.return_value = [
+        {"id": "vieille", "url": "/cookbook_menu_static/cookbook-menu-card.js?v=1789716075"},
+        {"id": "autre", "url": "/trakt_scrobbler/trakt-card.js?v=1.3.0-10"},
+    ]
+    ressources.async_delete_item = AsyncMock()
+    ressources.async_create_item = AsyncMock()
+    ressources.async_update_item = AsyncMock()
+    await frontend.async_enregistrer_carte(_hass_avec_ressources(ressources))
+    ressources.async_delete_item.assert_awaited_once_with("vieille")
+    ressources.async_create_item.assert_awaited_once_with(
+        {"res_type": "module", "url": "/nextcloud_cookbook_menu_static/cookbook-menu-card.js?v=42"}
+    )
+    ressources.async_update_item.assert_not_awaited()
+
+
 async def test_mise_a_jour_de_la_version() -> None:
     ressources = MagicMock(loaded=True)
     ressources.async_items.return_value = [

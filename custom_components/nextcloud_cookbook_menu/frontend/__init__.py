@@ -17,6 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 CHEMIN_BASE = "/nextcloud_cookbook_menu_static"
 FICHIER = "cookbook-menu-card.js"
 URL_CARTE = f"{CHEMIN_BASE}/{FICHIER}"
+# Le domaine s'appelait « cookbook_menu » avant la 1.0.0 : sa ressource ne sert plus à rien.
+ANCIENNE_URL_CARTE = "/cookbook_menu_static/"
 
 
 def version_carte() -> str:
@@ -44,11 +46,16 @@ async def async_enregistrer_carte(hass: HomeAssistant) -> None:
         if not ressources.loaded:
             await ressources.async_load()
             ressources.loaded = True
-        for element in ressources.async_items():
-            if element.get("url", "").startswith(URL_CARTE):
-                if element["url"] != url:
+        enregistree = False
+        for element in list(ressources.async_items()):
+            adresse = element.get("url", "")
+            if adresse.startswith(ANCIENNE_URL_CARTE):
+                await ressources.async_delete_item(element["id"])
+            elif adresse.startswith(URL_CARTE):
+                if adresse != url:
                     await ressources.async_update_item(element["id"], {"res_type": "module", "url": url})
-                return
-        await ressources.async_create_item({"res_type": "module", "url": url})
+                enregistree = True
+        if not enregistree:
+            await ressources.async_create_item({"res_type": "module", "url": url})
     except Exception as err:
         _LOGGER.warning("Impossible d'enregistrer la carte Nextcloud Cookbook Menu comme ressource : %s", err)
