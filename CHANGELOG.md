@@ -3,11 +3,14 @@
 Toutes les évolutions notables de ce projet sont consignées ici.
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [SemVer](https://semver.org/lang/fr/).
 
-## [Unreleased]
+## [1.1.0] - 2026-09-19
 
 ### Ajouté
 - Carte `custom:cookbook-recipes-card` : consultation des recettes en grille de vignettes, recherche et filtre par catégorie, sans passer par le menu. La fiche ouverte depuis cette carte propose le jour, les couverts et l'ajout au menu.
 - Les photos sont servies en vignette (`.../image/<entrée>/<recette>/thumb`), pas en pleine taille, pour la grille.
+
+### Corrigé
+- La ressource Lovelace laissée par le domaine `cookbook_menu` (avant la 1.0.0) est retirée automatiquement.
 
 ## [1.0.0] - 2026-09-18
 
