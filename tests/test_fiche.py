@@ -115,6 +115,12 @@ async def test_vue_image(hass: HomeAssistant, entree, mock_client, hass_client: 
     assert reponse.status == HTTPStatus.OK
     assert await reponse.read() == b"JPEG"
 
+    # Vignette : la taille est passée à Nextcloud, les tailles inconnues sont refusées.
+    reponse = await client.get(f"{url}/thumb")
+    assert reponse.status == HTTPStatus.OK
+    assert mock_client.async_get_image.call_args[0][1] == "thumb"
+    assert (await client.get(f"{url}/enorme")).status == HTTPStatus.BAD_REQUEST
+
     mock_client.async_get_image.return_value = None
     assert (await client.get(url)).status == HTTPStatus.NOT_FOUND
     mock_client.async_get_image.side_effect = CookbookConnectionError("coupure")

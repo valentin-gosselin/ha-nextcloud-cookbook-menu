@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from http import HTTPStatus
-from typing import Any
+from typing import Any, ClassVar
 
 from aiohttp import web
 from homeassistant.components.http import HomeAssistantView
@@ -18,7 +18,20 @@ from .ingredients.minuteurs import trouver_minuteurs
 from .ingredients.parser import analyser
 
 URL_IMAGE = "/api/nextcloud_cookbook_menu/image/{entry_id}/{recipe_id}"
+URL_IMAGE_TAILLE = f"{URL_IMAGE}/{{taille}}"
 VALIDITE_IMAGE = timedelta(hours=24)
+# Tailles servies par l'application Cookbook de Nextcloud.
+TAILLES = ("full", "thumb", "thumb16")
+
+
+def image_signee(hass: HomeAssistant, entry_id: str, recipe_id: str, taille: str = "full") -> str:
+    """Adresse de la photo, signée par Home Assistant pour 24 h (Nextcloud exige les identifiants)."""
+    chemin = (
+        URL_IMAGE.format(entry_id=entry_id, recipe_id=recipe_id)
+        if taille == "full"
+        else URL_IMAGE_TAILLE.format(entry_id=entry_id, recipe_id=recipe_id, taille=taille)
+    )
+    return async_sign_path(hass, chemin, VALIDITE_IMAGE)
 
 
 def ingredients_structures(recette: Recipe) -> list[dict[str, Any]]:
@@ -63,7 +76,6 @@ def etapes_structurees(recette: Recipe) -> list[dict[str, Any]]:
 
 def fiche(hass: HomeAssistant, entry_id: str, recette: Recipe, couverts: int) -> dict[str, Any]:
     """Tout ce que la fenêtre de recette affiche."""
-    chemin_image = URL_IMAGE.format(entry_id=entry_id, recipe_id=recette.id)
     entree = hass.config_entries.async_get_entry(entry_id)
     nextcloud = entree.data[CONF_URL].rstrip("/") if entree else ""
     return {
@@ -81,7 +93,7 @@ def fiche(hass: HomeAssistant, entry_id: str, recette: Recipe, couverts: int) ->
         "tools": list(recette.tools),
         "ingredients": ingredients_structures(recette),
         "steps": etapes_structurees(recette),
-        "image": async_sign_path(hass, chemin_image, VALIDITE_IMAGE),
+        "image": image_signee(hass, entry_id, recette.id),
     }
 
 
@@ -89,16 +101,19 @@ class VueImageRecette(HomeAssistantView):
     """Photo d'une recette relayée depuis Nextcloud (l'accès à Nextcloud exige les identifiants)."""
 
     url = URL_IMAGE
+    extra_urls: ClassVar[list[str]] = [URL_IMAGE_TAILLE]
     name = "api:nextcloud_cookbook_menu:image"
     requires_auth = True
 
-    async def get(self, request: web.Request, entry_id: str, recipe_id: str) -> web.Response:
+    async def get(self, request: web.Request, entry_id: str, recipe_id: str, taille: str = "full") -> web.Response:
         hass: HomeAssistant = request.app["hass"]
         entree = hass.config_entries.async_get_entry(entry_id)
         if entree is None or entree.domain != DOMAIN or not hasattr(entree, "runtime_data"):
             return web.Response(status=HTTPStatus.NOT_FOUND)
+        if taille not in TAILLES:
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
         try:
-            image = await entree.runtime_data.client.async_get_image(recipe_id)
+            image = await entree.runtime_data.client.async_get_image(recipe_id, taille)
         except CookbookError:
             return web.Response(status=HTTPStatus.BAD_GATEWAY)
         if image is None:

@@ -11,12 +11,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN
-from .fiche import fiche
+from .fiche import fiche, image_signee
+from .ingredients.normalize import sans_accents
 
 
 @callback
 def async_enregistrer_commandes(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_recettes)
+    websocket_api.async_register_command(hass, ws_catalogue)
     websocket_api.async_register_command(hass, ws_fiche)
     websocket_api.async_register_command(hass, ws_reserve)
     websocket_api.async_register_command(hass, ws_reserve_modifier)
@@ -48,6 +50,39 @@ def ws_recettes(hass: HomeAssistant, connexion: websocket_api.ActiveConnection, 
             "shopping_entity": registre.async_get_entity_id("todo", DOMAIN, f"{entree.entry_id}_shopping"),
             "recipes": [
                 {"id": identifiant, "name": libelle} for libelle, identifiant in planificateur.choix_recettes().items()
+            ],
+        },
+    )
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): "nextcloud_cookbook_menu/catalog", vol.Optional("config_entry_id"): str}
+)
+@callback
+def ws_catalogue(hass: HomeAssistant, connexion: websocket_api.ActiveConnection, message: dict[str, Any]) -> None:
+    """Toutes les recettes avec leur vignette et leur catégorie, pour la carte de consultation."""
+    entree = _entree(hass, message)
+    if entree is None:
+        connexion.send_error(message["id"], "not_found", "Nextcloud Cookbook Menu is not set up")
+        return
+    planificateur = entree.runtime_data.planner
+    recettes = sorted(planificateur.recettes.values(), key=lambda r: sans_accents(r.name))
+    connexion.send_result(
+        message["id"],
+        {
+            "config_entry_id": entree.entry_id,
+            "default_servings": planificateur.couverts_par_defaut,
+            "categories": sorted({r.category for r in recettes if r.category}, key=sans_accents),
+            "recipes": [
+                {
+                    "id": recette.id,
+                    "name": recette.name,
+                    "category": recette.category,
+                    "total_minutes": recette.total_minutes,
+                    "servings": recette.servings,
+                    "image": image_signee(hass, entree.entry_id, recette.id, "thumb"),
+                }
+                for recette in recettes
             ],
         },
     )

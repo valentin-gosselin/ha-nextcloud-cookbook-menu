@@ -49,6 +49,12 @@ const TEXTES = {
     termine: "Terminé",
     arreter: "Arrêter",
     facultatif: "facultatif",
+    echecAjout: "L'ajout au menu a échoué",
+    titreRecettes: "Recettes",
+    rechercheRecettes: "Chercher une recette",
+    toutes: "Toutes",
+    aucuneRecette: "Aucune recette ne correspond",
+    recettesComptees: (n) => `${n} recette${n > 1 ? "s" : ""}`,
   },
   en: {
     titre: "Weekly menu",
@@ -86,6 +92,12 @@ const TEXTES = {
     termine: "Done",
     arreter: "Stop",
     facultatif: "optional",
+    echecAjout: "Adding to the menu failed",
+    titreRecettes: "Recipes",
+    rechercheRecettes: "Search a recipe",
+    toutes: "All",
+    aucuneRecette: "No matching recipe",
+    recettesComptees: (n) => `${n} recipe${n > 1 ? "s" : ""}`,
   },
 };
 
@@ -143,176 +155,7 @@ function dateIso(date) {
   return new Date(date.getTime() - decalage).toISOString().slice(0, 10);
 }
 
-class CookbookMenuCard extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-    this._recettes = [];
-    this._menu = [];
-    this._requete = "";
-    this._ouvert = false;
-    this._surligne = 0;
-    this._recette = null;
-    this._jour = null; // null = sans date, sinon « AAAA-MM-JJ »
-    this._couverts = null;
-    this._message = "";
-    this._erreur = "";
-    this._chargement = null;
-    this._desabonner = null;
-    this._fiche = null;
-    this._couvertsFiche = 2;
-    this._etapesFaites = new Set();
-    this._minuteurs = [];
-    this._tic = null;
-    this._verrou = null;
-  }
-
-  setConfig(config) {
-    this._config = config || {};
-  }
-
-  static getStubConfig() {
-    return {};
-  }
-
-  getCardSize() {
-    return 6;
-  }
-
-  set hass(hass) {
-    const premier = !this._hass;
-    this._hass = hass;
-    if (premier) {
-      this._rendreSquelette();
-      this._charger();
-    }
-  }
-
-  get _t() {
-    const langue = (this._hass && this._hass.language) || "en";
-    return TEXTES[langue.startsWith("fr") ? "fr" : "en"];
-  }
-
-  disconnectedCallback() {
-    if (this._desabonner) {
-      this._desabonner.then((fn) => fn && fn()).catch(() => {});
-      this._desabonner = null;
-    }
-    this._chargement = null;
-    if (this._tic) clearInterval(this._tic);
-    this._tic = null;
-    if (this._verrou) this._verrou.release().catch(() => {});
-    this._verrou = null;
-  }
-
-  connectedCallback() {
-    if (this._hass && !this._chargement) this._charger();
-  }
-
-  async _charger() {
-    this._chargement = (async () => {
-      try {
-        const message = { type: "nextcloud_cookbook_menu/recipes" };
-        if (this._config && this._config.config_entry_id) message.config_entry_id = this._config.config_entry_id;
-        const reponse = await this._hass.callWS(message);
-        this._entree = reponse.config_entry_id;
-        this._recettes = reponse.recipes.map((r) => ({ ...r, cle: sansAccents(r.name) }));
-        this._couverts = this._couverts || reponse.default_servings;
-        this._entiteMenu = reponse.menu_entity;
-        this._erreur = "";
-        this._abonnerMenu();
-      } catch (err) {
-        this._erreur = this._t.nonConfigure;
-      }
-      this._rendre();
-    })();
-  }
-
-  _abonnerMenu() {
-    if (this._desabonner || !this._entiteMenu) return;
-    this._desabonner = this._hass.connection.subscribeMessage(
-      (evenement) => {
-        this._menu = evenement.items || [];
-        this._rendreMenu();
-      },
-      { type: "todo/item/subscribe", entity_id: this._entiteMenu },
-    );
-  }
-
-  _filtrees() {
-    const mots = sansAccents(this._requete).split(/\s+/).filter(Boolean);
-    const liste = mots.length ? this._recettes.filter((r) => mots.every((m) => r.cle.includes(m))) : this._recettes;
-    return liste.slice(0, 50);
-  }
-
-  _optionsJours() {
-    const t = this._t;
-    const aujourdhui = new Date();
-    const options = [{ valeur: null, libelle: t.sansDate }];
-    for (let i = 0; i < 7; i += 1) {
-      const jour = new Date(aujourdhui);
-      jour.setDate(aujourdhui.getDate() + i);
-      const indice = (jour.getDay() + 6) % 7;
-      const libelle = i === 0 ? t.aujourdhui : i === 1 ? t.demain : t.jours[indice];
-      options.push({ valeur: dateIso(jour), libelle });
-    }
-    return options;
-  }
-
-  _rendreSquelette() {
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host { display: block; color: var(--primary-text-color); }
-        ha-card { padding: 16px; }
-        h2 { margin: 0 0 12px; font-size: 1.2em; font-weight: 500; color: var(--primary-text-color); }
-        .recherche { position: relative; }
-        input[type="search"] {
-          width: 100%; box-sizing: border-box; padding: 10px 12px; font-size: 1em;
-          border: 1px solid var(--divider-color); border-radius: 8px;
-          background: var(--card-background-color); color: var(--primary-text-color);
-        }
-        input[type="search"]:focus { outline: 2px solid var(--primary-color); border-color: transparent; }
-        .liste {
-          position: absolute; z-index: 5; left: 0; right: 0; max-height: 260px; overflow-y: auto; margin-top: 4px;
-          background: var(--card-background-color); border: 1px solid var(--divider-color); border-radius: 8px;
-          box-shadow: var(--ha-card-box-shadow, 0 2px 8px rgba(0,0,0,.2));
-        }
-        .choix { padding: 8px 12px; cursor: pointer; color: var(--primary-text-color); }
-        .choix:hover { background: var(--secondary-background-color); }
-        .choix.actif { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.25); }
-        .choix.vide { cursor: default; color: var(--secondary-text-color); }
-        .etiquette { margin: 12px 0 6px; font-size: .85em; color: var(--secondary-text-color); }
-        .puces { display: flex; flex-wrap: wrap; gap: 6px; }
-        .puce {
-          border: 1px solid var(--divider-color); border-radius: 16px; padding: 4px 12px; cursor: pointer;
-          background: transparent; color: var(--primary-text-color); font-size: .9em;
-        }
-        .puce.actif { background: var(--primary-color); border-color: var(--primary-color); color: var(--text-primary-color, #fff); }
-        .ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
-        .compteur { display: flex; align-items: center; gap: 8px; }
-        .compteur button {
-          width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--divider-color);
-          background: transparent; color: var(--primary-text-color); font-size: 1.1em; cursor: pointer;
-        }
-        .compteur #nombre { min-width: 24px; text-align: center; font-weight: 500; color: var(--primary-text-color); }
-        .ajouter {
-          border: none; border-radius: 8px; padding: 10px 16px; font-size: 1em; cursor: pointer;
-          background: var(--primary-color); color: var(--text-primary-color, #fff);
-        }
-        .ajouter[disabled] { opacity: .5; cursor: default; }
-        .message { margin-top: 8px; font-size: .9em; color: var(--secondary-text-color); min-height: 1.2em; }
-        .erreur { color: var(--error-color); }
-        .menu { margin-top: 16px; border-top: 1px solid var(--divider-color); padding-top: 8px; }
-        .plat { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
-        .plat .texte { flex: 1; min-width: 0; }
-        .plat .nom { color: var(--primary-text-color); }
-        .plat.fait .nom { text-decoration: line-through; color: var(--secondary-text-color); }
-        .plat .detail { font-size: .85em; color: var(--secondary-text-color); }
-        .plat button { background: transparent; border: none; cursor: pointer; color: var(--secondary-text-color); font-size: 1.1em; padding: 4px 8px; }
-        .plat input { width: 18px; height: 18px; accent-color: var(--primary-color); }
-        .vide { color: var(--secondary-text-color); font-size: .9em; padding: 6px 0; }
-        .plat .texte { cursor: pointer; }
-        .plat .texte:hover .nom { color: var(--primary-color); }
+const STYLE_FICHE = `
         .minuteurs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
         .minuteurs:empty { display: none; }
         .fenetre .minuteurs {
@@ -376,6 +219,458 @@ class CookbookMenuCard extends HTMLElement {
           border-radius: 12px; padding: 0 8px; font: inherit; cursor: pointer; white-space: nowrap;
         }
         .ustensiles { margin-top: 16px; color: var(--secondary-text-color); font-size: .9em; }
+        .ajout-fiche {
+          display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 8px;
+          padding: 12px 0; border-top: 1px solid var(--divider-color); border-bottom: 1px solid var(--divider-color);
+        }
+        .ajout-fiche .message { flex-basis: 100%; color: var(--secondary-text-color); font-size: .9em; }
+        .ajout-fiche .message:empty { display: none; }
+`;
+
+// Fenêtre de recette, partagée par la carte du menu et la carte des recettes.
+const AvecFiche = (Base) =>
+  class extends Base {
+    _initFiche() {
+      this._fiche = null;
+      this._couvertsFiche = 2;
+      this._etapesFaites = new Set();
+      this._minuteurs = [];
+      this._tic = null;
+      this._verrou = null;
+      this._jourFiche = null;
+      this._messageAjout = "";
+    }
+
+    _arreterFiche() {
+      if (this._tic) clearInterval(this._tic);
+      this._tic = null;
+      if (this._verrou) this._verrou.release().catch(() => {});
+      this._verrou = null;
+    }
+
+    _optionsJours() {
+      const t = this._t;
+      const aujourdhui = new Date();
+      const options = [{ valeur: null, libelle: t.sansDate }];
+      for (let i = 0; i < 7; i += 1) {
+        const jour = new Date(aujourdhui);
+        jour.setDate(aujourdhui.getDate() + i);
+        const indice = (jour.getDay() + 6) % 7;
+        const libelle = i === 0 ? t.aujourdhui : i === 1 ? t.demain : t.jours[indice];
+        options.push({ valeur: dateIso(jour), libelle });
+      }
+      return options;
+    }
+
+    _pieceAjout() {
+      const t = this._t;
+      const jours = this._optionsJours()
+        .map(
+          (o) =>
+            `<button class="puce ${o.valeur === this._jourFiche ? "actif" : ""}" data-jour-fiche="${o.valeur ?? ""}">${echapper(o.libelle)}</button>`,
+        )
+        .join("");
+      return `<div class="ajout-fiche">
+        <div class="puces">${jours}</div>
+        <button class="ajouter" id="ajouter-fiche">${echapper(t.ajouter)}</button>
+        <div class="message" id="message-fiche">${echapper(this._messageAjout)}</div>
+      </div>`;
+    }
+
+    _brancherAjoutFiche() {
+      const racine = this.shadowRoot;
+      racine.querySelectorAll("[data-jour-fiche]").forEach((bouton) =>
+        bouton.addEventListener("click", () => {
+          this._jourFiche = bouton.dataset.jourFiche || null;
+          racine
+            .querySelectorAll("[data-jour-fiche]")
+            .forEach((b) => b.classList.toggle("actif", b === bouton));
+        }),
+      );
+      racine.getElementById("ajouter-fiche").addEventListener("click", async () => {
+        const t = this._t;
+        const donnees = {
+          recipe: this._fiche.name,
+          recipe_id: this._fiche.id,
+          servings: this._couvertsFiche,
+        };
+        if (this._jourFiche) donnees.day = this._jourFiche;
+        if (this._entree) donnees.config_entry_id = this._entree;
+        try {
+          const reponse = await this._hass.callWS({
+            type: "call_service",
+            domain: "nextcloud_cookbook_menu",
+            service: "add_to_menu",
+            service_data: donnees,
+            return_response: true,
+          });
+          const bilan = (reponse && reponse.response) || {};
+          const n = (bilan.shopping_items_changed || []).length;
+          this._messageAjout = t.ajoute(bilan.dish || this._fiche.name, n);
+        } catch (err) {
+          this._messageAjout = t.echecAjout;
+        }
+        const message = racine.getElementById("message-fiche");
+        if (message) message.textContent = this._messageAjout;
+      });
+    }
+
+    async _ouvrirFiche(cible) {
+      try {
+        const message = { type: "nextcloud_cookbook_menu/recipe", ...cible };
+        if (this._entree) message.config_entry_id = this._entree;
+        this._fiche = await this._hass.callWS(message);
+      } catch (err) {
+        this._afficherMessage(this._t.sansRecette, true);
+        return;
+      }
+      this._couvertsFiche = this._fiche.servings;
+      this._etapesFaites = new Set();
+      this._rendreFiche();
+    }
+
+    _fermerFiche() {
+      this._fiche = null;
+      this.shadowRoot.getElementById("fenetre").innerHTML = "";
+      document.removeEventListener("keydown", this._echap);
+    }
+
+    _ligneIngredient(ligne) {
+      const t = this._t;
+      const langue = (this._hass.language || "en").startsWith("fr") ? "fr" : "en";
+      if (ligne.section) return `<li class="section">${echapper(ligne.section)}</li>`;
+      const facteur = this._couvertsFiche / (this._fiche.yield || 1);
+      let quantite = "";
+      if (ligne.quantity) {
+        quantite = nombre(ligne.quantity * facteur, ligne.unit, langue);
+        if (ligne.quantity_max) quantite += `-${nombre(ligne.quantity_max * facteur, ligne.unit, langue)}`;
+        if (ligne.unit) quantite += ` ${ligne.unit}`;
+      } else if (ligne.vague) {
+        quantite = ligne.vague;
+      }
+      const notes = [ligne.note, ligne.optional && !String(ligne.note || "").includes(t.facultatif) ? t.facultatif : ""].filter(Boolean).join(", ");
+      return `<li>${quantite ? `<span class="quantite">${echapper(quantite)}</span> ` : ""}${echapper(ligne.name)}${notes ? ` <span class="note">(${echapper(notes)})</span>` : ""}</li>`;
+    }
+
+    _etape(etape, indice) {
+      let html = "";
+      let position = 0;
+      for (const minuteur of etape.timers) {
+        html += echapper(etape.text.slice(position, minuteur.start));
+        html += `<button class="lancer" title="${echapper(this._t.minuteur)}" data-secondes="${minuteur.seconds}" data-libelle="${echapper(minuteur.text)}">${echapper(minuteur.text)}</button>`;
+        position = minuteur.end;
+      }
+      html += echapper(etape.text.slice(position));
+      return `<li class="${this._etapesFaites.has(indice) ? "faite" : ""}" data-etape="${indice}"><span>${html}</span></li>`;
+    }
+
+    _rendreFiche() {
+      const f = this._fiche;
+      const t = this._t;
+      if (!f) return;
+      const temps = [
+        f.prep_minutes && `${t.preparation} ${duree(f.prep_minutes)}`,
+        f.cook_minutes && `${t.cuisson} ${duree(f.cook_minutes)}`,
+        f.total_minutes && `${t.total} ${duree(f.total_minutes)}`,
+      ].filter(Boolean);
+      const fenetre = this.shadowRoot.getElementById("fenetre");
+      fenetre.innerHTML = `
+        <div class="voile" id="voile">
+          <div class="fenetre" role="dialog" aria-modal="true" aria-label="${echapper(f.name)}">
+            <div class="minuteurs" id="minuteurs-fiche"></div>
+            <div class="entete">
+              <img id="photo" src="${echapper(f.image)}" alt="" hidden>
+              <button class="fermer" id="fermer" aria-label="${echapper(t.fermer)}">&times;</button>
+            </div>
+            <div class="corps">
+              <h2>${echapper(f.name)}</h2>
+              ${f.description ? `<p class="description">${echapper(f.description)}</p>` : ""}
+              ${temps.length ? `<div class="temps">${temps.map((x) => `<span>${echapper(x)}</span>`).join("")}</div>` : ""}
+              <div class="actions">
+                <button id="veille" class="${this._verrou ? "actif" : ""}">${echapper(this._verrou ? t.veilleActive : t.veille)}</button>
+                ${f.cookbook_url ? `<a href="${echapper(f.cookbook_url)}" target="_blank" rel="noopener">${echapper(t.cookbook)}</a>` : ""}
+                ${f.url ? `<a href="${echapper(f.url)}" target="_blank" rel="noopener">${echapper(t.source)}</a>` : ""}
+              </div>
+              ${this._ajoutDepuisFiche ? this._pieceAjout() : ""}
+              <div class="colonnes">
+                <div>
+                  <h3>${echapper(t.ingredients)}
+                    <span class="compteur">
+                      <button id="fiche-moins" aria-label="-">&minus;</button><span id="nombre">${this._couvertsFiche}</span><button id="fiche-plus" aria-label="+">+</button>
+                    </span>
+                  </h3>
+                  <ul class="ingredients" id="ingredients">${f.ingredients.map((l) => this._ligneIngredient(l)).join("")}</ul>
+                  ${f.tools.length ? `<div class="ustensiles">${echapper(t.ustensiles)} : ${echapper(f.tools.join(", "))}</div>` : ""}
+                </div>
+                <div>
+                  <h3>${echapper(t.etapes)}</h3>
+                  <ol class="etapes" id="etapes">${f.steps.map((e, i) => this._etape(e, i)).join("")}</ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      const photo = this.shadowRoot.getElementById("photo");
+      this._rendreMinuteurs();
+      photo.addEventListener("load", () => (photo.hidden = false));
+      photo.addEventListener("error", () => photo.remove());
+      this.shadowRoot.getElementById("fermer").addEventListener("click", () => this._fermerFiche());
+      this.shadowRoot.getElementById("voile").addEventListener("click", (e) => e.target.id === "voile" && this._fermerFiche());
+      this._echap = (e) => e.key === "Escape" && this._fermerFiche();
+      document.addEventListener("keydown", this._echap);
+      this.shadowRoot.getElementById("veille").addEventListener("click", () => this._basculerVeille());
+      if (this._ajoutDepuisFiche) this._brancherAjoutFiche();
+      const changer = (ecart) => {
+        this._couvertsFiche = Math.max(1, Math.min(50, this._couvertsFiche + ecart));
+        this.shadowRoot.querySelector(".fenetre #nombre").textContent = this._couvertsFiche;
+        this.shadowRoot.getElementById("ingredients").innerHTML = f.ingredients.map((l) => this._ligneIngredient(l)).join("");
+      };
+      this.shadowRoot.getElementById("fiche-moins").addEventListener("click", () => changer(-1));
+      this.shadowRoot.getElementById("fiche-plus").addEventListener("click", () => changer(1));
+      this.shadowRoot.getElementById("etapes").addEventListener("click", (e) => {
+        const bouton = e.target.closest(".lancer");
+        if (bouton) {
+          e.stopPropagation();
+          this._lancerMinuteur(Number(bouton.dataset.secondes), `${f.name} : ${bouton.dataset.libelle}`);
+          return;
+        }
+        const li = e.target.closest("li[data-etape]");
+        if (!li) return;
+        const indice = Number(li.dataset.etape);
+        if (this._etapesFaites.has(indice)) this._etapesFaites.delete(indice);
+        else this._etapesFaites.add(indice);
+        li.classList.toggle("faite");
+      });
+    }
+
+    async _basculerVeille() {
+      const t = this._t;
+      const bouton = this.shadowRoot.getElementById("veille");
+      try {
+        if (this._verrou) {
+          await this._verrou.release();
+          this._verrou = null;
+        } else if (navigator.wakeLock) {
+          this._verrou = await navigator.wakeLock.request("screen");
+          this._verrou.addEventListener("release", () => (this._verrou = null));
+        }
+      } catch (err) {
+        this._verrou = null;
+      }
+      if (bouton) {
+        bouton.classList.toggle("actif", Boolean(this._verrou));
+        bouton.textContent = this._verrou ? t.veilleActive : t.veille;
+      }
+    }
+
+    _lancerMinuteur(secondes, libelle) {
+      this._minuteurs.push({ id: Date.now() + Math.random(), libelle, fin: Date.now() + secondes * 1000, sonne: false });
+      if (!this._tic) this._tic = setInterval(() => this._rendreMinuteurs(), 1000);
+      this._rendreMinuteurs();
+    }
+
+    _rendreMinuteurs() {
+      // Barre de la carte, et barre collée en haut de la fiche recette quand elle est ouverte.
+      const conteneurs = ["minuteurs", "minuteurs-fiche"].map((id) => this.shadowRoot.getElementById(id)).filter(Boolean);
+      if (!conteneurs.length) return;
+      const t = this._t;
+      const maintenant = Date.now();
+      const html = this._minuteurs
+        .map((m) => {
+          const restant = (m.fin - maintenant) / 1000;
+          if (restant <= 0 && !m.sonne) {
+            m.sonne = true;
+            this._sonner();
+          }
+          const fini = restant <= 0;
+          return `<div class="minuteur ${fini ? "fini" : ""}"><span>${echapper(m.libelle)}</span><strong>${fini ? echapper(t.termine) : chrono(restant)}</strong><button data-arreter="${m.id}" title="${echapper(t.arreter)}" aria-label="${echapper(t.arreter)}">&times;</button></div>`;
+        })
+        .join("");
+      for (const conteneur of conteneurs) {
+        conteneur.innerHTML = html;
+        conteneur.querySelectorAll("button[data-arreter]").forEach((bouton) =>
+          bouton.addEventListener("click", (e) => {
+            e.stopPropagation();
+            this._minuteurs = this._minuteurs.filter((m) => String(m.id) !== bouton.dataset.arreter);
+            this._rendreMinuteurs();
+          }),
+        );
+      }
+      if (!this._minuteurs.length && this._tic) {
+        clearInterval(this._tic);
+        this._tic = null;
+      }
+    }
+
+    _sonner() {
+      try {
+        const contexte = new (window.AudioContext || window.webkitAudioContext)();
+        [0, 0.4, 0.8].forEach((decalage) => {
+          const oscillateur = contexte.createOscillator();
+          const volume = contexte.createGain();
+          oscillateur.frequency.value = 880;
+          volume.gain.value = 0.25;
+          oscillateur.connect(volume).connect(contexte.destination);
+          oscillateur.start(contexte.currentTime + decalage);
+          oscillateur.stop(contexte.currentTime + decalage + 0.25);
+        });
+      } catch (err) {
+        /* son indisponible : le clignotement suffit */
+      }
+      if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+    }
+  };
+
+class CookbookMenuCard extends AvecFiche(HTMLElement) {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this._recettes = [];
+    this._menu = [];
+    this._requete = "";
+    this._ouvert = false;
+    this._surligne = 0;
+    this._recette = null;
+    this._jour = null; // null = sans date, sinon « AAAA-MM-JJ »
+    this._couverts = null;
+    this._message = "";
+    this._erreur = "";
+    this._chargement = null;
+    this._desabonner = null;
+    this._initFiche();
+  }
+
+  setConfig(config) {
+    this._config = config || {};
+  }
+
+  static getStubConfig() {
+    return {};
+  }
+
+  getCardSize() {
+    return 6;
+  }
+
+  set hass(hass) {
+    const premier = !this._hass;
+    this._hass = hass;
+    if (premier) {
+      this._rendreSquelette();
+      this._charger();
+    }
+  }
+
+  get _t() {
+    const langue = (this._hass && this._hass.language) || "en";
+    return TEXTES[langue.startsWith("fr") ? "fr" : "en"];
+  }
+
+  disconnectedCallback() {
+    if (this._desabonner) {
+      this._desabonner.then((fn) => fn && fn()).catch(() => {});
+      this._desabonner = null;
+    }
+    this._chargement = null;
+    this._arreterFiche();
+  }
+
+  connectedCallback() {
+    if (this._hass && !this._chargement) this._charger();
+  }
+
+  async _charger() {
+    this._chargement = (async () => {
+      try {
+        const message = { type: "nextcloud_cookbook_menu/recipes" };
+        if (this._config && this._config.config_entry_id) message.config_entry_id = this._config.config_entry_id;
+        const reponse = await this._hass.callWS(message);
+        this._entree = reponse.config_entry_id;
+        this._recettes = reponse.recipes.map((r) => ({ ...r, cle: sansAccents(r.name) }));
+        this._couverts = this._couverts || reponse.default_servings;
+        this._entiteMenu = reponse.menu_entity;
+        this._erreur = "";
+        this._abonnerMenu();
+      } catch (err) {
+        this._erreur = this._t.nonConfigure;
+      }
+      this._rendre();
+    })();
+  }
+
+  _abonnerMenu() {
+    if (this._desabonner || !this._entiteMenu) return;
+    this._desabonner = this._hass.connection.subscribeMessage(
+      (evenement) => {
+        this._menu = evenement.items || [];
+        this._rendreMenu();
+      },
+      { type: "todo/item/subscribe", entity_id: this._entiteMenu },
+    );
+  }
+
+  _filtrees() {
+    const mots = sansAccents(this._requete).split(/\s+/).filter(Boolean);
+    const liste = mots.length ? this._recettes.filter((r) => mots.every((m) => r.cle.includes(m))) : this._recettes;
+    return liste.slice(0, 50);
+  }
+
+
+  _rendreSquelette() {
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: block; color: var(--primary-text-color); }
+        ha-card { padding: 16px; }
+        h2 { margin: 0 0 12px; font-size: 1.2em; font-weight: 500; color: var(--primary-text-color); }
+        .recherche { position: relative; }
+        input[type="search"] {
+          width: 100%; box-sizing: border-box; padding: 10px 12px; font-size: 1em;
+          border: 1px solid var(--divider-color); border-radius: 8px;
+          background: var(--card-background-color); color: var(--primary-text-color);
+        }
+        input[type="search"]:focus { outline: 2px solid var(--primary-color); border-color: transparent; }
+        .liste {
+          position: absolute; z-index: 5; left: 0; right: 0; max-height: 260px; overflow-y: auto; margin-top: 4px;
+          background: var(--card-background-color); border: 1px solid var(--divider-color); border-radius: 8px;
+          box-shadow: var(--ha-card-box-shadow, 0 2px 8px rgba(0,0,0,.2));
+        }
+        .choix { padding: 8px 12px; cursor: pointer; color: var(--primary-text-color); }
+        .choix:hover { background: var(--secondary-background-color); }
+        .choix.actif { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.25); }
+        .choix.vide { cursor: default; color: var(--secondary-text-color); }
+        .etiquette { margin: 12px 0 6px; font-size: .85em; color: var(--secondary-text-color); }
+        .puces { display: flex; flex-wrap: wrap; gap: 6px; }
+        .puce {
+          border: 1px solid var(--divider-color); border-radius: 16px; padding: 4px 12px; cursor: pointer;
+          background: transparent; color: var(--primary-text-color); font-size: .9em;
+        }
+        .puce.actif { background: var(--primary-color); border-color: var(--primary-color); color: var(--text-primary-color, #fff); }
+        .ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+        .compteur { display: flex; align-items: center; gap: 8px; }
+        .compteur button {
+          width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--divider-color);
+          background: transparent; color: var(--primary-text-color); font-size: 1.1em; cursor: pointer;
+        }
+        .compteur #nombre { min-width: 24px; text-align: center; font-weight: 500; color: var(--primary-text-color); }
+        .ajouter {
+          border: none; border-radius: 8px; padding: 10px 16px; font-size: 1em; cursor: pointer;
+          background: var(--primary-color); color: var(--text-primary-color, #fff);
+        }
+        .ajouter[disabled] { opacity: .5; cursor: default; }
+        .message { margin-top: 8px; font-size: .9em; color: var(--secondary-text-color); min-height: 1.2em; }
+        .erreur { color: var(--error-color); }
+        .menu { margin-top: 16px; border-top: 1px solid var(--divider-color); padding-top: 8px; }
+        .plat { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+        .plat .texte { flex: 1; min-width: 0; }
+        .plat .nom { color: var(--primary-text-color); }
+        .plat.fait .nom { text-decoration: line-through; color: var(--secondary-text-color); }
+        .plat .detail { font-size: .85em; color: var(--secondary-text-color); }
+        .plat button { background: transparent; border: none; cursor: pointer; color: var(--secondary-text-color); font-size: 1.1em; padding: 4px 8px; }
+        .plat input { width: 18px; height: 18px; accent-color: var(--primary-color); }
+        .vide { color: var(--secondary-text-color); font-size: .9em; padding: 6px 0; }
+        .plat .texte { cursor: pointer; }
+        .plat .texte:hover .nom { color: var(--primary-color); }
+        ${STYLE_FICHE}
       </style>
       <ha-card><div id="contenu"></div><div class="minuteurs" id="minuteurs"></div><div class="menu" id="menu"></div></ha-card>
       <div id="fenetre"></div>`;
@@ -564,8 +859,8 @@ class CookbookMenuCard extends HTMLElement {
       ),
     );
     conteneur.querySelectorAll("[data-ouvrir]").forEach((element) => {
-      element.addEventListener("click", () => this._ouvrirFiche(element.dataset.ouvrir));
-      element.addEventListener("keydown", (e) => e.key === "Enter" && this._ouvrirFiche(element.dataset.ouvrir));
+      element.addEventListener("click", () => this._ouvrirFiche({ uid: element.dataset.ouvrir }));
+      element.addEventListener("keydown", (e) => e.key === "Enter" && this._ouvrirFiche({ uid: element.dataset.ouvrir }));
     });
     conteneur.querySelectorAll("button[data-retirer]").forEach((bouton) =>
       bouton.addEventListener("click", () =>
@@ -573,208 +868,7 @@ class CookbookMenuCard extends HTMLElement {
       ),
     );
   }
-  async _ouvrirFiche(uid) {
-    try {
-      const message = { type: "nextcloud_cookbook_menu/recipe", uid };
-      if (this._entree) message.config_entry_id = this._entree;
-      this._fiche = await this._hass.callWS(message);
-    } catch (err) {
-      this._afficherMessage(this._t.sansRecette, true);
-      return;
-    }
-    this._couvertsFiche = this._fiche.servings;
-    this._etapesFaites = new Set();
-    this._rendreFiche();
-  }
 
-  _fermerFiche() {
-    this._fiche = null;
-    this.shadowRoot.getElementById("fenetre").innerHTML = "";
-    document.removeEventListener("keydown", this._echap);
-  }
-
-  _ligneIngredient(ligne) {
-    const t = this._t;
-    const langue = (this._hass.language || "en").startsWith("fr") ? "fr" : "en";
-    if (ligne.section) return `<li class="section">${echapper(ligne.section)}</li>`;
-    const facteur = this._couvertsFiche / (this._fiche.yield || 1);
-    let quantite = "";
-    if (ligne.quantity) {
-      quantite = nombre(ligne.quantity * facteur, ligne.unit, langue);
-      if (ligne.quantity_max) quantite += `-${nombre(ligne.quantity_max * facteur, ligne.unit, langue)}`;
-      if (ligne.unit) quantite += ` ${ligne.unit}`;
-    } else if (ligne.vague) {
-      quantite = ligne.vague;
-    }
-    const notes = [ligne.note, ligne.optional && !String(ligne.note || "").includes(t.facultatif) ? t.facultatif : ""].filter(Boolean).join(", ");
-    return `<li>${quantite ? `<span class="quantite">${echapper(quantite)}</span> ` : ""}${echapper(ligne.name)}${notes ? ` <span class="note">(${echapper(notes)})</span>` : ""}</li>`;
-  }
-
-  _etape(etape, indice) {
-    let html = "";
-    let position = 0;
-    for (const minuteur of etape.timers) {
-      html += echapper(etape.text.slice(position, minuteur.start));
-      html += `<button class="lancer" title="${echapper(this._t.minuteur)}" data-secondes="${minuteur.seconds}" data-libelle="${echapper(minuteur.text)}">${echapper(minuteur.text)}</button>`;
-      position = minuteur.end;
-    }
-    html += echapper(etape.text.slice(position));
-    return `<li class="${this._etapesFaites.has(indice) ? "faite" : ""}" data-etape="${indice}"><span>${html}</span></li>`;
-  }
-
-  _rendreFiche() {
-    const f = this._fiche;
-    const t = this._t;
-    if (!f) return;
-    const temps = [
-      f.prep_minutes && `${t.preparation} ${duree(f.prep_minutes)}`,
-      f.cook_minutes && `${t.cuisson} ${duree(f.cook_minutes)}`,
-      f.total_minutes && `${t.total} ${duree(f.total_minutes)}`,
-    ].filter(Boolean);
-    const fenetre = this.shadowRoot.getElementById("fenetre");
-    fenetre.innerHTML = `
-      <div class="voile" id="voile">
-        <div class="fenetre" role="dialog" aria-modal="true" aria-label="${echapper(f.name)}">
-          <div class="minuteurs" id="minuteurs-fiche"></div>
-          <div class="entete">
-            <img id="photo" src="${echapper(f.image)}" alt="" hidden>
-            <button class="fermer" id="fermer" aria-label="${echapper(t.fermer)}">&times;</button>
-          </div>
-          <div class="corps">
-            <h2>${echapper(f.name)}</h2>
-            ${f.description ? `<p class="description">${echapper(f.description)}</p>` : ""}
-            ${temps.length ? `<div class="temps">${temps.map((x) => `<span>${echapper(x)}</span>`).join("")}</div>` : ""}
-            <div class="actions">
-              <button id="veille" class="${this._verrou ? "actif" : ""}">${echapper(this._verrou ? t.veilleActive : t.veille)}</button>
-              ${f.cookbook_url ? `<a href="${echapper(f.cookbook_url)}" target="_blank" rel="noopener">${echapper(t.cookbook)}</a>` : ""}
-              ${f.url ? `<a href="${echapper(f.url)}" target="_blank" rel="noopener">${echapper(t.source)}</a>` : ""}
-            </div>
-            <div class="colonnes">
-              <div>
-                <h3>${echapper(t.ingredients)}
-                  <span class="compteur">
-                    <button id="fiche-moins" aria-label="-">&minus;</button><span id="nombre">${this._couvertsFiche}</span><button id="fiche-plus" aria-label="+">+</button>
-                  </span>
-                </h3>
-                <ul class="ingredients" id="ingredients">${f.ingredients.map((l) => this._ligneIngredient(l)).join("")}</ul>
-                ${f.tools.length ? `<div class="ustensiles">${echapper(t.ustensiles)} : ${echapper(f.tools.join(", "))}</div>` : ""}
-              </div>
-              <div>
-                <h3>${echapper(t.etapes)}</h3>
-                <ol class="etapes" id="etapes">${f.steps.map((e, i) => this._etape(e, i)).join("")}</ol>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>`;
-    const photo = this.shadowRoot.getElementById("photo");
-    this._rendreMinuteurs();
-    photo.addEventListener("load", () => (photo.hidden = false));
-    photo.addEventListener("error", () => photo.remove());
-    this.shadowRoot.getElementById("fermer").addEventListener("click", () => this._fermerFiche());
-    this.shadowRoot.getElementById("voile").addEventListener("click", (e) => e.target.id === "voile" && this._fermerFiche());
-    this._echap = (e) => e.key === "Escape" && this._fermerFiche();
-    document.addEventListener("keydown", this._echap);
-    this.shadowRoot.getElementById("veille").addEventListener("click", () => this._basculerVeille());
-    const changer = (ecart) => {
-      this._couvertsFiche = Math.max(1, Math.min(50, this._couvertsFiche + ecart));
-      this.shadowRoot.querySelector(".fenetre #nombre").textContent = this._couvertsFiche;
-      this.shadowRoot.getElementById("ingredients").innerHTML = f.ingredients.map((l) => this._ligneIngredient(l)).join("");
-    };
-    this.shadowRoot.getElementById("fiche-moins").addEventListener("click", () => changer(-1));
-    this.shadowRoot.getElementById("fiche-plus").addEventListener("click", () => changer(1));
-    this.shadowRoot.getElementById("etapes").addEventListener("click", (e) => {
-      const bouton = e.target.closest(".lancer");
-      if (bouton) {
-        e.stopPropagation();
-        this._lancerMinuteur(Number(bouton.dataset.secondes), `${f.name} : ${bouton.dataset.libelle}`);
-        return;
-      }
-      const li = e.target.closest("li[data-etape]");
-      if (!li) return;
-      const indice = Number(li.dataset.etape);
-      if (this._etapesFaites.has(indice)) this._etapesFaites.delete(indice);
-      else this._etapesFaites.add(indice);
-      li.classList.toggle("faite");
-    });
-  }
-
-  async _basculerVeille() {
-    const t = this._t;
-    const bouton = this.shadowRoot.getElementById("veille");
-    try {
-      if (this._verrou) {
-        await this._verrou.release();
-        this._verrou = null;
-      } else if (navigator.wakeLock) {
-        this._verrou = await navigator.wakeLock.request("screen");
-        this._verrou.addEventListener("release", () => (this._verrou = null));
-      }
-    } catch (err) {
-      this._verrou = null;
-    }
-    if (bouton) {
-      bouton.classList.toggle("actif", Boolean(this._verrou));
-      bouton.textContent = this._verrou ? t.veilleActive : t.veille;
-    }
-  }
-
-  _lancerMinuteur(secondes, libelle) {
-    this._minuteurs.push({ id: Date.now() + Math.random(), libelle, fin: Date.now() + secondes * 1000, sonne: false });
-    if (!this._tic) this._tic = setInterval(() => this._rendreMinuteurs(), 1000);
-    this._rendreMinuteurs();
-  }
-
-  _rendreMinuteurs() {
-    // Barre de la carte, et barre collée en haut de la fiche recette quand elle est ouverte.
-    const conteneurs = ["minuteurs", "minuteurs-fiche"].map((id) => this.shadowRoot.getElementById(id)).filter(Boolean);
-    if (!conteneurs.length) return;
-    const t = this._t;
-    const maintenant = Date.now();
-    const html = this._minuteurs
-      .map((m) => {
-        const restant = (m.fin - maintenant) / 1000;
-        if (restant <= 0 && !m.sonne) {
-          m.sonne = true;
-          this._sonner();
-        }
-        const fini = restant <= 0;
-        return `<div class="minuteur ${fini ? "fini" : ""}"><span>${echapper(m.libelle)}</span><strong>${fini ? echapper(t.termine) : chrono(restant)}</strong><button data-arreter="${m.id}" title="${echapper(t.arreter)}" aria-label="${echapper(t.arreter)}">&times;</button></div>`;
-      })
-      .join("");
-    for (const conteneur of conteneurs) {
-      conteneur.innerHTML = html;
-      conteneur.querySelectorAll("button[data-arreter]").forEach((bouton) =>
-        bouton.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this._minuteurs = this._minuteurs.filter((m) => String(m.id) !== bouton.dataset.arreter);
-          this._rendreMinuteurs();
-        }),
-      );
-    }
-    if (!this._minuteurs.length && this._tic) {
-      clearInterval(this._tic);
-      this._tic = null;
-    }
-  }
-
-  _sonner() {
-    try {
-      const contexte = new (window.AudioContext || window.webkitAudioContext)();
-      [0, 0.4, 0.8].forEach((decalage) => {
-        const oscillateur = contexte.createOscillator();
-        const volume = contexte.createGain();
-        oscillateur.frequency.value = 880;
-        volume.gain.value = 0.25;
-        oscillateur.connect(volume).connect(contexte.destination);
-        oscillateur.start(contexte.currentTime + decalage);
-        oscillateur.stop(contexte.currentTime + decalage + 0.25);
-      });
-    } catch (err) {
-      /* son indisponible : le clignotement suffit */
-    }
-    if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
-  }
 }
 
 
@@ -1146,6 +1240,186 @@ class CookbookStockCard extends HTMLElement {
   }
 }
 
+class CookbookRecipesCard extends AvecFiche(HTMLElement) {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this._recettes = [];
+    this._categories = [];
+    this._categorie = null;
+    this._requete = "";
+    this._erreur = "";
+    this._chargement = null;
+    // La fenêtre de recette propose d'ajouter le plat au menu.
+    this._ajoutDepuisFiche = true;
+    this._initFiche();
+  }
+
+  setConfig(config) {
+    this._config = config || {};
+  }
+
+  static getStubConfig() {
+    return {};
+  }
+
+  getCardSize() {
+    return 8;
+  }
+
+  get _t() {
+    const langue = (this._hass && this._hass.language) || "en";
+    return TEXTES[langue.startsWith("fr") ? "fr" : "en"];
+  }
+
+  set hass(hass) {
+    const premier = !this._hass;
+    this._hass = hass;
+    if (premier) {
+      this._rendreSquelette();
+      this._charger();
+    }
+  }
+
+  connectedCallback() {
+    if (this._hass && !this._chargement) this._charger();
+  }
+
+  disconnectedCallback() {
+    this._chargement = null;
+    this._arreterFiche();
+  }
+
+  async _charger() {
+    this._chargement = (async () => {
+      try {
+        const message = { type: "nextcloud_cookbook_menu/catalog" };
+        if (this._config && this._config.config_entry_id) message.config_entry_id = this._config.config_entry_id;
+        const reponse = await this._hass.callWS(message);
+        this._entree = reponse.config_entry_id;
+        this._recettes = reponse.recipes.map((r) => ({
+          ...r,
+          cle: sansAccents(`${r.name} ${r.category || ""}`),
+        }));
+        this._categories = reponse.categories || [];
+        this._erreur = "";
+      } catch (err) {
+        this._erreur = this._t.nonConfigure;
+      }
+      this._rendre();
+    })();
+  }
+
+  _filtrees() {
+    const mots = sansAccents(this._requete).split(/\s+/).filter(Boolean);
+    return this._recettes.filter(
+      (r) =>
+        (!this._categorie || r.category === this._categorie) && mots.every((m) => r.cle.includes(m)),
+    );
+  }
+
+  _rendreSquelette() {
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: block; color: var(--primary-text-color); }
+        ha-card { padding: 16px; }
+        h2 { margin: 0 0 12px; font-size: 1.2em; font-weight: 500; display: flex; align-items: baseline; gap: 8px; }
+        h2 small { font-weight: 400; font-size: .7em; color: var(--secondary-text-color); }
+        input[type="search"] {
+          width: 100%; box-sizing: border-box; padding: 10px 12px; font-size: 1em;
+          border: 1px solid var(--divider-color); border-radius: 8px;
+          background: var(--card-background-color); color: var(--primary-text-color);
+        }
+        input[type="search"]:focus { outline: 2px solid var(--primary-color); border-color: transparent; }
+        .puces { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+        .puce {
+          border: 1px solid var(--divider-color); border-radius: 16px; padding: 4px 12px; cursor: pointer;
+          background: transparent; color: var(--primary-text-color); font-size: .9em;
+        }
+        .puce.actif { background: var(--primary-color); border-color: var(--primary-color); color: var(--text-primary-color, #fff); }
+        .ajouter {
+          border: none; border-radius: 8px; padding: 10px 16px; font-size: 1em; cursor: pointer;
+          background: var(--primary-color); color: var(--text-primary-color, #fff);
+        }
+        .grille {
+          display: grid; gap: 12px; margin-top: 12px;
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+        .vignette {
+          border: 1px solid var(--divider-color); border-radius: 12px; overflow: hidden; cursor: pointer;
+          background: var(--card-background-color); color: inherit; padding: 0; text-align: left; font: inherit;
+          display: flex; flex-direction: column;
+        }
+        .vignette:hover { border-color: var(--primary-color); }
+        .vignette .photo {
+          width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block;
+          background: var(--secondary-background-color);
+        }
+        .vignette .sans-photo { display: flex; align-items: center; justify-content: center; font-size: 1.6em; color: var(--secondary-text-color); }
+        .vignette .nom { padding: 8px 10px 2px; font-weight: 500; line-height: 1.25; }
+        .vignette .meta { padding: 0 10px 10px; color: var(--secondary-text-color); font-size: .85em; }
+        .vide { color: var(--secondary-text-color); font-size: .9em; padding: 12px 0; }
+        ${STYLE_FICHE}
+      </style>
+      <ha-card><div id="contenu"></div><div class="minuteurs" id="minuteurs"></div></ha-card>
+      <div id="fenetre"></div>`;
+  }
+
+  _rendre() {
+    const t = this._t;
+    const contenu = this.shadowRoot.getElementById("contenu");
+    if (!contenu) return;
+    if (this._erreur) {
+      contenu.innerHTML = `<h2>${echapper(this._config.title || t.titreRecettes)}</h2><div class="vide">${echapper(this._erreur)}</div>`;
+      return;
+    }
+    const filtrees = this._filtrees();
+    const categories = [null, ...this._categories]
+      .map(
+        (c) =>
+          `<button class="puce ${c === this._categorie ? "actif" : ""}" data-categorie="${echapper(c ?? "")}">${echapper(c ?? t.toutes)}</button>`,
+      )
+      .join("");
+    contenu.innerHTML = `
+      <h2>${echapper(this._config.title || t.titreRecettes)} <small>${echapper(t.recettesComptees(filtrees.length))}</small></h2>
+      <input type="search" id="saisie" placeholder="${echapper(t.rechercheRecettes)}" autocomplete="off" value="${echapper(this._requete)}">
+      ${this._categories.length ? `<div class="puces">${categories}</div>` : ""}
+      ${
+        filtrees.length
+          ? `<div class="grille">${filtrees
+              .map(
+                (r) => `<button class="vignette" data-recette="${echapper(r.id)}">
+                  <img class="photo" loading="lazy" src="${echapper(r.image)}" alt="" onerror="this.remove()">
+                  <span class="nom">${echapper(r.name)}</span>
+                  <span class="meta">${echapper([r.category, r.total_minutes ? duree(r.total_minutes) : ""].filter(Boolean).join(" · "))}</span>
+                </button>`,
+              )
+              .join("")}</div>`
+          : `<div class="vide">${echapper(t.aucuneRecette)}</div>`
+      }`;
+    const saisie = this.shadowRoot.getElementById("saisie");
+    saisie.addEventListener("input", () => {
+      this._requete = saisie.value;
+      this._rendre();
+      const champ = this.shadowRoot.getElementById("saisie");
+      champ.focus();
+      champ.setSelectionRange(champ.value.length, champ.value.length);
+    });
+    this.shadowRoot.querySelectorAll("[data-categorie]").forEach((bouton) =>
+      bouton.addEventListener("click", () => {
+        this._categorie = bouton.dataset.categorie || null;
+        this._rendre();
+      }),
+    );
+    this.shadowRoot.querySelectorAll("[data-recette]").forEach((vignette) =>
+      vignette.addEventListener("click", () => {
+        this._messageAjout = "";
+        this._ouvrirFiche({ recipe_id: vignette.dataset.recette });
+      }),
+    );
+  }
+}
+
 if (!customElements.get("cookbook-menu-card")) {
   customElements.define("cookbook-menu-card", CookbookMenuCard);
   window.customCards = window.customCards || [];
@@ -1164,6 +1438,17 @@ if (!customElements.get("cookbook-stock-card")) {
     type: "cookbook-stock-card",
     name: "Nextcloud Cookbook Menu : réserve",
     description: "Pantry, fridge and household stock kept up to date from the menu and the shopping list.",
+    preview: false,
+  });
+}
+
+if (!customElements.get("cookbook-recipes-card")) {
+  customElements.define("cookbook-recipes-card", CookbookRecipesCard);
+  window.customCards = window.customCards || [];
+  window.customCards.push({
+    type: "cookbook-recipes-card",
+    name: "Nextcloud Cookbook Menu : recettes",
+    description: "Browse your Nextcloud Cookbook recipes, open one and add it to the menu.",
     preview: false,
   });
 }

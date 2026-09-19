@@ -47,6 +47,28 @@ async def test_commande_recettes(hass: HomeAssistant, entree, hass_ws_client: We
     assert reponse["error"]["code"] == "not_found"
 
 
+async def test_commande_catalogue(hass: HomeAssistant, entree, hass_ws_client: WebSocketGenerator) -> None:
+    """Catalogue des recettes pour la carte de consultation (story 2.13)."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "nextcloud_cookbook_menu/catalog"})
+    reponse = await client.receive_json()
+    assert reponse["success"], reponse
+    resultat = reponse["result"]
+    assert (resultat["config_entry_id"], resultat["default_servings"]) == (entree.entry_id, 2)
+    assert len(resultat["recipes"]) == 57
+    noms = [r["name"] for r in resultat["recipes"]]
+    assert noms == sorted(noms, key=lambda n: n.lower().replace("Œ", "oe")) or noms[0] < noms[-1]
+    carry = next(r for r in resultat["recipes"] if r["id"] == "2176038")
+    assert (carry["name"], carry["category"]) == ("Carry de poulet", "Plats principaux")
+    assert carry["image"].startswith(f"/api/nextcloud_cookbook_menu/image/{entree.entry_id}/2176038/thumb?authSig=")
+    assert "Plats principaux" in resultat["categories"] and "" not in resultat["categories"]
+    assert all("total_minutes" in r and "servings" in r for r in resultat["recipes"])
+
+    await client.send_json_auto_id({"type": "nextcloud_cookbook_menu/catalog", "config_entry_id": "inconnue"})
+    reponse = await client.receive_json()
+    assert not reponse["success"] and reponse["error"]["code"] == "not_found"
+
+
 async def test_ajout_par_identifiant(hass: HomeAssistant, entree) -> None:
     reponse = await hass.services.async_call(
         DOMAIN,

@@ -74,6 +74,16 @@ Click a dish to open its recipe: photo, times, ingredients scaled to the serving
 
 The same can be done without the card with the entities *Recipe to add*, *Day*, *Servings* and the *Add to menu* button.
 
+### Browsing the recipes
+
+A second card lists every recipe, without going through the menu:
+
+```yaml
+type: custom:cookbook-recipes-card
+```
+
+A grid of thumbnails with the name, the category and the total time, a search field (accents ignored) and one chip per category. Click a recipe to open the same full view as from the menu: photo, ingredients scaled to the servings, steps and timers. From there, pick a day and the servings and add it to the menu in one click.
+
 ## Stock: pantry, fridge and household
 
 Nextcloud Cookbook Menu keeps track of what is at home without asking you to type anything:
