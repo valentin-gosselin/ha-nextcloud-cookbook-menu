@@ -122,10 +122,13 @@ def ws_reserve(hass: HomeAssistant, connexion: websocket_api.ActiveConnection, m
     {
         vol.Required("type"): "nextcloud_cookbook_menu/stock/update",
         vol.Optional("config_entry_id"): str,
-        vol.Required("action"): vol.In(["missing", "present", "remove", "check_pantry", "to_pantry"]),
+        vol.Required("action"): vol.In(
+            ["missing", "present", "remove", "check_pantry", "to_pantry", "recurring", "not_recurring"]
+        ),
         vol.Optional("key"): str,
         vol.Optional("name"): str,
         vol.Optional("names"): [str],
+        vol.Optional("weeks"): vol.All(vol.Coerce(int), vol.Range(min=1, max=52)),
         vol.Optional("missing"): [str],
     }
 )
@@ -143,6 +146,8 @@ def ws_reserve_modifier(
     try:
         if action == "check_pantry":
             planificateur.async_valider_placard(message.get("missing", []))
+        elif action == "recurring" and "name" in message:
+            planificateur.async_recurrent_ajouter(message["name"], message.get("weeks", 1))
         elif action == "to_pantry" and ("name" in message or "names" in message):
             noms = message.get("names", []) + ([message["name"]] if "name" in message else [])
             planificateur.async_reserve_au_placard(noms=noms)
@@ -155,6 +160,10 @@ def ws_reserve_modifier(
             planificateur.async_reserve_present(message["key"])
         elif action == "to_pantry":
             planificateur.async_reserve_au_placard(cle_produit=message["key"])
+        elif action == "recurring":
+            planificateur.async_recurrent_ajouter(message["key"], message.get("weeks", 1))
+        elif action == "not_recurring":
+            planificateur.async_recurrent_retirer(message["key"])
         else:
             planificateur.async_reserve_retirer(message["key"])
     except HomeAssistantError as err:

@@ -108,7 +108,7 @@ async def test_produit_au_frigo_signale_manquant(hass: HomeAssistant, mock_clien
     await ajouter(hass, "salade cesar")
     await cocher(hass, "Citron (1)")
     planificateur = config_entry.runtime_data.planner
-    assert planificateur.reserve()["fridge"] == [{"key": "citron", "name": "Citron", "quantity": "1", "days_left": 7}]
+    assert planificateur.reserve()["fridge"] == [{"key": "citron", "name": "Citron", "quantity": "1", "days_left": 21}]
     await ajouter_course(hass, "citron")  # « il n'y a plus de citron » : le frigo se vide
     assert (await courses(hass))["Citron (1)"]["status"] == "needs_action"
     assert planificateur.reserve()["home"] == []

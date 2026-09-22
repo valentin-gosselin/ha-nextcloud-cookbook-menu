@@ -36,6 +36,58 @@ _HERBE = Profil(
      "g": 1 / 30, "pièce": 1, "botte": 1},
 )  # fmt: skip
 
+# Conditionnements : ce qu'on achète vraiment en magasin. Une recette qui demande 10 g de beurre
+# fait acheter une plaquette, et le reste sert aux plats suivants. Clé produit -> {mesure: paquet}.
+CONDITIONNEMENTS: dict[str, dict[str, float]] = {
+    "beurre": {"g": 250},
+    "beurre allege": {"g": 250},
+    "beurre demi sel": {"g": 250},
+    "margarine": {"g": 250},
+    "creme fraiche": {"g": 200, "ml": 200},
+    "creme liquide": {"ml": 200},
+    "creme": {"g": 200, "ml": 200},
+    "lait": {"ml": 1000},
+    "lait amande": {"ml": 1000},
+    "lait vegetal": {"ml": 1000},
+    "yaourt": {"pièce": 4},
+    "fromage blanc": {"g": 500},
+    "mascarpone": {"g": 250},
+    "ricotta": {"g": 250},
+    "parmesan": {"g": 100},
+    "parmesan rape": {"g": 100},
+    "gruyere": {"g": 200},
+    "emmental": {"g": 200},
+    "fromage rape": {"g": 200},
+    "comte": {"g": 200},
+    "feta": {"g": 200},
+    "mozzarella": {"g": 125},
+    "chevre": {"g": 150},
+    "oeuf": {"pièce": 6},
+    "lardon": {"g": 200},
+    "lardon fume": {"g": 200},
+    "chorizo": {"g": 150},
+    "jambon": {"pièce": 4, "g": 200},
+    "saumon fume": {"g": 150},
+    "thon": {"boîte": 1, "g": 140},
+    "pomme terre": {"g": 1000},
+    "carotte": {"g": 500},
+    "champignon paris": {"g": 250},
+    "haricot vert frais": {"g": 500},
+    "salade verte": {"pièce": 1},
+    "vinaigre": {"ml": 500},
+    "sauce soja": {"ml": 250},
+    "moutarde": {"g": 200},
+    "mayonnaise": {"g": 250},
+    "ketchup": {"g": 300},
+}
+
+
+def conditionnement(cle: str, mesure: str) -> float | None:
+    """Taille du paquet acheté pour ce produit dans cette mesure, si elle est connue."""
+    paquets = CONDITIONNEMENTS.get(cle)
+    return paquets.get(mesure) if paquets else None
+
+
 PROFILS: dict[str, Profil] = {
     # Légumes et fruits à la pièce (poids moyens)
     "oignon": _piece(100),

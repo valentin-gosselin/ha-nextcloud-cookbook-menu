@@ -889,8 +889,8 @@ const TEXTES_RESERVE = {
     valider: "Valider",
     aRacheter: "À racheter",
     rien: "Rien à racheter",
-    placard: "Placard",
-    placardAide: "Touchez un produit quand il n'y en a plus.",
+    placard: "Toujours là",
+    placardAide: "Épices, huiles, farines. Touchez un produit quand il n'y en a plus.",
     placardGerer: "Gérer",
     placardFini: "Terminé",
     placardAideGerer: "Touchez un produit pour le sortir du placard.",
@@ -900,15 +900,25 @@ const TEXTES_RESERVE = {
     saisieLibre: (texte) => `Ajouter « ${texte} »`,
     aucuneProposition: "Aucun produit connu : Entrée pour l'ajouter tel quel",
     auPlacard: "Au placard",
-    frigo: "Frigo",
+    frigo: "Acheté pour le menu",
     frigoVide: "Rien d'acheté pour le menu en ce moment",
+    recurrents: "Racheté régulièrement",
+    recurrentsAide: "Ce qui part hors menu : beurre, lait, café.",
+    recurrentsVide: "Ajoutez ce que vous rachetez à intervalle régulier",
+    ajouterRecurrent: "Ajouter un produit récurrent",
+    frequence: (n) => (n === 1 ? "chaque semaine" : `toutes les ${n} semaines`),
+    dansJours: (n) => (n === 0 ? "à racheter" : `dans ${n} jour${n > 1 ? "s" : ""}`),
+    ajouterCourt: "Ajouter",
+    moinsSouvent: "Moins souvent",
+    plusSouvent: "Plus souvent",
+    retirer: "Retirer",
     maison: "Maison",
     maisonVide: "Les achats hors menu apparaîtront ici une fois cochés dans la liste de courses",
     jours: (n) => (n <= 0 ? "à consommer aujourd'hui" : `encore ${n} jour${n > 1 ? "s" : ""}`),
     plusRien: "Il n'y en a plus",
     jEnAi: "J'en ai",
     sortir: "Sortir de la réserve",
-    sortirFrigo: "Sortir du frigo",
+    sortirFrigo: "Retirer du stock",
     nonConfigure: "Nextcloud Cookbook Menu n'est pas configuré",
   },
   en: {
@@ -918,8 +928,8 @@ const TEXTES_RESERVE = {
     valider: "Confirm",
     aRacheter: "To buy again",
     rien: "Nothing to buy again",
-    placard: "Pantry",
-    placardAide: "Tap a product when you run out of it.",
+    placard: "Always in stock",
+    placardAide: "Spices, oils, flours. Tap a product when you run out of it.",
     placardGerer: "Manage",
     placardFini: "Done",
     placardAideGerer: "Tap a product to remove it from the pantry.",
@@ -929,15 +939,25 @@ const TEXTES_RESERVE = {
     saisieLibre: (texte) => `Add "${texte}"`,
     aucuneProposition: "No known product: press Enter to add it as typed",
     auPlacard: "To pantry",
-    frigo: "Fridge",
+    frigo: "Bought for the menu",
     frigoVide: "Nothing bought for the menu right now",
+    recurrents: "Bought regularly",
+    recurrentsAide: "What goes outside the menu: butter, milk, coffee.",
+    recurrentsVide: "Add what you buy again at a regular interval",
+    ajouterRecurrent: "Add a recurring product",
+    frequence: (n) => (n === 1 ? "every week" : `every ${n} weeks`),
+    dansJours: (n) => (n === 0 ? "to buy again" : `in ${n} day${n > 1 ? "s" : ""}`),
+    ajouterCourt: "Add",
+    moinsSouvent: "Less often",
+    plusSouvent: "More often",
+    retirer: "Remove",
     maison: "Household",
     maisonVide: "Items bought outside the menu show up here once checked on the shopping list",
     jours: (n) => (n <= 0 ? "use today" : `${n} day${n > 1 ? "s" : ""} left`),
     plusRien: "Out of stock",
     jEnAi: "In stock",
     sortir: "Remove from stock",
-    sortirFrigo: "Remove from fridge",
+    sortirFrigo: "Remove from stock",
     nonConfigure: "Nextcloud Cookbook Menu is not set up",
   },
 };
@@ -1031,10 +1051,13 @@ class CookbookStockCard extends HTMLElement {
         .puce.manque { border-color: var(--error-color); color: var(--error-color); }
         .verification { border: 1px solid var(--primary-color); border-radius: 12px; padding: 12px; margin-bottom: 8px; }
         .verification label { display: inline-flex; align-items: center; gap: 4px; margin: 4px 12px 4px 0; }
-        .ligne { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--divider-color); flex-wrap: wrap; }
-        .ligne .nom { flex: 1; min-width: 120px; }
+        .ligne { padding: 8px 0; border-bottom: 1px solid var(--divider-color); }
+        .ligne .nom { display: block; line-height: 1.3; }
+        .ligne .bas { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
         .ligne .detail { color: var(--secondary-text-color); font-size: .85em; }
         .ligne .detail.urgent { color: var(--error-color); }
+        .ligne .boutons { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+        .ligne .boutons button { white-space: nowrap; }
         button.action {
           border: 1px solid var(--divider-color); border-radius: 12px; background: transparent; cursor: pointer;
           color: var(--primary-text-color); padding: 2px 10px; font-size: .85em;
@@ -1090,12 +1113,38 @@ class CookbookStockCard extends HTMLElement {
         ? r.fridge
             .map(
               (f) => `<div class="ligne"><span class="nom">${echapper(f.name)}${f.quantity ? ` <span class="detail">(${echapper(f.quantity)})</span>` : ""}</span>
-                <span class="detail ${f.days_left !== null && f.days_left <= 1 ? "urgent" : ""}">${f.days_left === null ? "" : echapper(t.jours(f.days_left))}</span>
-                <button class="action" data-manquant="${echapper(f.key)}">${echapper(t.plusRien)}</button>
-                <button class="action" data-retirer="${echapper(f.key)}">${echapper(t.sortirFrigo)}</button></div>`,
+                <div class="bas">
+                  <span class="detail ${f.days_left !== null && f.days_left <= 1 ? "urgent" : ""}">${f.days_left === null ? "" : echapper(t.jours(f.days_left))}</span>
+                  <span class="boutons">
+                    <button class="action" data-manquant="${echapper(f.key)}">${echapper(t.plusRien)}</button>
+                    <button class="action" data-retirer="${echapper(f.key)}">${echapper(t.sortirFrigo)}</button>
+                  </span>
+                </div></div>`,
             )
             .join("")
         : `<div class="vide">${echapper(t.frigoVide)}</div>`}
+      <h3>${echapper(t.recurrents)} <small>${echapper(t.recurrentsAide)}</small></h3>
+      ${(r.recurring || []).length
+        ? (r.recurring || [])
+            .map(
+              (p) => `<div class="ligne"><span class="nom">${echapper(p.name)}</span>
+                <div class="bas">
+                  <span class="detail ${p.due ? "urgent" : ""}">${echapper(`${t.frequence(p.weeks)} · ${t.dansJours(p.days_left)}`)}</span>
+                  <span class="boutons">
+                    <button class="action" data-moins="${echapper(p.key)}" data-semaines="${p.weeks}" title="${echapper(t.moinsSouvent)}">&minus;</button>
+                    <button class="action" data-plus="${echapper(p.key)}" data-semaines="${p.weeks}" title="${echapper(t.plusSouvent)}">+</button>
+                    <button class="action" data-non-recurrent="${echapper(p.key)}">${echapper(t.retirer)}</button>
+                  </span>
+                </div></div>`,
+            )
+            .join("")
+        : `<div class="vide">${echapper(t.recurrentsVide)}</div>`}
+      <form class="ajout" id="ajout-recurrent">
+        <div class="champ">
+          <input id="nouveau-recurrent" type="search" autocomplete="off" placeholder="${echapper(t.ajouterRecurrent)}" aria-label="${echapper(t.ajouterRecurrent)}">
+        </div>
+        <button class="action" type="submit">${echapper(t.ajouterCourt)}</button>
+      </form>
       <h3>${echapper(t.placard)} <small>${echapper(this._gererPlacard ? t.placardAideGerer : t.placardAide)}</small>
         <button class="action" id="gerer">${echapper(this._gererPlacard ? t.placardFini : t.placardGerer)}</button></h3>
       <div class="puces">${r.pantry
@@ -1121,9 +1170,11 @@ class CookbookStockCard extends HTMLElement {
             .filter((m) => m.present)
             .map(
               (m) => `<div class="ligne"><span class="nom">${echapper(m.name)}${m.description ? ` <span class="detail">${echapper(m.description)}</span>` : ""}</span>
-                <button class="action" data-manquant="${echapper(m.key)}">${echapper(t.plusRien)}</button>
-                <button class="action" data-placard="${echapper(m.key)}">${echapper(t.auPlacard)}</button>
-                <button class="action" data-retirer="${echapper(m.key)}">${echapper(t.sortir)}</button></div>`,
+                <div class="bas"><span class="boutons">
+                  <button class="action" data-manquant="${echapper(m.key)}">${echapper(t.plusRien)}</button>
+                  <button class="action" data-placard="${echapper(m.key)}">${echapper(t.auPlacard)}</button>
+                  <button class="action" data-retirer="${echapper(m.key)}">${echapper(t.sortir)}</button>
+                </span></div></div>`,
             )
             .join("")
         : `<div class="vide">${echapper(t.maisonVide)}</div>`}
@@ -1135,6 +1186,25 @@ class CookbookStockCard extends HTMLElement {
     this.shadowRoot.getElementById("gerer").addEventListener("click", () => {
       this._gererPlacard = !this._gererPlacard;
       this._rendre();
+    });
+    this.shadowRoot.querySelectorAll("[data-moins]").forEach((b) =>
+      b.addEventListener("click", () =>
+        this._agir("recurring", b.dataset.moins, { weeks: Math.min(52, Number(b.dataset.semaines) + 1) }),
+      ),
+    );
+    this.shadowRoot.querySelectorAll("[data-plus]").forEach((b) =>
+      b.addEventListener("click", () =>
+        this._agir("recurring", b.dataset.plus, { weeks: Math.max(1, Number(b.dataset.semaines) - 1) }),
+      ),
+    );
+    this.shadowRoot.querySelectorAll("[data-non-recurrent]").forEach((b) =>
+      b.addEventListener("click", () => this._agir("not_recurring", b.dataset.nonRecurrent)),
+    );
+    this.shadowRoot.getElementById("ajout-recurrent").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const champ = this.shadowRoot.getElementById("nouveau-recurrent");
+      const nom = champ.value.trim();
+      if (nom) this._agir("recurring", null, { name: nom }).then(() => (champ.value = ""));
     });
     this._brancherAjout();
     this.shadowRoot.querySelectorAll("[data-verifier]").forEach((c) =>

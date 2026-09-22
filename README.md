@@ -96,7 +96,13 @@ Nextcloud Cookbook Menu keeps track of what is at home without asking you to typ
 - **Fridge**: checking a shopping line means you bought it. The quantity goes to the fridge, a line stays checked while the fridge covers the menu, and only what is missing is asked for. A cooked dish (checked in the menu) or a dish whose day has passed uses its share. Leftovers are reused by the next dishes. Fresh products are forgotten after 7 days, groceries after 60.
 - **Household**: items added by hand to the shopping list (toilet paper, a pan) join the stock once checked. They can be marked out of stock again, or removed from the stock.
 
-Products that keep (baking powder, honey, pasta, canned food: the pantry index) join the **pantry** when bought, not the fridge, and are not asked for again until you say you are out of them. Each fridge line has a *Remove from fridge* button, for something thrown away or checked by mistake.
+Products that keep (baking powder, honey, pasta, canned food: the pantry index) join the **pantry** when bought, not the fridge, and are not asked for again until you say you are out of them. Each stock line has a *Remove from stock* button, for something thrown away or checked by mistake.
+
+**Purchase packs**: a recipe asking for 10 g of butter buys a 250 g pack, nine eggs become a box of twelve. What is left over serves the next dishes instead of buying butter again every week.
+
+**Shelf life** is per product: garlic, onions and potatoes 30 days, eggs 21, tomatoes and salad 5, minced meat 2, 7 days for other fresh products and 60 for groceries.
+
+**Recurring products**: what goes outside the menu (butter for toast, milk, coffee) comes back on the list at its own pace, once a week by default, adjustable per product in the stock card.
 
 ```yaml
 type: custom:cookbook-stock-card

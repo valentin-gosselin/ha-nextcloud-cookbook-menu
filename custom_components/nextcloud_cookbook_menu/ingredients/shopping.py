@@ -10,7 +10,7 @@ import math
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
-from .achats import ALIAS, PROFILS, convertir, fusionner_mesures
+from .achats import ALIAS, PROFILS, conditionnement, convertir, fusionner_mesures
 from .aisles import Rayon, rayon
 from .normalize import sans_accents
 from .pantry import est_au_placard
@@ -48,12 +48,12 @@ class LigneCourses:
 
     @property
     def libelle(self) -> str:
-        quantites = formater_quantites(self.quantites)
+        quantites = formater_quantites(self.quantites, self.cle)
         return f"{self.nom} ({quantites})" if quantites else self.nom
 
     def mesure(self) -> dict[str, float]:
         """Quantités arrondies à l'achat, pour comparer deux calculs."""
-        return {m: arrondir(m, q) for m, q in self.quantites.items()}
+        return {m: arrondir(m, q, self.cle) for m, q in self.quantites.items()}
 
 
 def _mesure_et_valeur(ingredient: Ingredient, facteur: float) -> tuple[str, float] | None:
@@ -74,7 +74,10 @@ def _mesure_et_valeur(ingredient: Ingredient, facteur: float) -> tuple[str, floa
     return unite, quantite
 
 
-def arrondir(mesure: str, valeur: float) -> float:
+def arrondir(mesure: str, valeur: float, cle: str | None = None) -> float:
+    """Quantité réellement achetée : au paquet quand on le connaît, sinon au pas courant."""
+    if cle is not None and (paquet := conditionnement(cle, mesure)):
+        return math.ceil(round(valeur / paquet, 6)) * paquet
     if mesure == "g":
         pas = 10 if valeur < 100 else 50
         return math.ceil(round(valeur, 6) / pas) * pas
@@ -94,11 +97,11 @@ def _nombre(valeur: float) -> str:
     return texte.replace(".", ",")
 
 
-def formater_quantites(quantites: dict[str, float]) -> str:
+def formater_quantites(quantites: dict[str, float], cle: str | None = None) -> str:
     """« 1 kg + 2 gousses », avec arrondi à l'achat et unités lisibles."""
     morceaux = []
     for mesure, valeur in quantites.items():
-        arrondi = arrondir(mesure, valeur)
+        arrondi = arrondir(mesure, valeur, cle)
         if mesure == "g":
             morceaux.append(f"{_nombre(arrondi / 1000)} kg" if arrondi >= 1000 else f"{int(arrondi)} g")
         elif mesure == "ml":

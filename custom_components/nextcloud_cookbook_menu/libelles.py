@@ -13,6 +13,8 @@ _LIBELLES = {
         "pour": "{recette} pour {n}",
         "placard_epuise": "manque au placard",
         "au_frigo": "déjà au frigo : {quantite}",
+        "recurrent": "à racheter toutes les {n} semaines",
+        "recurrent_semaine": "à racheter chaque semaine",
     },
     "en": {
         "couverts": "{n} servings",
@@ -22,6 +24,8 @@ _LIBELLES = {
         "pour": "{recette} for {n}",
         "placard_epuise": "missing from the pantry",
         "au_frigo": "already in the fridge: {quantite}",
+        "recurrent": "to buy again every {n} weeks",
+        "recurrent_semaine": "to buy again every week",
     },
 }
 

@@ -7,9 +7,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [
 
 ### Ajouté
 - Minuteurs côté Home Assistant : un minuteur lancé depuis une recette démarre aussi un minuteur Assist sur l'appareil vocal choisi dans les options (il sonne dessus), démarre l'entité `timer` choisie, et émet l'événement `nextcloud_cookbook_menu_timer_started` pour les automatisations. Nouvelle action `start_timer`. Sans rien régler, le compte à rebours de la carte fonctionne comme avant.
-- Carte Réserve : bouton « Sortir du frigo » sur chaque produit, pour jeter un produit périmé ou corriger une erreur.
+- Carte Réserve : bouton « Retirer du stock » sur chaque produit, pour jeter un produit périmé ou corriger une erreur.
+- Produits récurrents : ce qui part hors menu (beurre des tartines, lait, café) revient dans la liste à sa fréquence, une semaine par défaut, réglable par produit dans la carte Réserve.
 
 ### Modifié
+- Achats au conditionnement réel : une recette qui demande 10 g de beurre fait acheter une plaquette de 250 g, 9 œufs deviennent une boîte de 12. Le reste sert aux plats suivants au lieu de racheter chaque semaine.
+- Durées de conservation par produit : ail, oignon et pommes de terre 30 jours, œufs 21, tomates et salade 5, viande hachée 2, au lieu de 7 jours pour tout le frais. Un produit inconnu compte désormais 7 jours et non 60.
+- Morceaux de boucherie et poissons reconnus (bavette, entrecôte, magret, dorade...) : ils étaient classés en épicerie, donc gardés 60 jours.
+- Les sections de la carte Réserve disent ce qu'elles font : « Toujours là » (présent ou manquant) et « Acheté pour le menu » (quantités et péremption).
 - Les minuteurs s'appellent « Étape 3 - Salade César » au lieu du seul nom de la recette.
 - Un produit qui se garde (index du placard : levure, miel, pâtes, conserves...) coché dans les courses rejoint le **placard** et non le frigo. Les produits déjà au frigo qui sont dans l'index y sont déplacés à la mise à jour.
 
@@ -20,6 +25,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [
 - Les photos sont servies en vignette (`.../image/<entrée>/<recette>/thumb`), pas en pleine taille, pour la grille.
 
 ### Corrigé
+- La tâche de minuit (consommation, expiration) s'exécutait hors de la boucle Home Assistant, ce qui est interdit pour du code qui touche à l'état.
 - La ressource Lovelace laissée par le domaine `cookbook_menu` (avant la 1.0.0) est retirée automatiquement.
 
 ## [1.0.0] - 2026-09-18

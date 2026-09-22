@@ -27,6 +27,7 @@ from .const import (
     DOMAIN,
 )
 from .ingredients import frigo
+from .ingredients.achats import PROFILS, conditionnement
 from .ingredients.aisles import Rayon, rayon
 from .ingredients.catalogue_placard import est_produit_de_placard, propositions
 from .ingredients.frigo import manque
@@ -471,7 +472,33 @@ class Planificateur:
     def _besoins(self, aujourdhui: date) -> dict[str, LigneCourses]:
         donnees = self.stockage.donnees
         lignes, _ = calculer(self._contributions(aujourdhui), self.placard(), donnees.placard_epuise)
-        return {ligne.cle: ligne for ligne in lignes}
+        besoins = {ligne.cle: ligne for ligne in lignes}
+        for cle_produit, produit in donnees.recurrents.items():
+            if not self._recurrent_du(produit, aujourdhui):
+                continue
+            ligne = besoins.get(cle_produit)
+            if ligne is None:
+                ligne = besoins[cle_produit] = LigneCourses(
+                    cle=cle_produit, nom=produit["nom"], rayon=rayon(cle_produit)
+                )
+            if not ligne.quantites:
+                ligne.quantites = dict(self._quantite_recurrente(cle_produit))
+        return besoins
+
+    @staticmethod
+    def _recurrent_du(produit: dict[str, Any], aujourdhui: date) -> bool:
+        """Un produit récurrent est à racheter tant qu'il n'a pas été acheté dans sa période."""
+        dernier = produit.get("dernier_achat")
+        if not dernier:
+            return True
+        semaines = max(1, int(produit.get("semaines", 1)))
+        return date.fromisoformat(dernier) + timedelta(weeks=semaines) <= aujourdhui
+
+    @staticmethod
+    def _quantite_recurrente(cle_produit: str) -> dict[str, float]:
+        """Un conditionnement du produit : une plaquette de beurre, une boîte d'œufs."""
+        mesure = PROFILS[cle_produit].achat if cle_produit in PROFILS else "pièce"
+        return {mesure: conditionnement(cle_produit, mesure) or 1}
 
     def liste_de_courses(self) -> list[LigneAffichee]:
         """Produits du menu (moins le frigo), produits du placard et de la maison qui manquent."""
@@ -481,15 +508,20 @@ class Planificateur:
         for ligne in self._besoins(self._aujourdhui()).values():
             sources = [textes["pour"].format(recette=r, n=n) for r, n in ligne.sources.items()]
             stock = donnees.frigo.get(ligne.cle, {}).get("quantites", {})
+            if (recurrent := donnees.recurrents.get(ligne.cle)) and self._recurrent_du(recurrent, self._aujourdhui()):
+                # Le beurre des tartines part sans passer par le menu : le stock ne compte plus.
+                stock = {}
+                semaines = max(1, int(recurrent.get("semaines", 1)))
+                sources.append(textes["recurrent_semaine"] if semaines == 1 else textes["recurrent"].format(n=semaines))
             if ligne.cle in donnees.placard_epuise:
                 libelle, fait = ligne.libelle, False
                 sources.append(textes["placard_epuise"])
             elif ligne.quantites:
                 reste = manque(ligne.quantites, stock)
                 fait = not reste
-                libelle = f"{ligne.nom} ({formater_quantites(reste)})" if reste else ligne.libelle
+                libelle = f"{ligne.nom} ({formater_quantites(reste, ligne.cle)})" if reste else ligne.libelle
                 if stock:
-                    sources.append(textes["au_frigo"].format(quantite=formater_quantites(stock)))
+                    sources.append(textes["au_frigo"].format(quantite=formater_quantites(stock, ligne.cle)))
             else:
                 libelle, fait = ligne.nom, ligne.cle in donnees.frigo
             affichees.append(
@@ -613,16 +645,29 @@ class Planificateur:
                 produit_maison["present"] = fait
         self._signaler_changement()
 
+    def _noter_achat(self, cle_produit: str) -> None:
+        """Date d'achat : sert la récurrence, et les propositions de récurrence à venir."""
+        donnees = self.stockage.donnees
+        aujourdhui = self._aujourdhui().isoformat()
+        dates = donnees.achats.setdefault(cle_produit, [])
+        if aujourdhui not in dates:
+            dates.append(aujourdhui)
+            del dates[:-6]
+        if recurrent := donnees.recurrents.get(cle_produit):
+            recurrent["dernier_achat"] = aujourdhui
+
     def _acheter(self, produit: LigneCourses) -> None:
         donnees = self.stockage.donnees
+        self._noter_achat(produit.cle)
         if est_produit_de_placard(produit.cle):
             # Levure, miel, pâtes : ça se garde, ça rejoint le placard et non le frigo.
             self._ranger_au_placard(produit.cle, produit.nom, present=True)
             return
+        self._noter_achat(produit.cle)
         stock = donnees.frigo.get(produit.cle, {}).get("quantites", {})
         # On achète des quantités arrondies (un citron entier, pas un demi).
         achat = (
-            {m: arrondir(m, v) for m, v in manque(produit.quantites, stock).items()}
+            {m: arrondir(m, v, produit.cle) for m, v in manque(produit.quantites, stock).items()}
             if produit.quantites
             else {"pièce": 1}
         )
@@ -652,6 +697,8 @@ class Planificateur:
         aujourdhui = aujourdhui or self._aujourdhui()
         donnees = self.stockage.donnees
         modifie = bool(frigo.expirer(donnees.frigo, aujourdhui))
+        # Un produit récurrent qui redevient à racheter doit réapparaître dans la liste.
+        modifie = modifie or any(self._recurrent_du(p, aujourdhui) for p in donnees.recurrents.values())
         for plat in self.menu:
             fini = plat.done or (plat.day is not None and plat.day < aujourdhui)
             if fini and not plat.consumed and (contribution := self._contribution(plat)) is not None:
@@ -690,13 +737,14 @@ class Planificateur:
         )
         return {
             "pantry_checked": donnees.placard_verifie,
+            "recurring": self.recurrents(),
             "pantry": sorted(placard, key=lambda p: sans_accents(p["name"])),
             "fridge": sorted(
                 (
                     {
                         "key": c,
                         "name": e["nom"],
-                        "quantity": formater_quantites(e["quantites"]),
+                        "quantity": formater_quantites(e["quantites"], c),
                         "days_left": (date.fromisoformat(e["expire"]) - aujourdhui).days if e.get("expire") else None,
                     }
                     for c, e in donnees.frigo.items()
@@ -716,6 +764,47 @@ class Planificateur:
                 key=lambda p: sans_accents(p["name"]),
             ),
         }
+
+    @callback
+    def async_recurrent_ajouter(self, nom: str, semaines: int = 1) -> None:
+        """Produit consommé hors menu (le beurre des tartines) : racheté toutes les N semaines."""
+        nom = nom.strip()
+        cle_produit = cle(nom)
+        if not cle_produit:
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="empty_dish")
+        donnees = self.stockage.donnees
+        existant = donnees.recurrents.get(cle_produit, {})
+        donnees.recurrents[cle_produit] = {
+            "nom": existant.get("nom") or nom,
+            "semaines": max(1, min(52, int(semaines))),
+            "dernier_achat": existant.get("dernier_achat"),
+        }
+        self._signaler_changement()
+
+    @callback
+    def async_recurrent_retirer(self, cle_produit: str) -> None:
+        """Le produit n'est plus racheté automatiquement."""
+        self.stockage.donnees.recurrents.pop(cle_produit, None)
+        self._signaler_changement()
+
+    def recurrents(self) -> list[dict[str, Any]]:
+        """Produits récurrents pour la carte, avec le nombre de jours avant le prochain achat."""
+        aujourdhui = self._aujourdhui()
+        lignes = []
+        for cle_produit, produit in self.stockage.donnees.recurrents.items():
+            dernier = produit.get("dernier_achat")
+            semaines = max(1, int(produit.get("semaines", 1)))
+            jours = 0 if not dernier else (date.fromisoformat(dernier) + timedelta(weeks=semaines) - aujourdhui).days
+            lignes.append(
+                {
+                    "key": cle_produit,
+                    "name": produit["nom"],
+                    "weeks": semaines,
+                    "days_left": max(0, jours),
+                    "due": self._recurrent_du(produit, aujourdhui),
+                }
+            )
+        return sorted(lignes, key=lambda p: sans_accents(p["name"]))
 
     @callback
     def async_reserve_present(self, cle_produit: str) -> None:

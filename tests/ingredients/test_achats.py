@@ -30,9 +30,10 @@ def libelles(*lignes: str) -> dict[str, str]:
             "Persil plat (1 bouquet)",
         ),
         (("400 g d'oignons", "2 oignons"), "oignon", "Oignons (6)"),
-        (("2 blancs d'oeuf", "50 g blanc d'oeuf", "3 oeufs", "2 jaunes d'œufs"), "oeuf", "Œufs (9)"),
+        # Conditionnements : on achète la plaquette et la boîte d'œufs, pas 150 g et 9 œufs.
+        (("2 blancs d'oeuf", "50 g blanc d'oeuf", "3 oeufs", "2 jaunes d'œufs"), "oeuf", "Œufs (12)"),
         (("30 ml de jus de citron", "0,5 citron", "Zeste de 1/2 citron"), "citron", "Citron (2)"),
-        (("1 noix de beurre", "1 c. à soupe de beurre", "100 g de beurre"), "beurre", "Beurre (150 g)"),
+        (("1 noix de beurre", "1 c. à soupe de beurre", "100 g de beurre"), "beurre", "Beurre (250 g)"),
         (("1 boîte de lait de coco", "20 cl de lait de coco"), "lait coco", "Lait de coco (2 boîtes)"),
         (("3 morceaux de gingembre",), "gingembre", "Gingembre (3 morceaux)"),
         (("1 verre de vin blanc sec", "20 cl de vin blanc sec"), "vin blanc sec", "Vin blanc sec (35 cl)"),

@@ -14,11 +14,60 @@ from .aisles import Rayon
 
 DUREE_FRAIS = timedelta(days=7)
 DUREE_EPICERIE = timedelta(days=60)
-_RAYONS_FRAIS = {Rayon.FRUITS_LEGUMES, Rayon.CREMERIE, Rayon.BOUCHERIE_POISSON, Rayon.BOULANGERIE}
+# Seuls ces rayons se gardent longtemps. Un produit non reconnu est traité comme du frais :
+# au pire il est oublié trop tôt et revient dans les courses, alors qu'une viande gardée
+# 60 jours ferait croire qu'on l'a encore.
+_RAYONS_LONGS = {Rayon.EPICERIE_SALEE, Rayon.EPICERIE_SUCREE, Rayon.SURGELES, Rayon.BOISSONS, Rayon.MAISON}
 
 
-def duree_de_vie(rayon: Rayon) -> timedelta:
-    return DUREE_FRAIS if rayon in _RAYONS_FRAIS else DUREE_EPICERIE
+# Durées de conservation par produit, quand le rayon ne suffit pas : l'ail et les pommes de terre
+# tiennent des semaines, la viande et la salade quelques jours.
+DUREES_PRODUITS: dict[str, int] = {
+    "ail": 30,
+    "oignon": 30,
+    "echalote": 30,
+    "pomme terre": 30,
+    "patate douce": 30,
+    "courge": 30,
+    "potimarron": 30,
+    "butternut": 30,
+    "gingembre": 21,
+    "citron": 21,
+    "orange": 14,
+    "pomme": 14,
+    "carotte": 14,
+    "chou": 14,
+    "oeuf": 21,
+    "fromage": 14,
+    "comte": 21,
+    "parmesan": 30,
+    "beurre": 30,
+    "lardon": 10,
+    "salade": 5,
+    "tomate": 5,
+    "champignon": 5,
+    "herbe": 5,
+    "persil": 5,
+    "coriandre": 5,
+    "basilic": 5,
+    "menthe": 5,
+    "poisson": 2,
+    "saumon": 2,
+    "crevette": 2,
+    "viande hachee": 2,
+    "boeuf hache": 2,
+    "pain": 3,
+}
+
+
+def duree_de_vie(rayon: Rayon, cle: str | None = None) -> timedelta:
+    """Durée de conservation : la table par produit d'abord, le rayon ensuite."""
+    if cle:
+        mots = cle.split()
+        for longueur in range(len(mots), 0, -1):
+            if (jours := DUREES_PRODUITS.get(" ".join(mots[:longueur]))) is not None:
+                return timedelta(days=jours)
+    return DUREE_EPICERIE if rayon in _RAYONS_LONGS else DUREE_FRAIS
 
 
 def ajouter(
@@ -33,7 +82,7 @@ def ajouter(
     entree = frigo.setdefault(cle, {"nom": nom, "quantites": {}})
     for mesure, valeur in quantites.items():
         entree["quantites"][mesure] = round(entree["quantites"].get(mesure, 0) + valeur, 4)
-    entree["expire"] = (jour + duree_de_vie(rayon)).isoformat()
+    entree["expire"] = (jour + duree_de_vie(rayon, cle)).isoformat()
 
 
 def retirer(frigo: dict[str, dict[str, Any]], cle: str, quantites: dict[str, float]) -> None:

@@ -71,6 +71,10 @@ class DonneesPlanificateur:
     frigo: dict[str, dict[str, Any]] = field(default_factory=dict)
     # Maison (hors menu et hors placard) : clé -> {nom, present (bool), description}.
     maison: dict[str, dict[str, Any]] = field(default_factory=dict)
+    # Produits récurrents (beurre des tartines) : clé -> {nom, semaines, dernier_achat}.
+    recurrents: dict[str, dict[str, Any]] = field(default_factory=dict)
+    # Dates des derniers achats par produit, pour proposer des récurrences.
+    achats: dict[str, list[str]] = field(default_factory=dict)
     # Le placard a été vérifié une première fois dans la carte.
     placard_verifie: bool = False
     # Plats passés : {day, recipe_id, summary, servings}.
@@ -86,6 +90,8 @@ class DonneesPlanificateur:
             "placard_retires": self.placard_retires,
             "frigo": self.frigo,
             "maison": self.maison,
+            "recurrents": self.recurrents,
+            "achats": self.achats,
             "placard_verifie": self.placard_verifie,
             "historique": self.historique,
             "synchro": self.synchro,
@@ -127,6 +133,8 @@ class DonneesPlanificateur:
             placard_retires=list(donnees.get("placard_retires", [])),
             frigo=frigo,
             maison=maison,
+            recurrents=dict(donnees.get("recurrents", {})),
+            achats=dict(donnees.get("achats", {})),
             placard_verifie=bool(donnees.get("placard_verifie", False)),
             historique=list(donnees.get("historique", [])),
             synchro=dict(donnees.get("synchro", {})),

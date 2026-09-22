@@ -76,7 +76,7 @@ async def test_cocher_c_est_acheter(hass: HomeAssistant, entree) -> None:
     await cocher(hass, "Tomates (2)")
     frigo = entree.runtime_data.planner.stockage.donnees.frigo
     assert frigo["tomate"]["quantites"] == {"pièce": 2}
-    assert frigo["tomate"]["expire"] == "2026-09-23"  # frais : 7 jours
+    assert frigo["tomate"]["expire"] == "2026-09-21"  # tomates : 5 jours (table par produit)
     ligne = (await courses(hass))["Tomates (2)"]
     assert ligne["status"] == "completed"
     assert ligne["description"] == "Carry de poulet pour 6, déjà au frigo : 2"
@@ -177,8 +177,8 @@ async def test_date_passee_consomme_et_restes_reutilises(hass: HomeAssistant, en
     await ajouter(hass, "salade cesar", description="pour 1")
     assert (await courses(hass))["Citron (1)"]["status"] == "completed"
 
-    # Au bout de 7 jours, le reste est oublié.
-    freezer.move_to("2026-09-25 00:05:00+02:00")
+    # Passé sa durée de conservation (21 jours pour un citron), le reste est oublié.
+    freezer.move_to("2026-10-09 00:05:00+02:00")
     planificateur.async_consommer()
     assert "citron" not in planificateur.stockage.donnees.frigo
 

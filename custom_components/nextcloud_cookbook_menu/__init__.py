@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
 import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.event import async_track_time_change
@@ -88,11 +89,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry)
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.runtime_data.sync.async_demarrer()
-    # Chaque nuit : part des plats de la veille retirée du frigo, produits expirés oubliés.
+
+    # Chaque nuit : part des plats de la veille retirée du frigo, produits expirés oubliés,
+    # produits récurrents remis dans les courses. Sans @callback, Home Assistant exécuterait
+    # ceci dans un fil d'exécution séparé, alors que le planificateur touche à l'état de HA.
+    @callback
+    def _chaque_nuit(_maintenant: datetime) -> None:
+        planificateur.async_consommer()
+
     planificateur.async_consommer()
-    entry.async_on_unload(
-        async_track_time_change(hass, lambda _maintenant: planificateur.async_consommer(), hour=0, minute=1, second=0)
-    )
+    entry.async_on_unload(async_track_time_change(hass, _chaque_nuit, hour=0, minute=1, second=0))
     return True
 
 
