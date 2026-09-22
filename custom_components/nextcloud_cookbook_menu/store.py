@@ -116,12 +116,16 @@ class DonneesPlanificateur:
             placard_ajouts.setdefault(cle_produit, produit["nom"])
             if not produit.get("present"):
                 placard_epuise.setdefault(cle_produit, produit["nom"])
+        frigo = dict(donnees.get("frigo", {}))
+        # Migration : un produit qui se garde, acheté pour le menu, était rangé au frigo.
+        for cle_produit in [c for c in frigo if est_produit_de_placard(c)]:
+            placard_ajouts.setdefault(cle_produit, frigo.pop(cle_produit)["nom"])
         return cls(
             menu=[PlatMenu.depuis_dict(p) for p in donnees.get("menu", [])],
             placard_epuise=placard_epuise,
             placard_ajouts=placard_ajouts,
             placard_retires=list(donnees.get("placard_retires", [])),
-            frigo=dict(donnees.get("frigo", {})),
+            frigo=frigo,
             maison=maison,
             placard_verifie=bool(donnees.get("placard_verifie", False)),
             historique=list(donnees.get("historique", [])),

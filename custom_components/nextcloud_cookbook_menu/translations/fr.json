@@ -104,7 +104,9 @@
           "pantry": "Placard",
           "sync_menu_entity": "Recopier le menu dans",
           "sync_shopping_entity": "Recopier la liste de courses dans",
-          "history_months": "Conservation de l'historique (mois)"
+          "history_months": "Conservation de l'historique (mois)",
+          "timer_device": "Appareil pour les minuteurs",
+          "timer_entity": "Entité minuteur"
         },
         "data_description": {
           "servings": "Nombre de personnes pour lesquelles un plat est prévu quand rien d'autre n'est précisé",
@@ -113,7 +115,9 @@
           "pantry": "Toujours à la maison : jamais ajoutés aux courses tant qu'ils ne sont pas signalés manquants (« il n'y a plus de... », ou la carte Réserve).",
           "sync_menu_entity": "Facultatif : une liste existante qui reçoit une copie du menu. Les lignes que vous y ajoutez vous-même ne sont jamais touchées.",
           "sync_shopping_entity": "Facultatif : la liste que vous ouvrez au magasin. Ce qui y est coché l'est aussi ici.",
-          "history_months": "Les plats plus anciens sont oubliés à chaque nouvelle semaine"
+          "history_months": "Les plats plus anciens sont oubliés à chaque nouvelle semaine",
+          "timer_device": "Facultatif : un appareil vocal qui sait tenir des minuteurs (Voice, satellite ESPHome). Le minuteur lancé depuis une recette y sonne à la fin.",
+          "timer_entity": "Facultatif : un minuteur existant (timer.*) démarré en même temps, pour vos automatisations et vos afficheurs."
         }
       }
     }
@@ -145,6 +149,9 @@
     },
     "no_recipe_selected": {
       "message": "Choisissez d'abord une recette"
+    },
+    "timer_device_unsupported": {
+      "message": "Cet appareil ne sait pas tenir de minuteur : {error}"
     }
   },
   "entity": {
@@ -311,6 +318,24 @@
         "product": {
           "name": "Produit",
           "description": "Nom du produit, par exemple huile d'olive."
+        }
+      }
+    },
+    "start_timer": {
+      "name": "Lancer un minuteur",
+      "description": "Lance un minuteur de cuisson : émet un événement, démarre l'entité minuteur et l'appareil vocal choisis dans les options.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Configuration",
+          "description": "Compte Nextcloud Cookbook à utiliser (facultatif s'il n'y en a qu'un)."
+        },
+        "seconds": {
+          "name": "Durée (secondes)",
+          "description": "Durée du minuteur en secondes, par exemple 1500 pour 25 minutes."
+        },
+        "name": {
+          "name": "Nom",
+          "description": "Nom annoncé et affiché, par exemple « Étape 3 - Carry de poulet »."
         }
       }
     }

@@ -113,3 +113,22 @@ out_of_stock:
       example: "huile d'olive"
       selector:
         text:
+
+start_timer:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: nextcloud_cookbook_menu
+    seconds:
+      required: true
+      example: 1500
+      selector:
+        number:
+          min: 1
+          max: 86400
+          mode: box
+    name:
+      example: "Étape 3 - Carry de poulet"
+      selector:
+        text:

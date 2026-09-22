@@ -226,25 +226,24 @@ async def test_cas_limites_de_la_reserve(hass: HomeAssistant, mock_client, confi
     await installer(hass, config_entry, pantry=["Sel"])  # l'huile d'olive n'est plus au placard
     planificateur = config_entry.runtime_data.planner
     await ajouter(hass, "couscous")
-    # « huile d'olive » sans quantité : cocher la range au frigo, décocher l'en sort.
+    donnees = planificateur.stockage.donnees
+    # L'huile d'olive se garde : cochée, elle rejoint le placard et non le frigo (story 2.14).
     await cocher(hass, "Huile d'olive")
-    assert "huile olive" in planificateur.stockage.donnees.frigo
-    await cocher(hass, "Huile d'olive", "needs_action")
-    assert "huile olive" not in planificateur.stockage.donnees.frigo
+    assert "huile olive" not in donnees.frigo
+    assert donnees.placard_ajouts == {"huile olive": "Huile d'olive"}
+    # Rangée au placard, la ligne quitte les courses : on revient en arrière depuis la carte.
+    assert not any(libelle.startswith("Huile") for libelle in await courses(hass))
+    planificateur.async_reserve_manquant("huile olive")
+    assert "Huile d'olive" in await courses(hass)
+    planificateur.async_reserve_retirer("huile olive")
+    assert donnees.placard_ajouts == {} and donnees.placard_epuise == {}
 
-    # Plat cuisiné : les ingrédients sans quantité ne changent pas le frigo.
-    await cocher(hass, "Huile d'olive")
+    # Un plat cuisiné ne change pas le frigo pour les ingrédients sans quantité.
     plat = planificateur.menu[0]
     planificateur.async_modifier_plat(plat.uid, fait=True)
-    assert "huile olive" in planificateur.stockage.donnees.frigo
+    assert "huile olive" not in donnees.frigo
 
-    # Produit de placard au frigo, signalé manquant : il rejoint le placard, à racheter.
-    planificateur.async_reserve_manquant("huile olive")
-    donnees = planificateur.stockage.donnees
-    assert "huile olive" not in donnees.frigo and donnees.placard_epuise == {"huile olive": "Huile d'olive"}
-    planificateur.async_reserve_present("huile olive")
-
-    # Autre produit au frigo, plus demandé par le menu : signalé manquant, il passe en maison.
+    # Produit au frigo, plus demandé par le menu : signalé manquant, il passe en maison.
     donnees.frigo["carotte"] = {"nom": "Carotte", "quantites": {"pièce": 2}, "expire": "2026-09-20"}
     planificateur.async_reserve_manquant("carotte")
     assert donnees.maison["carotte"]["present"] is False
@@ -312,6 +311,24 @@ async def test_index_du_placard(hass: HomeAssistant, mock_client, config_entry, 
     # « Il n'y a plus de sel » le remet au placard, à racheter.
     await ajouter_course(hass, "Sel")
     assert donnees.placard_retires == [] and donnees.placard_epuise["sel"] == "Sel"
+
+
+async def test_migration_du_frigo_vers_le_placard() -> None:
+    """Story 2.14 : les produits qui se gardent, achetés avant, quittent le frigo."""
+    from custom_components.nextcloud_cookbook_menu.store import DonneesPlanificateur
+
+    donnees = DonneesPlanificateur.depuis_dict(
+        {
+            "frigo": {
+                "levure chimique": {"nom": "Levure chimique", "quantites": {"sachet": 1}, "expire": "2026-11-15"},
+                "miel": {"nom": "Miel", "quantites": {"ml": 10}, "expire": "2026-11-15"},
+                "merguez": {"nom": "Merguez", "quantites": {"pièce": 4}, "expire": "2026-09-23"},
+            }
+        }
+    )
+    assert list(donnees.frigo) == ["merguez"]
+    assert donnees.placard_ajouts == {"levure chimique": "Levure chimique", "miel": "Miel"}
+    assert donnees.placard_epuise == {}
 
 
 async def test_migration_de_la_maison_vers_le_placard() -> None:

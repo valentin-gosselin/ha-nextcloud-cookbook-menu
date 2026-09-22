@@ -595,7 +595,7 @@ class Planificateur:
             elif fait and not ligne.fait:
                 self._acheter(produit)
             elif not fait and ligne.fait:
-                # Décoché : l'achat est annulé.
+                # Décoché : l'achat est annulé. Un produit rangé au placard n'a plus de ligne ici.
                 if produit.quantites:
                     frigo.retirer(donnees.frigo, produit.cle, produit.mesure())
                 else:
@@ -615,6 +615,10 @@ class Planificateur:
 
     def _acheter(self, produit: LigneCourses) -> None:
         donnees = self.stockage.donnees
+        if est_produit_de_placard(produit.cle):
+            # Levure, miel, pâtes : ça se garde, ça rejoint le placard et non le frigo.
+            self._ranger_au_placard(produit.cle, produit.nom, present=True)
+            return
         stock = donnees.frigo.get(produit.cle, {}).get("quantites", {})
         # On achète des quantités arrondies (un citron entier, pas un demi).
         achat = (
@@ -732,13 +736,9 @@ class Planificateur:
         elif cle_produit in produits_placard:
             donnees.placard_epuise[cle_produit] = produits_placard[cle_produit]
         elif cle_produit in donnees.frigo:
-            nom = donnees.frigo[cle_produit]["nom"]
-            if est_produit_de_placard(cle_produit):
-                self._ranger_au_placard(cle_produit, nom, present=False)
-            else:
-                del donnees.frigo[cle_produit]
-                if cle_produit not in self._besoins(self._aujourdhui()):
-                    donnees.maison[cle_produit] = {"nom": nom, "present": False, "description": None}
+            nom = donnees.frigo.pop(cle_produit)["nom"]
+            if cle_produit not in self._besoins(self._aujourdhui()):
+                donnees.maison[cle_produit] = {"nom": nom, "present": False, "description": None}
         else:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

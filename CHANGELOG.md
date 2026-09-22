@@ -3,6 +3,16 @@
 Toutes les évolutions notables de ce projet sont consignées ici.
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [SemVer](https://semver.org/lang/fr/).
 
+## [Unreleased]
+
+### Ajouté
+- Minuteurs côté Home Assistant : un minuteur lancé depuis une recette démarre aussi un minuteur Assist sur l'appareil vocal choisi dans les options (il sonne dessus), démarre l'entité `timer` choisie, et émet l'événement `nextcloud_cookbook_menu_timer_started` pour les automatisations. Nouvelle action `start_timer`. Sans rien régler, le compte à rebours de la carte fonctionne comme avant.
+- Carte Réserve : bouton « Sortir du frigo » sur chaque produit, pour jeter un produit périmé ou corriger une erreur.
+
+### Modifié
+- Les minuteurs s'appellent « Étape 3 - Salade César » au lieu du seul nom de la recette.
+- Un produit qui se garde (index du placard : levure, miel, pâtes, conserves...) coché dans les courses rejoint le **placard** et non le frigo. Les produits déjà au frigo qui sont dans l'index y sont déplacés à la mise à jour.
+
 ## [1.1.0] - 2026-09-19
 
 ### Ajouté

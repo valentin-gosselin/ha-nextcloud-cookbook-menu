@@ -46,6 +46,8 @@ Settings > Devices & services > Add integration > **Nextcloud Cookbook Menu**, t
 | Pantry staples | salt, pepper, oils, vinegar, sugar, flour, common spices | Never added to the shopping list. "Oil", "vinegar", "salt" and "pepper" also cover their variants. |
 | History retention | 24 months | Past dishes older than this are forgotten at each new week. |
 | Copy the menu to / Copy the shopping list to | none | An existing to-do list that receives a copy (see below). |
+| Device for timers | none | A voice device that can hold timers: a timer started from a recipe rings there. |
+| Timer entity | none | An existing `timer.*` started at the same time, for your automations and displays. |
 | Refresh interval | 30 minutes | How often recipes are reloaded from Nextcloud. |
 
 ## Entities
@@ -72,6 +74,8 @@ Type a few letters to find a recipe (accents are ignored), pick the day and the 
 
 Click a dish to open its recipe: photo, times, ingredients scaled to the servings (adjustable), numbered steps you can check off, and **timers**: every duration written in a step ("25 min", "1 h 30") is a button that starts a countdown, shown at the top of the recipe and in the card, which rings at the end. A *Keep screen on* button prevents the tablet from sleeping while cooking.
 
+A timer is named after the step it comes from ("Step 3 - Caesar salad"). It counts down in the card, and Home Assistant starts its own timer at the same time: on the voice device chosen in the options (it rings there), on the `timer.*` entity chosen in the options, and as the event `nextcloud_cookbook_menu_timer_started` (`name`, `seconds`, `config_entry_id`) for your own automations. Nothing to configure to keep the card countdown alone.
+
 The same can be done without the card with the entities *Recipe to add*, *Day*, *Servings* and the *Add to menu* button.
 
 ### Browsing the recipes
@@ -92,6 +96,8 @@ Nextcloud Cookbook Menu keeps track of what is at home without asking you to typ
 - **Fridge**: checking a shopping line means you bought it. The quantity goes to the fridge, a line stays checked while the fridge covers the menu, and only what is missing is asked for. A cooked dish (checked in the menu) or a dish whose day has passed uses its share. Leftovers are reused by the next dishes. Fresh products are forgotten after 7 days, groceries after 60.
 - **Household**: items added by hand to the shopping list (toilet paper, a pan) join the stock once checked. They can be marked out of stock again, or removed from the stock.
 
+Products that keep (baking powder, honey, pasta, canned food: the pantry index) join the **pantry** when bought, not the fridge, and are not asked for again until you say you are out of them. Each fridge line has a *Remove from fridge* button, for something thrown away or checked by mistake.
+
 ```yaml
 type: custom:cookbook-stock-card
 ```
@@ -109,6 +115,7 @@ The first time, the card asks you to check the pantry: everything is considered 
 | `nextcloud_cookbook_menu.get_history` | `recipe` (optional), `limit` | past dishes, most recent first |
 | `nextcloud_cookbook_menu.search_recipes` | `query`, `limit` | recipes with a similarity score |
 | `nextcloud_cookbook_menu.out_of_stock` | `product` | |
+| `nextcloud_cookbook_menu.start_timer` | `seconds`, `name` | |
 
 `config_entry_id` is optional when a single account is configured. Weekdays can be written in French or English ("jeudi", "thursday", "mercredi prochain").
 

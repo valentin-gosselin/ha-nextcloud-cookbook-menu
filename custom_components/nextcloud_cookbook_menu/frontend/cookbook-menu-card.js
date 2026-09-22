@@ -46,6 +46,7 @@ const TEXTES = {
     veille: "Garder l'écran allumé",
     veilleActive: "Écran maintenu allumé",
     minuteur: "Lancer un minuteur",
+    etape: "Étape",
     termine: "Terminé",
     arreter: "Arrêter",
     facultatif: "facultatif",
@@ -89,6 +90,7 @@ const TEXTES = {
     veille: "Keep screen on",
     veilleActive: "Screen kept on",
     minuteur: "Start a timer",
+    etape: "Step",
     termine: "Done",
     arreter: "Stop",
     facultatif: "optional",
@@ -357,7 +359,7 @@ const AvecFiche = (Base) =>
       let position = 0;
       for (const minuteur of etape.timers) {
         html += echapper(etape.text.slice(position, minuteur.start));
-        html += `<button class="lancer" title="${echapper(this._t.minuteur)}" data-secondes="${minuteur.seconds}" data-libelle="${echapper(minuteur.text)}">${echapper(minuteur.text)}</button>`;
+        html += `<button class="lancer" title="${echapper(this._t.minuteur)}" data-secondes="${minuteur.seconds}" data-etape="${indice + 1}">${echapper(minuteur.text)}</button>`;
         position = minuteur.end;
       }
       html += echapper(etape.text.slice(position));
@@ -431,7 +433,8 @@ const AvecFiche = (Base) =>
         const bouton = e.target.closest(".lancer");
         if (bouton) {
           e.stopPropagation();
-          this._lancerMinuteur(Number(bouton.dataset.secondes), `${f.name} : ${bouton.dataset.libelle}`);
+          // « Étape 3 - Salade César » : on sait où on en est quand le minuteur sonne.
+        this._lancerMinuteur(Number(bouton.dataset.secondes), `${t.etape} ${bouton.dataset.etape} - ${f.name}`);
           return;
         }
         const li = e.target.closest("li[data-etape]");
@@ -464,6 +467,12 @@ const AvecFiche = (Base) =>
     }
 
     _lancerMinuteur(secondes, libelle) {
+      // Minuteur côté Home Assistant (appareil vocal, entité minuteur, événement) en plus de la carte.
+      const donnees = { seconds: secondes, name: libelle };
+      if (this._entree) donnees.config_entry_id = this._entree;
+      this._hass
+        .callService("nextcloud_cookbook_menu", "start_timer", donnees)
+        .catch(() => {});
       this._minuteurs.push({ id: Date.now() + Math.random(), libelle, fin: Date.now() + secondes * 1000, sonne: false });
       if (!this._tic) this._tic = setInterval(() => this._rendreMinuteurs(), 1000);
       this._rendreMinuteurs();
@@ -899,6 +908,7 @@ const TEXTES_RESERVE = {
     plusRien: "Il n'y en a plus",
     jEnAi: "J'en ai",
     sortir: "Sortir de la réserve",
+    sortirFrigo: "Sortir du frigo",
     nonConfigure: "Nextcloud Cookbook Menu n'est pas configuré",
   },
   en: {
@@ -927,6 +937,7 @@ const TEXTES_RESERVE = {
     plusRien: "Out of stock",
     jEnAi: "In stock",
     sortir: "Remove from stock",
+    sortirFrigo: "Remove from fridge",
     nonConfigure: "Nextcloud Cookbook Menu is not set up",
   },
 };
@@ -1080,7 +1091,8 @@ class CookbookStockCard extends HTMLElement {
             .map(
               (f) => `<div class="ligne"><span class="nom">${echapper(f.name)}${f.quantity ? ` <span class="detail">(${echapper(f.quantity)})</span>` : ""}</span>
                 <span class="detail ${f.days_left !== null && f.days_left <= 1 ? "urgent" : ""}">${f.days_left === null ? "" : echapper(t.jours(f.days_left))}</span>
-                <button class="action" data-manquant="${echapper(f.key)}">${echapper(t.plusRien)}</button></div>`,
+                <button class="action" data-manquant="${echapper(f.key)}">${echapper(t.plusRien)}</button>
+                <button class="action" data-retirer="${echapper(f.key)}">${echapper(t.sortirFrigo)}</button></div>`,
             )
             .join("")
         : `<div class="vide">${echapper(t.frigoVide)}</div>`}

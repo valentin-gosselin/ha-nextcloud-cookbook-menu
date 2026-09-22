@@ -104,7 +104,9 @@
           "pantry": "Pantry staples",
           "sync_menu_entity": "Copy the menu to",
           "sync_shopping_entity": "Copy the shopping list to",
-          "history_months": "History retention (months)"
+          "history_months": "History retention (months)",
+          "timer_device": "Device for timers",
+          "timer_entity": "Timer entity"
         },
         "data_description": {
           "servings": "Number of people a dish is planned for when nothing else is specified",
@@ -113,7 +115,9 @@
           "pantry": "Always at home: never added to the shopping list unless marked as missing (\"we're out of...\" or the Stock card).",
           "sync_menu_entity": "Optional: an existing to-do list that receives a copy of the menu. Items you add there yourself are never touched.",
           "sync_shopping_entity": "Optional: the to-do list you open at the store. Items checked there are checked here too.",
-          "history_months": "Past dishes older than this are forgotten at each new week"
+          "history_months": "Past dishes older than this are forgotten at each new week",
+          "timer_device": "Optional: a voice device that can hold timers (Voice, ESPHome satellite). A timer started from a recipe rings there.",
+          "timer_entity": "Optional: an existing timer (timer.*) started at the same time, for your automations and displays."
         }
       }
     }
@@ -145,6 +149,9 @@
     },
     "no_recipe_selected": {
       "message": "Choose a recipe first"
+    },
+    "timer_device_unsupported": {
+      "message": "This device cannot hold timers: {error}"
     }
   },
   "entity": {
@@ -311,6 +318,24 @@
         "product": {
           "name": "Product",
           "description": "Name of the product, for example olive oil."
+        }
+      }
+    },
+    "start_timer": {
+      "name": "Start a timer",
+      "description": "Starts a cooking timer: fires an event, starts the timer entity and the voice device chosen in the options.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Configuration",
+          "description": "Nextcloud Cookbook account to use (optional when there is only one)."
+        },
+        "seconds": {
+          "name": "Duration (seconds)",
+          "description": "Timer duration in seconds, for example 1500 for 25 minutes."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Name announced and displayed, for example “Step 3 - Chicken curry”."
         }
       }
     }

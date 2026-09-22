@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
 import voluptuous as vol
@@ -9,10 +10,10 @@ from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import service
+from homeassistant.helpers import intent, service
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import CONF_TIMER_DEVICE, CONF_TIMER_ENTITY, DOMAIN, EVENEMENT_MINUTEUR
 from .jours import lire_jour
 from .planner import INCHANGE, Planificateur
 
@@ -31,7 +32,10 @@ SERVICE_NEW_WEEK = "new_week"
 SERVICE_SEARCH_RECIPES = "search_recipes"
 SERVICE_GET_HISTORY = "get_history"
 SERVICE_OUT_OF_STOCK = "out_of_stock"
+SERVICE_START_TIMER = "start_timer"
 ATTR_PRODUCT = "product"
+ATTR_NAME = "name"
+ATTR_SECONDS = "seconds"
 
 _ENTREE = {vol.Optional(ATTR_CONFIG_ENTRY_ID): cv.string}
 _COUVERTS = vol.All(vol.Coerce(int), vol.Range(min=1, max=50))
@@ -64,6 +68,13 @@ SCHEMA_HISTORY = vol.Schema(
     }
 )
 SCHEMA_OUT_OF_STOCK = vol.Schema({**_ENTREE, vol.Required(ATTR_PRODUCT): vol.All(cv.string, vol.Length(min=1))})
+SCHEMA_START_TIMER = vol.Schema(
+    {
+        **_ENTREE,
+        vol.Required(ATTR_SECONDS): vol.All(vol.Coerce(int), vol.Range(min=1, max=24 * 3600)),
+        vol.Optional(ATTR_NAME): cv.string,
+    }
+)
 SCHEMA_SEARCH = vol.Schema(
     {
         **_ENTREE,
@@ -132,6 +143,41 @@ async def _manque(appel: ServiceCall) -> None:
     _planificateur(appel).async_ajouter_course(appel.data[ATTR_PRODUCT])
 
 
+async def _minuteur(appel: ServiceCall) -> None:
+    """Lance un minuteur : événement pour les automatisations, minuteur Assist, entité minuteur."""
+    hass = appel.hass
+    entree = service.async_get_config_entry(hass, DOMAIN, appel.data.get(ATTR_CONFIG_ENTRY_ID))
+    secondes = appel.data[ATTR_SECONDS]
+    nom = appel.data.get(ATTR_NAME) or ""
+    hass.bus.async_fire(
+        EVENEMENT_MINUTEUR,
+        {"config_entry_id": entree.entry_id, "name": nom, "seconds": secondes},
+    )
+    if entite := entree.options.get(CONF_TIMER_ENTITY):
+        await hass.services.async_call(
+            "timer",
+            "start",
+            {"entity_id": entite, "duration": str(timedelta(seconds=secondes))},
+            blocking=True,
+        )
+    if appareil := entree.options.get(CONF_TIMER_DEVICE):
+        try:
+            await intent.async_handle(
+                hass,
+                DOMAIN,
+                intent.INTENT_START_TIMER,
+                {"seconds": {"value": secondes}, **({"name": {"value": nom}} if nom else {})},
+                device_id=appareil,
+                language=hass.config.language,
+            )
+        except intent.IntentError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="timer_device_unsupported",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+
 async def _chercher(appel: ServiceCall) -> ServiceResponse:
     planificateur = _planificateur(appel)
     return {
@@ -164,6 +210,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(DOMAIN, SERVICE_OUT_OF_STOCK, _manque, schema=SCHEMA_OUT_OF_STOCK)
+    hass.services.async_register(DOMAIN, SERVICE_START_TIMER, _minuteur, schema=SCHEMA_START_TIMER)
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_HISTORY,

@@ -20,6 +20,9 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    DeviceSelector,
+    DeviceSelectorConfig,
+    EntityFilterSelectorConfig,
     EntitySelector,
     EntitySelectorConfig,
     NumberSelector,
@@ -51,6 +54,8 @@ from .const import (
     CONF_SERVINGS,
     CONF_SYNC_MENU_ENTITY,
     CONF_SYNC_SHOPPING_ENTITY,
+    CONF_TIMER_DEVICE,
+    CONF_TIMER_ENTITY,
     DEFAULT_HISTORY_MONTHS,
     DEFAULT_SCAN_INTERVAL_MINUTES,
     DEFAULT_SERVINGS,
@@ -332,6 +337,12 @@ class CookbookMenuOptionsFlow(OptionsFlowWithReload):
                 vol.Required(
                     CONF_HISTORY_MONTHS, default=options.get(CONF_HISTORY_MONTHS, DEFAULT_HISTORY_MONTHS)
                 ): NumberSelector(NumberSelectorConfig(min=1, max=120, step=1, mode=NumberSelectorMode.BOX)),
+                vol.Optional(
+                    CONF_TIMER_DEVICE, description={"suggested_value": options.get(CONF_TIMER_DEVICE)}
+                ): DeviceSelector(DeviceSelectorConfig(entity=[EntityFilterSelectorConfig(domain="assist_satellite")])),
+                vol.Optional(
+                    CONF_TIMER_ENTITY, description={"suggested_value": options.get(CONF_TIMER_ENTITY)}
+                ): EntitySelector(EntitySelectorConfig(domain="timer")),
                 vol.Required(
                     CONF_SCAN_INTERVAL_MINUTES,
                     default=options.get(CONF_SCAN_INTERVAL_MINUTES, DEFAULT_SCAN_INTERVAL_MINUTES),

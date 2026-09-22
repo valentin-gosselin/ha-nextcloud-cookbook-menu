@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 
 import pytest
@@ -11,6 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from custom_components.nextcloud_cookbook_menu.api import CookbookConnectionError, Recipe
+from custom_components.nextcloud_cookbook_menu.ingredients import frigo
+from custom_components.nextcloud_cookbook_menu.ingredients.aisles import Rayon
 
 from .test_menu import ajouter, elements
 
@@ -94,10 +97,25 @@ async def test_cocher_c_est_acheter(hass: HomeAssistant, entree) -> None:
 async def test_epicerie_expire_plus_tard(hass: HomeAssistant, entree) -> None:
     await ajouter(hass, "couscous")
     await cocher(hass, "Merguez (4)")
+    donnees = entree.runtime_data.planner.stockage.donnees
+    assert donnees.frigo["merguez"]["expire"] == "2026-09-23"  # frais : 7 jours
+
+    # Épicerie : 60 jours (produit sans rapport avec l'index du placard).
+    frigo.ajouter(donnees.frigo, "sachet", "Sachet", {"pièce": 1}, Rayon.EPICERIE_SALEE, date(2026, 9, 16))
+    assert donnees.frigo["sachet"]["expire"] == "2026-11-15"
+
+    # Les pois chiches se gardent : ils rejoignent le placard, pas le frigo (story 2.14).
     await cocher(hass, "Pois chiches (150 g)")
-    frigo = entree.runtime_data.planner.stockage.donnees.frigo
-    assert frigo["merguez"]["expire"] == "2026-09-23"
-    assert frigo["pois chiche"]["expire"] == "2026-11-15"  # épicerie : 60 jours
+    assert "pois chiche" not in donnees.frigo
+    assert donnees.placard_ajouts == {"pois chiche": "Pois chiches"}
+    assert not any(libelle.startswith("Pois chiches") for libelle in await courses(hass))
+
+    # Produit sans quantité : coché il entre au frigo, décoché il en sort.
+    await ajouter(hass, "cordon bleu")
+    await cocher(hass, "Beurre")
+    assert "beurre" in donnees.frigo
+    await cocher(hass, "Beurre", "needs_action")
+    assert "beurre" not in donnees.frigo
 
 
 async def test_recette_modifiee_apres_achat(hass: HomeAssistant, entree, recettes) -> None:
