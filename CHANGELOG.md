@@ -14,6 +14,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [
 - Achats au conditionnement réel : une recette qui demande 10 g de beurre fait acheter une plaquette de 250 g, 9 œufs deviennent une boîte de 12. Le reste sert aux plats suivants au lieu de racheter chaque semaine.
 - Durées de conservation par produit : ail, oignon et pommes de terre 30 jours, œufs 21, tomates et salade 5, viande hachée 2, au lieu de 7 jours pour tout le frais. Un produit inconnu compte désormais 7 jours et non 60.
 - Morceaux de boucherie et poissons reconnus (bavette, entrecôte, magret, dorade...) : ils étaient classés en épicerie, donc gardés 60 jours.
+- Carte Réserve en onglets (« À racheter », « Acheté pour le menu », « Racheté régulièrement », « Toujours là », « Maison ») avec un compteur par onglet, et lignes compactes à boutons en icônes : la carte tient sur un écran au lieu de dérouler tout le stock. L'onglet choisi est retenu sur l'appareil.
 - Les sections de la carte Réserve disent ce qu'elles font : « Toujours là » (présent ou manquant) et « Acheté pour le menu » (quantités et péremption).
 - Les minuteurs s'appellent « Étape 3 - Salade César » au lieu du seul nom de la recette.
 - Un produit qui se garde (index du placard : levure, miel, pâtes, conserves...) coché dans les courses rejoint le **placard** et non le frigo. Les produits déjà au frigo qui sont dans l'index y sont déplacés à la mise à jour.

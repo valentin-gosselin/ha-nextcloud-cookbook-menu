@@ -108,6 +108,8 @@ Products that keep (baking powder, honey, pasta, canned food: the pantry index) 
 type: custom:cookbook-stock-card
 ```
 
+The card is organised in tabs (*To buy again*, *Bought for the menu*, *Bought regularly*, *Always in stock*, *Household*), each with a counter, so it stays the height of one screen whatever the size of your stock.
+
 The first time, the card asks you to check the pantry: everything is considered in stock, uncheck what is missing.
 
 ## Actions

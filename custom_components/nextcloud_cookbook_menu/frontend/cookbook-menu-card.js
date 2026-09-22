@@ -908,6 +908,7 @@ const TEXTES_RESERVE = {
     ajouterRecurrent: "Ajouter un produit récurrent",
     frequence: (n) => (n === 1 ? "chaque semaine" : `toutes les ${n} semaines`),
     dansJours: (n) => (n === 0 ? "à racheter" : `dans ${n} jour${n > 1 ? "s" : ""}`),
+    joursCourt: (n) => (n <= 0 ? "aujourd'hui" : `${n} j`),
     ajouterCourt: "Ajouter",
     moinsSouvent: "Moins souvent",
     plusSouvent: "Plus souvent",
@@ -947,6 +948,7 @@ const TEXTES_RESERVE = {
     ajouterRecurrent: "Add a recurring product",
     frequence: (n) => (n === 1 ? "every week" : `every ${n} weeks`),
     dansJours: (n) => (n === 0 ? "to buy again" : `in ${n} day${n > 1 ? "s" : ""}`),
+    joursCourt: (n) => (n <= 0 ? "today" : `${n} d`),
     ajouterCourt: "Add",
     moinsSouvent: "Less often",
     plusSouvent: "More often",
@@ -1032,6 +1034,133 @@ class CookbookStockCard extends HTMLElement {
     return this._hass.callWS(message);
   }
 
+  get _onglet() {
+    if (!this._ongletChoisi) {
+      try {
+        this._ongletChoisi = localStorage.getItem("cookbook-stock-card-onglet") || "racheter";
+      } catch (err) {
+        this._ongletChoisi = "racheter";
+      }
+    }
+    return this._ongletChoisi;
+  }
+
+  set _onglet(valeur) {
+    this._ongletChoisi = valeur;
+    try {
+      localStorage.setItem("cookbook-stock-card-onglet", valeur);
+    } catch (err) {
+      /* navigation privée : l'onglet n'est pas retenu, tant pis */
+    }
+  }
+
+  _sections() {
+    const t = this._t;
+    const r = this._reserve;
+    return [
+      { cle: "racheter", titre: t.aRacheter, n: r.pantry.filter((p) => p.missing).length + r.home.filter((m) => !m.present).length },
+      { cle: "stock", titre: t.frigo, n: r.fridge.length },
+      { cle: "recurrents", titre: t.recurrents, n: (r.recurring || []).length },
+      { cle: "placard", titre: t.placard, n: r.pantry.length },
+      { cle: "maison", titre: t.maison, n: r.home.filter((m) => m.present).length },
+    ];
+  }
+
+  _jours(f) {
+    const t = this._t;
+    if (f.days_left === null) return "";
+    const urgent = f.days_left <= 1 ? "urgent" : "";
+    return `<span class="detail ${urgent}">${echapper(t.joursCourt(f.days_left))}</span>`;
+  }
+
+  _icone(attribut, cle, icone, titre) {
+    return `<button class="icone" ${attribut}="${echapper(cle)}" title="${echapper(titre)}" aria-label="${echapper(titre)}"><ha-icon icon="${icone}"></ha-icon></button>`;
+  }
+
+  _rendreSection(cle) {
+    const t = this._t;
+    const r = this._reserve;
+    if (cle === "racheter") {
+      const aRacheter = [
+        ...r.pantry.filter((p) => p.missing).map((p) => ({ cle: p.key, nom: p.name })),
+        ...r.home.filter((m) => !m.present).map((m) => ({ cle: m.key, nom: m.name })),
+      ];
+      return aRacheter.length
+        ? `<div class="puces">${aRacheter.map((p) => `<button class="puce manque" data-present="${echapper(p.cle)}" title="${echapper(t.jEnAi)}">${echapper(p.nom)}</button>`).join("")}</div>`
+        : `<div class="vide">${echapper(t.rien)}</div>`;
+    }
+    if (cle === "stock") {
+      return r.fridge.length
+        ? r.fridge
+            .map(
+              (f) => `<div class="ligne">
+                <span class="nom">${echapper(f.name)}${f.quantity ? ` <span class="detail">(${echapper(f.quantity)})</span>` : ""}</span>
+                ${this._jours(f)}
+                <span class="boutons">
+                  ${this._icone("data-manquant", f.key, "mdi:cart-plus", t.plusRien)}
+                  ${this._icone("data-retirer", f.key, "mdi:delete-outline", t.sortirFrigo)}
+                </span></div>`,
+            )
+            .join("")
+        : `<div class="vide">${echapper(t.frigoVide)}</div>`;
+    }
+    if (cle === "recurrents") {
+      const lignes = (r.recurring || [])
+        .map(
+          (p) => `<div class="ligne">
+            <span class="nom">${echapper(p.name)}</span>
+            <span class="detail ${p.due ? "urgent" : ""}">${echapper(`${t.frequence(p.weeks)} · ${t.dansJours(p.days_left)}`)}</span>
+            <span class="boutons">
+              <button class="icone" data-moins="${echapper(p.key)}" data-semaines="${p.weeks}" title="${echapper(t.moinsSouvent)}">&minus;</button>
+              <button class="icone" data-plus="${echapper(p.key)}" data-semaines="${p.weeks}" title="${echapper(t.plusSouvent)}">+</button>
+              ${this._icone("data-non-recurrent", p.key, "mdi:delete-outline", t.retirer)}
+            </span></div>`,
+        )
+        .join("");
+      return `<div class="aide">${echapper(t.recurrentsAide)}</div>
+        ${lignes || `<div class="vide">${echapper(t.recurrentsVide)}</div>`}
+        <form class="ajout" id="ajout-recurrent">
+          <div class="champ"><input id="nouveau-recurrent" type="search" autocomplete="off" placeholder="${echapper(t.ajouterRecurrent)}" aria-label="${echapper(t.ajouterRecurrent)}"></div>
+          <button class="action" type="submit">${echapper(t.ajouterCourt)}</button>
+        </form>`;
+    }
+    if (cle === "placard") {
+      return `<div class="aide">${echapper(this._gererPlacard ? t.placardAideGerer : t.placardAide)}
+          <button class="action" id="gerer">${echapper(this._gererPlacard ? t.placardFini : t.placardGerer)}</button></div>
+        <div class="puces">${r.pantry
+          .filter((p) => this._gererPlacard || !p.missing)
+          .map((p) =>
+            this._gererPlacard
+              ? `<button class="puce retirer" data-retirer="${echapper(p.key)}" title="${echapper(t.sortir)}">${echapper(p.name)}</button>`
+              : `<button class="puce" data-manquant="${echapper(p.key)}" title="${echapper(t.plusRien)}">${echapper(p.name)}</button>`,
+          )
+          .join("")}</div>
+        <form class="ajout" id="ajout" autocomplete="off">
+          <div class="champ">
+            <input id="nouveau" type="search" role="combobox" aria-expanded="${this._popover}" aria-controls="propositions"
+              placeholder="${echapper(t.ajouterPlacardExemple)}" aria-label="${echapper(t.ajouterPlacard)}" value="${echapper(this._saisie)}">
+            <div class="propositions" id="propositions" role="listbox" aria-multiselectable="true" ${this._popover ? "" : "hidden"}></div>
+          </div>
+          <button class="action principal" type="submit" id="valider-ajout">${echapper(this._choisis.size ? t.ajouterN(this._choisis.size) : t.ajouterCourt)}</button>
+        </form>
+        <div class="puces choisis" id="choisis"></div>`;
+    }
+    const maison = r.home.filter((m) => m.present);
+    return maison.length
+      ? maison
+          .map(
+            (m) => `<div class="ligne">
+              <span class="nom">${echapper(m.name)}${m.description ? ` <span class="detail">${echapper(m.description)}</span>` : ""}</span>
+              <span class="boutons">
+                ${this._icone("data-manquant", m.key, "mdi:cart-plus", t.plusRien)}
+                ${this._icone("data-placard", m.key, "mdi:cupboard-outline", t.auPlacard)}
+                ${this._icone("data-retirer", m.key, "mdi:delete-outline", t.sortir)}
+              </span></div>`,
+          )
+          .join("")
+      : `<div class="vide">${echapper(t.maisonVide)}</div>`;
+  }
+
   _rendre() {
     const t = this._t;
     const r = this._reserve;
@@ -1040,9 +1169,7 @@ class CookbookStockCard extends HTMLElement {
         :host { display: block; color: var(--primary-text-color); }
         ha-card { padding: 16px; }
         h2 { margin: 0 0 8px; font-size: 1.2em; font-weight: 500; }
-        h3 { margin: 16px 0 6px; font-size: 1em; font-weight: 500; display: flex; align-items: baseline; gap: 8px; }
-        h3 small { font-weight: 400; color: var(--secondary-text-color); font-size: .8em; }
-        .aide, .vide { color: var(--secondary-text-color); font-size: .9em; }
+        .aide, .vide { color: var(--secondary-text-color); font-size: .9em; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .puces { display: flex; flex-wrap: wrap; gap: 6px; }
         .puce {
           border: 1px solid var(--divider-color); border-radius: 16px; padding: 4px 12px; cursor: pointer;
@@ -1051,13 +1178,25 @@ class CookbookStockCard extends HTMLElement {
         .puce.manque { border-color: var(--error-color); color: var(--error-color); }
         .verification { border: 1px solid var(--primary-color); border-radius: 12px; padding: 12px; margin-bottom: 8px; }
         .verification label { display: inline-flex; align-items: center; gap: 4px; margin: 4px 12px 4px 0; }
-        .ligne { padding: 8px 0; border-bottom: 1px solid var(--divider-color); }
-        .ligne .nom { display: block; line-height: 1.3; }
-        .ligne .bas { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-        .ligne .detail { color: var(--secondary-text-color); font-size: .85em; }
+        .onglets { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 2px; scrollbar-width: none; }
+        .onglets::-webkit-scrollbar { display: none; }
+        .onglet {
+          border: none; border-radius: 16px; padding: 6px 12px; cursor: pointer; white-space: nowrap;
+          background: var(--secondary-background-color); color: var(--primary-text-color); font-size: .9em;
+        }
+        .onglet.actif { background: var(--primary-color); color: var(--text-primary-color, #fff); }
+        .onglet .compteur { opacity: .7; margin-left: 4px; }
+        .ligne { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--divider-color); }
+        .ligne .nom { flex: 1; min-width: 0; line-height: 1.3; }
+        .ligne .detail { color: var(--secondary-text-color); font-size: .85em; white-space: nowrap; }
         .ligne .detail.urgent { color: var(--error-color); }
-        .ligne .boutons { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
-        .ligne .boutons button { white-space: nowrap; }
+        .ligne .boutons { display: flex; gap: 2px; }
+        button.icone {
+          border: none; background: transparent; color: var(--secondary-text-color); cursor: pointer;
+          width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+          font-size: 1.1em; padding: 0;
+        }
+        button.icone:hover { background: var(--secondary-background-color); color: var(--primary-text-color); }
         button.action {
           border: 1px solid var(--divider-color); border-radius: 12px; background: transparent; cursor: pointer;
           color: var(--primary-text-color); padding: 2px 10px; font-size: .85em;
@@ -1090,10 +1229,6 @@ class CookbookStockCard extends HTMLElement {
       this.shadowRoot.innerHTML = `${style}<ha-card><h2>${echapper(this._config.title || t.titre)}</h2><div class="aide">${echapper(this._erreur)}</div></ha-card>`;
       return;
     }
-    const aRacheter = [
-      ...r.pantry.filter((p) => p.missing).map((p) => ({ cle: p.key, nom: p.name })),
-      ...r.home.filter((m) => !m.present).map((m) => ({ cle: m.key, nom: m.name })),
-    ];
     const verification = r.pantry_checked
       ? ""
       : `<div class="verification"><strong>${echapper(t.verifier)}</strong><div class="aide">${echapper(t.verifierAide)}</div>
@@ -1101,112 +1236,51 @@ class CookbookStockCard extends HTMLElement {
             .map((p) => `<label><input type="checkbox" data-verifier="${echapper(p.key)}" ${this._manquantsVerification.has(p.key) ? "" : "checked"}> ${echapper(p.name)}</label>`)
             .join("")}</div>
           <button class="action principal" id="valider">${echapper(t.valider)}</button></div>`;
+    const onglets = this._sections()
+      .map(
+        (s) => `<button class="onglet ${s.cle === this._onglet ? "actif" : ""}" data-onglet="${s.cle}">${echapper(s.titre)}<span class="compteur">${s.n}</span></button>`,
+      )
+      .join("");
     this.shadowRoot.innerHTML = `${style}<ha-card>
       <h2>${echapper(this._config.title || t.titre)}</h2>
       ${verification}
-      <h3>${echapper(t.aRacheter)}</h3>
-      ${aRacheter.length
-        ? `<div class="puces">${aRacheter.map((p) => `<button class="puce manque" data-present="${echapper(p.cle)}" title="${echapper(t.jEnAi)}">${echapper(p.nom)}</button>`).join("")}</div>`
-        : `<div class="vide">${echapper(t.rien)}</div>`}
-      <h3>${echapper(t.frigo)}</h3>
-      ${r.fridge.length
-        ? r.fridge
-            .map(
-              (f) => `<div class="ligne"><span class="nom">${echapper(f.name)}${f.quantity ? ` <span class="detail">(${echapper(f.quantity)})</span>` : ""}</span>
-                <div class="bas">
-                  <span class="detail ${f.days_left !== null && f.days_left <= 1 ? "urgent" : ""}">${f.days_left === null ? "" : echapper(t.jours(f.days_left))}</span>
-                  <span class="boutons">
-                    <button class="action" data-manquant="${echapper(f.key)}">${echapper(t.plusRien)}</button>
-                    <button class="action" data-retirer="${echapper(f.key)}">${echapper(t.sortirFrigo)}</button>
-                  </span>
-                </div></div>`,
-            )
-            .join("")
-        : `<div class="vide">${echapper(t.frigoVide)}</div>`}
-      <h3>${echapper(t.recurrents)} <small>${echapper(t.recurrentsAide)}</small></h3>
-      ${(r.recurring || []).length
-        ? (r.recurring || [])
-            .map(
-              (p) => `<div class="ligne"><span class="nom">${echapper(p.name)}</span>
-                <div class="bas">
-                  <span class="detail ${p.due ? "urgent" : ""}">${echapper(`${t.frequence(p.weeks)} · ${t.dansJours(p.days_left)}`)}</span>
-                  <span class="boutons">
-                    <button class="action" data-moins="${echapper(p.key)}" data-semaines="${p.weeks}" title="${echapper(t.moinsSouvent)}">&minus;</button>
-                    <button class="action" data-plus="${echapper(p.key)}" data-semaines="${p.weeks}" title="${echapper(t.plusSouvent)}">+</button>
-                    <button class="action" data-non-recurrent="${echapper(p.key)}">${echapper(t.retirer)}</button>
-                  </span>
-                </div></div>`,
-            )
-            .join("")
-        : `<div class="vide">${echapper(t.recurrentsVide)}</div>`}
-      <form class="ajout" id="ajout-recurrent">
-        <div class="champ">
-          <input id="nouveau-recurrent" type="search" autocomplete="off" placeholder="${echapper(t.ajouterRecurrent)}" aria-label="${echapper(t.ajouterRecurrent)}">
-        </div>
-        <button class="action" type="submit">${echapper(t.ajouterCourt)}</button>
-      </form>
-      <h3>${echapper(t.placard)} <small>${echapper(this._gererPlacard ? t.placardAideGerer : t.placardAide)}</small>
-        <button class="action" id="gerer">${echapper(this._gererPlacard ? t.placardFini : t.placardGerer)}</button></h3>
-      <div class="puces">${r.pantry
-        .filter((p) => this._gererPlacard || !p.missing)
-        .map((p) =>
-          this._gererPlacard
-            ? `<button class="puce retirer" data-retirer="${echapper(p.key)}" title="${echapper(t.sortir)}">${echapper(p.name)}</button>`
-            : `<button class="puce" data-manquant="${echapper(p.key)}" title="${echapper(t.plusRien)}">${echapper(p.name)}</button>`,
-        )
-        .join("")}</div>
-      <form class="ajout" id="ajout" autocomplete="off">
-        <div class="champ">
-          <input id="nouveau" type="search" role="combobox" aria-expanded="${this._popover}" aria-controls="propositions"
-            placeholder="${echapper(t.ajouterPlacardExemple)}" aria-label="${echapper(t.ajouterPlacard)}" value="${echapper(this._saisie)}">
-          <div class="propositions" id="propositions" role="listbox" aria-multiselectable="true" ${this._popover ? "" : "hidden"}></div>
-        </div>
-        <button class="action principal" type="submit" id="valider-ajout">${echapper(this._choisis.size ? t.ajouterN(this._choisis.size) : t.ajouterPlacard)}</button>
-      </form>
-      <div class="puces choisis" id="choisis"></div>
-      <h3>${echapper(t.maison)}</h3>
-      ${r.home.some((m) => m.present)
-        ? r.home
-            .filter((m) => m.present)
-            .map(
-              (m) => `<div class="ligne"><span class="nom">${echapper(m.name)}${m.description ? ` <span class="detail">${echapper(m.description)}</span>` : ""}</span>
-                <div class="bas"><span class="boutons">
-                  <button class="action" data-manquant="${echapper(m.key)}">${echapper(t.plusRien)}</button>
-                  <button class="action" data-placard="${echapper(m.key)}">${echapper(t.auPlacard)}</button>
-                  <button class="action" data-retirer="${echapper(m.key)}">${echapper(t.sortir)}</button>
-                </span></div></div>`,
-            )
-            .join("")
-        : `<div class="vide">${echapper(t.maisonVide)}</div>`}
+      <div class="onglets">${onglets}</div>
+      <div id="section">${this._rendreSection(this._onglet)}</div>
     </ha-card>`;
+    this.shadowRoot.querySelectorAll("[data-onglet]").forEach((b) =>
+      b.addEventListener("click", () => {
+        this._onglet = b.dataset.onglet;
+        this._rendre();
+      }),
+    );
     this.shadowRoot.querySelectorAll("[data-present]").forEach((b) => b.addEventListener("click", () => this._agir("present", b.dataset.present)));
     this.shadowRoot.querySelectorAll("[data-manquant]").forEach((b) => b.addEventListener("click", () => this._agir("missing", b.dataset.manquant)));
     this.shadowRoot.querySelectorAll("[data-retirer]").forEach((b) => b.addEventListener("click", () => this._agir("remove", b.dataset.retirer)));
     this.shadowRoot.querySelectorAll("[data-placard]").forEach((b) => b.addEventListener("click", () => this._agir("to_pantry", b.dataset.placard)));
-    this.shadowRoot.getElementById("gerer").addEventListener("click", () => {
-      this._gererPlacard = !this._gererPlacard;
-      this._rendre();
-    });
     this.shadowRoot.querySelectorAll("[data-moins]").forEach((b) =>
-      b.addEventListener("click", () =>
-        this._agir("recurring", b.dataset.moins, { weeks: Math.min(52, Number(b.dataset.semaines) + 1) }),
-      ),
+      b.addEventListener("click", () => this._agir("recurring", b.dataset.moins, { weeks: Math.min(52, Number(b.dataset.semaines) + 1) })),
     );
     this.shadowRoot.querySelectorAll("[data-plus]").forEach((b) =>
-      b.addEventListener("click", () =>
-        this._agir("recurring", b.dataset.plus, { weeks: Math.max(1, Number(b.dataset.semaines) - 1) }),
-      ),
+      b.addEventListener("click", () => this._agir("recurring", b.dataset.plus, { weeks: Math.max(1, Number(b.dataset.semaines) - 1) })),
     );
     this.shadowRoot.querySelectorAll("[data-non-recurrent]").forEach((b) =>
       b.addEventListener("click", () => this._agir("not_recurring", b.dataset.nonRecurrent)),
     );
-    this.shadowRoot.getElementById("ajout-recurrent").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const champ = this.shadowRoot.getElementById("nouveau-recurrent");
-      const nom = champ.value.trim();
-      if (nom) this._agir("recurring", null, { name: nom }).then(() => (champ.value = ""));
-    });
-    this._brancherAjout();
+    const gerer = this.shadowRoot.getElementById("gerer");
+    if (gerer)
+      gerer.addEventListener("click", () => {
+        this._gererPlacard = !this._gererPlacard;
+        this._rendre();
+      });
+    const ajoutRecurrent = this.shadowRoot.getElementById("ajout-recurrent");
+    if (ajoutRecurrent)
+      ajoutRecurrent.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const champ = this.shadowRoot.getElementById("nouveau-recurrent");
+        const nom = champ.value.trim();
+        if (nom) this._agir("recurring", null, { name: nom }).then(() => (champ.value = ""));
+      });
+    if (this.shadowRoot.getElementById("ajout")) this._brancherAjout();
     this.shadowRoot.querySelectorAll("[data-verifier]").forEach((c) =>
       c.addEventListener("change", () => {
         if (c.checked) this._manquantsVerification.delete(c.dataset.verifier);
