@@ -3,7 +3,7 @@
 Toutes les évolutions notables de ce projet sont consignées ici.
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [SemVer](https://semver.org/lang/fr/).
 
-## [Unreleased]
+## [1.2.0] - 2026-09-23
 
 ### Ajouté
 - Minuteurs côté Home Assistant : un minuteur lancé depuis une recette démarre aussi un minuteur Assist sur l'appareil vocal choisi dans les options (il sonne dessus), démarre l'entité `timer` choisie, et émet l'événement `nextcloud_cookbook_menu_timer_started` pour les automatisations. Nouvelle action `start_timer`. Sans rien régler, le compte à rebours de la carte fonctionne comme avant.
