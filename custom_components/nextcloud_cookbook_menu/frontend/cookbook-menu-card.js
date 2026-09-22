@@ -903,6 +903,11 @@ const TEXTES_RESERVE = {
     frigo: "Acheté pour le menu",
     frigoVide: "Rien d'acheté pour le menu en ce moment",
     recurrents: "Racheté régulièrement",
+    ongletRacheter: "À racheter",
+    ongletStock: "Stock",
+    ongletRecurrents: "Récurrents",
+    ongletPlacard: "Placard",
+    ongletMaison: "Maison",
     recurrentsAide: "Ce qui part hors menu : beurre, lait, café.",
     recurrentsVide: "Ajoutez ce que vous rachetez à intervalle régulier",
     ajouterRecurrent: "Ajouter un produit récurrent",
@@ -943,6 +948,11 @@ const TEXTES_RESERVE = {
     frigo: "Bought for the menu",
     frigoVide: "Nothing bought for the menu right now",
     recurrents: "Bought regularly",
+    ongletRacheter: "To buy",
+    ongletStock: "Stock",
+    ongletRecurrents: "Recurring",
+    ongletPlacard: "Pantry",
+    ongletMaison: "Household",
     recurrentsAide: "What goes outside the menu: butter, milk, coffee.",
     recurrentsVide: "Add what you buy again at a regular interval",
     ajouterRecurrent: "Add a recurring product",
@@ -1057,12 +1067,18 @@ class CookbookStockCard extends HTMLElement {
   _sections() {
     const t = this._t;
     const r = this._reserve;
+    // Onglet : libellé court, pour tenir dans une colonne étroite. Nom complet en titre de section.
     return [
-      { cle: "racheter", titre: t.aRacheter, n: r.pantry.filter((p) => p.missing).length + r.home.filter((m) => !m.present).length },
-      { cle: "stock", titre: t.frigo, n: r.fridge.length },
-      { cle: "recurrents", titre: t.recurrents, n: (r.recurring || []).length },
-      { cle: "placard", titre: t.placard, n: r.pantry.length },
-      { cle: "maison", titre: t.maison, n: r.home.filter((m) => m.present).length },
+      {
+        cle: "racheter",
+        court: t.ongletRacheter,
+        titre: t.aRacheter,
+        n: r.pantry.filter((p) => p.missing).length + r.home.filter((m) => !m.present).length,
+      },
+      { cle: "stock", court: t.ongletStock, titre: t.frigo, n: r.fridge.length },
+      { cle: "recurrents", court: t.ongletRecurrents, titre: t.recurrents, n: (r.recurring || []).length },
+      { cle: "placard", court: t.ongletPlacard, titre: t.placard, n: r.pantry.length },
+      { cle: "maison", court: t.ongletMaison, titre: t.maison, n: r.home.filter((m) => m.present).length },
     ];
   }
 
@@ -1178,14 +1194,14 @@ class CookbookStockCard extends HTMLElement {
         .puce.manque { border-color: var(--error-color); color: var(--error-color); }
         .verification { border: 1px solid var(--primary-color); border-radius: 12px; padding: 12px; margin-bottom: 8px; }
         .verification label { display: inline-flex; align-items: center; gap: 4px; margin: 4px 12px 4px 0; }
-        .onglets { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 2px; scrollbar-width: none; }
-        .onglets::-webkit-scrollbar { display: none; }
+        .onglets { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
         .onglet {
           border: none; border-radius: 16px; padding: 6px 12px; cursor: pointer; white-space: nowrap;
           background: var(--secondary-background-color); color: var(--primary-text-color); font-size: .9em;
         }
         .onglet.actif { background: var(--primary-color); color: var(--text-primary-color, #fff); }
         .onglet .compteur { opacity: .7; margin-left: 4px; }
+        h3 { margin: 0 0 6px; font-size: 1em; font-weight: 500; }
         .ligne { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--divider-color); }
         .ligne .nom { flex: 1; min-width: 0; line-height: 1.3; }
         .ligne .detail { color: var(--secondary-text-color); font-size: .85em; white-space: nowrap; }
@@ -1236,16 +1252,19 @@ class CookbookStockCard extends HTMLElement {
             .map((p) => `<label><input type="checkbox" data-verifier="${echapper(p.key)}" ${this._manquantsVerification.has(p.key) ? "" : "checked"}> ${echapper(p.name)}</label>`)
             .join("")}</div>
           <button class="action principal" id="valider">${echapper(t.valider)}</button></div>`;
-    const onglets = this._sections()
+    const sections = this._sections();
+    const onglets = sections
       .map(
-        (s) => `<button class="onglet ${s.cle === this._onglet ? "actif" : ""}" data-onglet="${s.cle}">${echapper(s.titre)}<span class="compteur">${s.n}</span></button>`,
+        (s) => `<button class="onglet ${s.cle === this._onglet ? "actif" : ""}" data-onglet="${s.cle}" title="${echapper(s.titre)}">${echapper(s.court)}<span class="compteur">${s.n}</span></button>`,
       )
       .join("");
+    const active = sections.find((s) => s.cle === this._onglet) || sections[0];
     this.shadowRoot.innerHTML = `${style}<ha-card>
       <h2>${echapper(this._config.title || t.titre)}</h2>
       ${verification}
       <div class="onglets">${onglets}</div>
-      <div id="section">${this._rendreSection(this._onglet)}</div>
+      <h3>${echapper(active.titre)}</h3>
+      <div id="section">${this._rendreSection(active.cle)}</div>
     </ha-card>`;
     this.shadowRoot.querySelectorAll("[data-onglet]").forEach((b) =>
       b.addEventListener("click", () => {
