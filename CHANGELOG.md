@@ -3,7 +3,7 @@
 Toutes les évolutions notables de ce projet sont consignées ici.
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [SemVer](https://semver.org/lang/fr/).
 
-## [Unreleased]
+## [1.3.0] - 2026-09-23
 
 ### Ajouté
 - Plusieurs minuteurs en parallèle, pour suivre plusieurs plats : l'intégration expose ses propres capteurs « Minuteur 1, 2, 3... » (nombre réglable de 1 à 10 dans les options) avec l'heure de fin et l'étape en cours. L'option « Entités minuteur » accepte désormais plusieurs `timer.*` : l'intégration prend le premier au repos.
