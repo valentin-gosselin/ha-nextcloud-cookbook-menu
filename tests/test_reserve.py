@@ -1,4 +1,4 @@
-"""Réserve : placard, maison et vérification initiale (story 2.10)."""
+"""Stock: pantry, home items and initial check (story 2.10)."""
 
 from __future__ import annotations
 
@@ -53,7 +53,7 @@ async def test_il_n_y_a_plus_d_huile(hass: HomeAssistant, mock_client, config_en
     ligne = (await courses(hass))["Huile (4 c. à s.)"]
     assert ligne["description"] == "Carry de poulet pour 6, manque au placard"
 
-    await ajouter_course(hass, "Muscade")  # pas utilisée par le menu : ligne seule
+    await ajouter_course(hass, "Muscade")  # not used by the menu: standalone line
     assert (await courses(hass))["Muscade"]["description"] == "manque au placard"
 
     await cocher(hass, "Huile (4 c. à s.)")
@@ -83,14 +83,14 @@ async def test_produits_maison(hass: HomeAssistant, mock_client, config_entry) -
     assert (ligne["description"], ligne["status"]) == ("promo", "needs_action")
 
     await cocher(hass, "Papier toilette x12")
-    assert "Papier toilette x12" not in await courses(hass)  # rangé dans la réserve
+    assert "Papier toilette x12" not in await courses(hass)  # stored in the stock
     planificateur = config_entry.runtime_data.planner
     maison = planificateur.reserve()["home"]
     assert maison == [
         {"key": "papier toilette", "name": "Papier toilette x12", "present": True, "description": "promo"}
     ]
 
-    # « Il n'y en a plus » depuis la carte, puis sortie de la réserve.
+    # "There's none left" from the card, then removal from the stock.
     planificateur.async_reserve_manquant("papier toilette")
     assert "Papier toilette x12" in await courses(hass)
     planificateur.async_reserve_present("papier toilette")
@@ -109,7 +109,7 @@ async def test_produit_au_frigo_signale_manquant(hass: HomeAssistant, mock_clien
     await cocher(hass, "Citron (1)")
     planificateur = config_entry.runtime_data.planner
     assert planificateur.reserve()["fridge"] == [{"key": "citron", "name": "Citron", "quantity": "1", "days_left": 21}]
-    await ajouter_course(hass, "citron")  # « il n'y a plus de citron » : le frigo se vide
+    await ajouter_course(hass, "citron")  # "no lemon left": the fridge entry is cleared
     assert (await courses(hass))["Citron (1)"]["status"] == "needs_action"
     assert planificateur.reserve()["home"] == []
 
@@ -133,7 +133,7 @@ async def test_verification_initiale_du_placard(hass: HomeAssistant, mock_client
     assert "Poivre" in await courses(hass)
 
     planificateur.async_reserve_manquant("sel")
-    await ajouter_course(hass, "Huile de sésame")  # famille « huile », hors options
+    await ajouter_course(hass, "Huile de sésame")  # "huile" family, outside options
     assert {p["name"] for p in planificateur.reserve()["pantry"] if p["missing"]} == {
         "Poivre",
         "Sel",
@@ -223,32 +223,32 @@ async def test_voix_action_et_llm(hass: HomeAssistant, mock_client, config_entry
 
 
 async def test_cas_limites_de_la_reserve(hass: HomeAssistant, mock_client, config_entry) -> None:
-    await installer(hass, config_entry, pantry=["Sel"])  # l'huile d'olive n'est plus au placard
+    await installer(hass, config_entry, pantry=["Sel"])  # olive oil is no longer in the pantry
     planificateur = config_entry.runtime_data.planner
     await ajouter(hass, "couscous")
     donnees = planificateur.stockage.donnees
-    # L'huile d'olive se garde : cochée, elle rejoint le placard et non le frigo (story 2.14).
+    # Olive oil keeps well: once checked off, it joins the pantry rather than the fridge (story 2.14).
     await cocher(hass, "Huile d'olive")
     assert "huile olive" not in donnees.frigo
     assert donnees.placard_ajouts == {"huile olive": "Huile d'olive"}
-    # Rangée au placard, la ligne quitte les courses : on revient en arrière depuis la carte.
+    # Once stored in the pantry, the line leaves the shopping list: we revert it from the card.
     assert not any(libelle.startswith("Huile") for libelle in await courses(hass))
     planificateur.async_reserve_manquant("huile olive")
     assert "Huile d'olive" in await courses(hass)
     planificateur.async_reserve_retirer("huile olive")
     assert donnees.placard_ajouts == {} and donnees.placard_epuise == {}
 
-    # Un plat cuisiné ne change pas le frigo pour les ingrédients sans quantité.
+    # Cooking a dish does not change the fridge for ingredients without a quantity.
     plat = planificateur.menu[0]
     planificateur.async_modifier_plat(plat.uid, fait=True)
     assert "huile olive" not in donnees.frigo
 
-    # Produit au frigo, plus demandé par le menu : signalé manquant, il passe en maison.
+    # Product in the fridge, no longer needed by the menu: flagged missing, it moves to home stock.
     donnees.frigo["carotte"] = {"nom": "Carotte", "quantites": {"pièce": 2}, "expire": "2026-09-20"}
     planificateur.async_reserve_manquant("carotte")
     assert donnees.maison["carotte"]["present"] is False
 
-    # Supprimer une ligne de placard manquant utilisée par le menu : « j'en ai ».
+    # Removing a missing pantry line used by the menu: "I have some".
     await ajouter(hass, "carry")
     await ajouter_course(hass, "sel")
     await hass.services.async_call(
@@ -258,7 +258,7 @@ async def test_cas_limites_de_la_reserve(hass: HomeAssistant, mock_client, confi
 
 
 async def test_index_du_placard(hass: HomeAssistant, mock_client, config_entry, hass_ws_client) -> None:
-    """Story 2.11 : un produit de placard ajouté à la main rejoint le placard, pas la maison."""
+    """Story 2.11: a pantry product added by hand joins the pantry, not the home stock."""
     await installer(hass, config_entry, pantry=["Sel"])
     planificateur = config_entry.runtime_data.planner
     donnees = planificateur.stockage.donnees
@@ -269,13 +269,13 @@ async def test_index_du_placard(hass: HomeAssistant, mock_client, config_entry, 
     await cocher(hass, "Ras el hanout")
     assert {"key": "ras el hanout", "name": "Ras el hanout", "missing": False} in planificateur.reserve()["pantry"]
 
-    # Désormais au placard : les recettes ne le demandent plus.
+    # Now in the pantry: recipes no longer ask for it.
     await ajouter_course(hass, "Huile d'olive")
     await cocher(hass, "Huile d'olive")
     await ajouter(hass, "couscous")
     assert not any(libelle.startswith("Huile") for libelle in await courses(hass))
 
-    # Carte : ajout direct (présent), produit de la maison déplacé, sortie du placard.
+    # Card: direct add (present), home item moved over, removal from the pantry.
     client = await hass_ws_client(hass)
     for message in (
         {"action": "to_pantry", "name": "Sirop de sureau"},
@@ -292,7 +292,7 @@ async def test_index_du_placard(hass: HomeAssistant, mock_client, config_entry, 
         "Riz basmati",
         "Quinoa",
     )
-    # Propositions de l'index : ni ce qui est déjà au placard, ni les variantes d'une famille présente.
+    # Index suggestions: neither what's already in the pantry, nor variants of a family already present.
     await client.send_json_auto_id({"type": "nextcloud_cookbook_menu/stock/subscribe"})
     await client.receive_json()
     suggestions = {p["name"] for p in (await client.receive_json())["event"]["suggestions"]}
@@ -303,18 +303,18 @@ async def test_index_du_placard(hass: HomeAssistant, mock_client, config_entry, 
     planificateur.async_reserve_au_placard(cle_produit="papier toilette")
     assert donnees.maison == {} and donnees.placard_epuise["papier toilette"] == "Papier toilette"
 
-    planificateur.async_reserve_retirer("sel")  # produit des options
-    planificateur.async_reserve_retirer("ras el hanout")  # produit rangé à la main
+    planificateur.async_reserve_retirer("sel")  # product from the options
+    planificateur.async_reserve_retirer("ras el hanout")  # product stored by hand
     cles = {p["key"] for p in planificateur.reserve()["pantry"]}
     assert "sel" not in cles and "ras el hanout" not in cles
     assert donnees.placard_retires == ["sel"]
-    # « Il n'y a plus de sel » le remet au placard, à racheter.
+    # "No salt left" puts it back in the pantry, to buy again.
     await ajouter_course(hass, "Sel")
     assert donnees.placard_retires == [] and donnees.placard_epuise["sel"] == "Sel"
 
 
 async def test_migration_du_frigo_vers_le_placard() -> None:
-    """Story 2.14 : les produits qui se gardent, achetés avant, quittent le frigo."""
+    """Story 2.14: products that keep well, bought before, leave the fridge."""
     from custom_components.nextcloud_cookbook_menu.store import DonneesPlanificateur
 
     donnees = DonneesPlanificateur.depuis_dict(

@@ -1,7 +1,7 @@
-"""Planificateur : source de vérité du menu (et, ensuite, des courses et du placard).
+"""Planner: single source of truth for the menu (and, in turn, for shopping and the pantry).
 
-Les entités todo, les actions de service et les outils vocaux passent tous par ici :
-aucune logique métier n'est dupliquée ailleurs.
+The todo entities, service actions and voice tools all go through here: no business
+logic is duplicated elsewhere.
 """
 
 from __future__ import annotations
@@ -47,12 +47,12 @@ from .store import PlatMenu, StockagePlanificateur
 if TYPE_CHECKING:
     from .coordinator import CookbookCoordinator
 
-# Valeur sentinelle : « ne pas modifier ce champ » (None a un sens pour la date).
+# Sentinel value: "do not change this field" (None is meaningful for the date).
 INCHANGE: Final = object()
 
 PREFIXE_PRODUIT: Final = "produit:"
 PREFIXE_RESERVE: Final = "reserve:"
-# Score minimal quand on accepte la meilleure recette malgré une ambiguïté.
+# Minimum score when accepting the best recipe match despite an ambiguity.
 SEUIL_MEILLEURE: Final = 0.5
 
 _COUVERTS = re.compile(
@@ -62,7 +62,7 @@ _COUVERTS = re.compile(
 
 
 def lire_couverts(texte: str | None) -> int | None:
-    """Nombre de couverts écrit librement (« pour 4 », « 4 couverts », « 4 »)."""
+    """Number of place settings written freely ("pour 4", "4 couverts", "4")."""
     if not texte:
         return None
     premiere_partie = texte.split(",")[0]
@@ -81,7 +81,7 @@ JOURS_SELECTION: Final = (
 
 @dataclass(slots=True)
 class Selection:
-    """Choix en cours dans les entités de contrôle (non persisté)."""
+    """Current choice in the control entities (not persisted)."""
 
     recette: str | None = None
     jour: str = "sans_date"
@@ -90,7 +90,7 @@ class Selection:
 
 @dataclass(slots=True)
 class LigneAffichee:
-    """Ligne de la liste de courses telle qu'affichée (calculée ou manuelle)."""
+    """Shopping list line as displayed (computed or manual)."""
 
     uid: str
     libelle: str
@@ -102,7 +102,7 @@ class LigneAffichee:
 
 @dataclass(slots=True)
 class ResultatAjout:
-    """Résultat de l'ajout d'un plat au menu."""
+    """Result of adding a dish to the menu."""
 
     plat: PlatMenu
     recette: Recipe | None
@@ -111,7 +111,7 @@ class ResultatAjout:
 
 
 class Planificateur:
-    """Menu de la semaine d'une entrée de configuration."""
+    """Weekly menu for a config entry."""
 
     def __init__(
         self,
@@ -125,11 +125,11 @@ class Planificateur:
         self._ecouteurs: list[Callable[[], None]] = []
         self.selection = Selection()
 
-    # --- Abonnements -----------------------------------------------------------------
+    # --- Subscriptions -----------------------------------------------------------------
 
     @callback
     def async_ecouter(self, rappel: Callable[[], None]) -> CALLBACK_TYPE:
-        """Appelle `rappel` à chaque changement. Renvoie la fonction de désabonnement."""
+        """Calls `rappel` on every change. Returns the unsubscribe function."""
         self._ecouteurs.append(rappel)
 
         @callback
@@ -144,11 +144,11 @@ class Planificateur:
         for rappel in list(self._ecouteurs):
             rappel()
 
-    # --- Lecture ---------------------------------------------------------------------
+    # --- Reading ---------------------------------------------------------------------
 
     @property
     def recettes(self) -> dict[str, Recipe]:
-        """Recettes proposables (catégories exclues retirées)."""
+        """Recipes available for selection (excluded categories removed)."""
         return self.coordinateur.data.recipes if self.coordinateur.data else {}
 
     @property
@@ -160,8 +160,8 @@ class Planificateur:
         return self.stockage.donnees.menu
 
     def recette_du_plat(self, plat: PlatMenu) -> Recipe | None:
-        """Recette liée au plat, si elle existe encore (y compris dans une catégorie exclue)."""
-        if plat.recipe_id is None or self.coordinateur.data is None:  # pragma: no cover - données absentes
+        """Recipe linked to the dish, if it still exists (including in an excluded category)."""
+        if plat.recipe_id is None or self.coordinateur.data is None:  # pragma: no cover - no data
             return None
         index = self.coordinateur.data
         return index.recipes.get(plat.recipe_id) or index.excluded.get(plat.recipe_id)
@@ -178,7 +178,7 @@ class Planificateur:
         )
 
     def plat_par_nom(self, texte: str) -> PlatMenu:
-        """Plat du menu le plus proche du texte (pour « retire le carry du menu »)."""
+        """Menu dish closest to the text (for "retire le carry du menu")."""
         candidats = sorted(((score(texte, p.summary), p) for p in self.menu), key=lambda c: -c[0])
         if not candidats or candidats[0][0] < SEUIL_MEILLEURE:
             raise ServiceValidationError(
@@ -189,7 +189,7 @@ class Planificateur:
         return candidats[0][1]
 
     def choix_recettes(self) -> dict[str, str]:
-        """Libellé affiché -> identifiant, triés sans tenir compte des accents. Homonymes précisés."""
+        """Displayed label -> id, sorted ignoring accents. Homonyms disambiguated."""
         recettes = sorted(self.recettes.values(), key=lambda r: sans_accents(r.name))
         noms = [r.name for r in recettes]
         choix: dict[str, str] = {}
@@ -202,7 +202,7 @@ class Planificateur:
 
     @callback
     def async_modifier_selection(self, **valeurs: Any) -> None:
-        """Change la sélection en cours et prévient les entités (rien à sauvegarder)."""
+        """Changes the current selection and notifies the entities (nothing to save)."""
         for champ, valeur in valeurs.items():
             setattr(self.selection, champ, valeur)
         for rappel in list(self._ecouteurs):
@@ -210,7 +210,7 @@ class Planificateur:
 
     @callback
     def async_ajouter_selection(self, aujourdhui: date) -> dict[str, Any]:
-        """Ajoute au menu la recette choisie dans les entités, puis vide le choix de recette."""
+        """Adds the recipe chosen in the entities to the menu, then clears the recipe choice."""
         choix = self.choix_recettes()
         if self.selection.recette not in choix:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="no_recipe_selected")
@@ -231,10 +231,10 @@ class Planificateur:
         self.async_modifier_selection(recette=None)
         return bilan
 
-    # --- Écriture --------------------------------------------------------------------
+    # --- Writing --------------------------------------------------------------------
 
     def _position_chronologique(self, jour: date | None) -> int:
-        """Index d'insertion : après les plats du même jour ou d'avant, les plats sans date en fin."""
+        """Insertion index: after dishes on the same day or earlier, undated dishes at the end."""
         if jour is None:
             return len(self.menu)
         for index, plat in enumerate(self.menu):
@@ -253,10 +253,11 @@ class Planificateur:
         fait: bool = False,
         choisir_meilleure: bool = False,
     ) -> ResultatAjout:
-        """Ajoute un plat. Le texte est rapproché d'une recette sauf si `recipe_id` est donné.
+        """Adds a dish. The text is matched against a recipe unless `recipe_id` is given.
 
-        `choisir_meilleure` (voix, actions) : prend la meilleure recette même si le choix est
-        ambigu, pourvu qu'elle ressemble assez ; l'UI, elle, ne lie que les correspondances nettes.
+        `choisir_meilleure` (voice, actions): takes the best recipe even if the match is
+        ambiguous, as long as it is close enough; the UI, on the other hand, only links
+        clean matches.
         """
         texte = texte.strip()
         if not texte and recipe_id is None:
@@ -295,7 +296,7 @@ class Planificateur:
         couverts: int | None = None,
         recipe_id: str | None = None,
     ) -> dict[str, Any]:
-        """Ajout « intelligent » (actions, voix, LLM) : meilleure recette, et bilan des courses."""
+        """ "Smart" add (actions, voice, LLM): best recipe match, plus a shopping list summary."""
         avant = {ligne.uid: ligne.libelle for ligne in self.liste_de_courses()}
         resultat = self.async_ajouter_plat(
             texte, jour=jour, couverts=couverts, recipe_id=recipe_id, choisir_meilleure=True
@@ -328,7 +329,7 @@ class Planificateur:
         couverts: int | None = None,
         fait: bool | None = None,
     ) -> PlatMenu:
-        """Modifie un plat. Un nouveau texte est de nouveau rapproché d'une recette."""
+        """Edits a dish. A new text is matched against a recipe again."""
         plat = self._plat(uid)
         if texte is not None and texte.strip() and texte.strip() != plat.summary:
             recette, _ = lien_automatique(texte, list(self.recettes.values()))
@@ -343,7 +344,7 @@ class Planificateur:
             if fait:
                 self.async_consommer()
             elif plat.consumed and (plat.day is None or plat.day >= self._aujourdhui()):
-                # Décoché par erreur : sa part revient au frigo.
+                # Unchecked by mistake: its share goes back to the fridge.
                 if (contribution := self._contribution(plat)) is not None:
                     self._appliquer_consommation(contribution, retirer=False)
                 plat.consumed = False
@@ -352,7 +353,7 @@ class Planificateur:
 
     @callback
     def async_supprimer_plats(self, uids: list[str]) -> None:
-        """Retire des plats du menu."""
+        """Removes dishes from the menu."""
         for uid in uids:
             self._plat(uid)
         self.stockage.donnees.menu = [p for p in self.menu if p.uid not in set(uids)]
@@ -360,7 +361,7 @@ class Planificateur:
 
     @callback
     def async_deplacer_plat(self, uid: str, uid_precedent: str | None) -> None:
-        """Place le plat `uid` juste après `uid_precedent` (en tête si None)."""
+        """Places dish `uid` right after `uid_precedent` (at the top if None)."""
         plat = self._plat(uid)
         if uid_precedent is not None:
             self._plat(uid_precedent)
@@ -371,11 +372,11 @@ class Planificateur:
 
     @callback
     def async_nouvelle_semaine(self, aujourdhui: date) -> list[dict[str, Any]]:
-        """Archive les plats cuisinés ou passés et garde les plats à venir.
+        """Archives cooked or past dishes and keeps upcoming dishes.
 
-        Un plat coché, ou prévu avant aujourd'hui, entre dans l'historique (sa part est d'abord
-        retirée du frigo). Un plat à venir ou sans date et non cuisiné reste au menu. L'historique
-        plus ancien que la durée de conservation est purgé.
+        A dish that is checked, or scheduled before today, moves into the history (its share
+        is first removed from the fridge). An upcoming or undated dish that hasn't been cooked
+        stays on the menu. History older than the retention period is purged.
         """
         self.async_consommer(aujourdhui)
         donnees = self.stockage.donnees
@@ -405,13 +406,13 @@ class Planificateur:
         return int(self.coordinateur.config_entry.options.get(CONF_HISTORY_MONTHS, DEFAULT_HISTORY_MONTHS))
 
     def historique(self, filtre: str | None = None, limite: int = 20) -> list[dict[str, Any]]:
-        """Plats archivés, du plus récent au plus ancien, éventuellement filtrés par nom."""
+        """Archived dishes, from most recent to oldest, optionally filtered by name."""
         plats = sorted(self.stockage.donnees.historique, key=lambda p: p.get("day") or "", reverse=True)
         if filtre:
             plats = [p for p in plats if score(filtre, p.get("summary", "")) >= SEUIL_MEILLEURE]
         return plats[:limite]
 
-    # --- Liste de courses et réserve ------------------------------------------------
+    # --- Shopping list and reserve ------------------------------------------------
 
     def _contribution(self, plat: PlatMenu) -> Contribution | None:
         recette = self.recette_du_plat(plat)
@@ -425,7 +426,7 @@ class Planificateur:
         )
 
     def _contributions(self, aujourdhui: date) -> list[Contribution]:
-        """Plats encore à cuisiner : ni cochés, ni consommés, ni passés."""
+        """Dishes still to be cooked: neither checked, nor consumed, nor past."""
         contributions = []
         for plat in self.menu:
             if plat.done or plat.consumed or (plat.day is not None and plat.day < aujourdhui):
@@ -435,7 +436,7 @@ class Planificateur:
         return contributions
 
     def produits_placard(self) -> dict[str, str]:
-        """Placard : produits des options (sauf ceux sortis) et produits rangés à la main, par clé."""
+        """Pantry: products from the options (except removed ones) and manually added products, by key."""
         donnees = self.stockage.donnees
         options = self.coordinateur.config_entry.options
         produits = {
@@ -448,11 +449,11 @@ class Planificateur:
         return produits
 
     def placard(self) -> set[str]:
-        """Clés des produits du placard."""
+        """Keys of the pantry products."""
         return set(self.produits_placard())
 
     def _ranger_au_placard(self, cle_produit: str, nom: str, *, present: bool) -> None:
-        """Le produit rejoint le placard (présent ou à racheter) et quitte le frigo et la maison."""
+        """The product joins the pantry (in stock or to rebuy) and leaves the fridge and household items."""
         donnees = self.stockage.donnees
         if cle_produit in donnees.placard_retires:
             donnees.placard_retires.remove(cle_produit)
@@ -487,7 +488,7 @@ class Planificateur:
 
     @staticmethod
     def _recurrent_du(produit: dict[str, Any], aujourdhui: date) -> bool:
-        """Un produit récurrent est à racheter tant qu'il n'a pas été acheté dans sa période."""
+        """A recurring product needs rebuying until it has been bought within its period."""
         dernier = produit.get("dernier_achat")
         if not dernier:
             return True
@@ -496,12 +497,12 @@ class Planificateur:
 
     @staticmethod
     def _quantite_recurrente(cle_produit: str) -> dict[str, float]:
-        """Un conditionnement du produit : une plaquette de beurre, une boîte d'œufs."""
+        """One pack of the product: a stick of butter, a box of eggs."""
         mesure = PROFILS[cle_produit].achat if cle_produit in PROFILS else "pièce"
         return {mesure: conditionnement(cle_produit, mesure) or 1}
 
     def liste_de_courses(self) -> list[LigneAffichee]:
-        """Produits du menu (moins le frigo), produits du placard et de la maison qui manquent."""
+        """Menu products (minus the fridge), plus missing pantry and household products."""
         textes = libelles(self.hass)
         donnees = self.stockage.donnees
         affichees: list[tuple[Rayon, str, LigneAffichee]] = []
@@ -509,7 +510,7 @@ class Planificateur:
             sources = [textes["pour"].format(recette=r, n=n) for r, n in ligne.sources.items()]
             stock = donnees.frigo.get(ligne.cle, {}).get("quantites", {})
             if (recurrent := donnees.recurrents.get(ligne.cle)) and self._recurrent_du(recurrent, self._aujourdhui()):
-                # Le beurre des tartines part sans passer par le menu : le stock ne compte plus.
+                # The toast butter goes out without going through the menu: stock no longer counts.
                 stock = {}
                 semaines = max(1, int(recurrent.get("semaines", 1)))
                 sources.append(textes["recurrent_semaine"] if semaines == 1 else textes["recurrent"].format(n=semaines))
@@ -583,12 +584,12 @@ class Planificateur:
 
     @callback
     def async_ajouter_course(self, texte: str, description: str | None = None, fait: bool = False) -> str:
-        """Ajout à la main, ou « il n'y en a plus » : le produit rejoint les courses.
+        """Manual add, or "there's none left": the product joins the shopping list.
 
-        Produit du placard (options, rangé à la main, ou reconnu par l'index des produits qui se
-        gardent) : signalé manquant. Produit au frigo : le frigo est vidé de ce produit. Autre
-        produit (papier toilette, poêle) : produit « maison » manquant, qui rejoindra la réserve
-        une fois acheté.
+        Pantry product (from the options, manually added, or recognized by the shelf-stable
+        products index): flagged as missing. Fridge product: the fridge is cleared of that
+        product. Other product (toilet paper, frying pan): missing "household" product, which
+        will join the reserve once bought.
         """
         texte = texte.strip()
         if not texte:
@@ -613,7 +614,7 @@ class Planificateur:
 
     @callback
     def async_modifier_course(self, uid: str, *, texte: str | None, description: str | None, fait: bool) -> None:
-        """Cocher, c'est acheter : le produit rejoint le frigo, le placard ou la maison."""
+        """Checking it off means buying it: the product joins the fridge, the pantry or the household items."""
         ligne = self._ligne_affichee(uid)
         donnees = self.stockage.donnees
         if ligne.calculee:
@@ -627,7 +628,7 @@ class Planificateur:
             elif fait and not ligne.fait:
                 self._acheter(produit)
             elif not fait and ligne.fait:
-                # Décoché : l'achat est annulé. Un produit rangé au placard n'a plus de ligne ici.
+                # Unchecked: the purchase is cancelled. A product stored in the pantry no longer has a line here.
                 if produit.quantites:
                     frigo.retirer(donnees.frigo, produit.cle, produit.mesure())
                 else:
@@ -646,7 +647,7 @@ class Planificateur:
         self._signaler_changement()
 
     def _noter_achat(self, cle_produit: str) -> None:
-        """Date d'achat : sert la récurrence, et les propositions de récurrence à venir."""
+        """Purchase date: used for recurrence, and for future recurrence suggestions."""
         donnees = self.stockage.donnees
         aujourdhui = self._aujourdhui().isoformat()
         dates = donnees.achats.setdefault(cle_produit, [])
@@ -660,12 +661,12 @@ class Planificateur:
         donnees = self.stockage.donnees
         self._noter_achat(produit.cle)
         if est_produit_de_placard(produit.cle):
-            # Levure, miel, pâtes : ça se garde, ça rejoint le placard et non le frigo.
+            # Yeast, honey, pasta: shelf-stable, so it joins the pantry and not the fridge.
             self._ranger_au_placard(produit.cle, produit.nom, present=True)
             return
         self._noter_achat(produit.cle)
         stock = donnees.frigo.get(produit.cle, {}).get("quantites", {})
-        # On achète des quantités arrondies (un citron entier, pas un demi).
+        # We buy rounded quantities (a whole lemon, not half).
         achat = (
             {m: arrondir(m, v, produit.cle) for m, v in manque(produit.quantites, stock).items()}
             if produit.quantites
@@ -675,7 +676,7 @@ class Planificateur:
 
     @callback
     def async_supprimer_courses(self, uids: list[str]) -> None:
-        """Supprimer une ligne du menu vaut « j'en ai déjà » ; une ligne de réserve sort de la réserve."""
+        """Deleting a menu line means "I already have it"; a reserve line leaves the reserve."""
         lignes = [self._ligne_affichee(uid) for uid in uids]
         donnees = self.stockage.donnees
         for ligne in lignes:
@@ -693,11 +694,11 @@ class Planificateur:
 
     @callback
     def async_consommer(self, aujourdhui: date | None = None) -> None:
-        """Retire du frigo la part des plats cuisinés ou passés, puis les produits expirés."""
+        """Removes from the fridge the share of cooked or past dishes, then expired products."""
         aujourdhui = aujourdhui or self._aujourdhui()
         donnees = self.stockage.donnees
         modifie = bool(frigo.expirer(donnees.frigo, aujourdhui))
-        # Un produit récurrent qui redevient à racheter doit réapparaître dans la liste.
+        # A recurring product that becomes due again must reappear on the list.
         modifie = modifie or any(self._recurrent_du(p, aujourdhui) for p in donnees.recurrents.values())
         for plat in self.menu:
             fini = plat.done or (plat.day is not None and plat.day < aujourdhui)
@@ -719,10 +720,10 @@ class Planificateur:
             elif ligne.cle in donnees.frigo:
                 frigo.ajouter(donnees.frigo, ligne.cle, ligne.nom, ligne.quantites, ligne.rayon, self._aujourdhui())
 
-    # --- Réserve (carte et voix) ----------------------------------------------------
+    # --- Reserve (card and voice) ----------------------------------------------------
 
     def reserve(self) -> dict[str, Any]:
-        """Placard, frigo et maison, pour la carte « Réserve »."""
+        """Pantry, fridge and household items, for the "Reserve" card."""
         donnees = self.stockage.donnees
         aujourdhui = self._aujourdhui()
         placard = [
@@ -767,7 +768,7 @@ class Planificateur:
 
     @callback
     def async_recurrent_ajouter(self, nom: str, semaines: int = 1) -> None:
-        """Produit consommé hors menu (le beurre des tartines) : racheté toutes les N semaines."""
+        """Product consumed outside the menu (toast butter): rebought every N weeks."""
         nom = nom.strip()
         cle_produit = cle(nom)
         if not cle_produit:
@@ -783,12 +784,12 @@ class Planificateur:
 
     @callback
     def async_recurrent_retirer(self, cle_produit: str) -> None:
-        """Le produit n'est plus racheté automatiquement."""
+        """The product is no longer automatically rebought."""
         self.stockage.donnees.recurrents.pop(cle_produit, None)
         self._signaler_changement()
 
     def recurrents(self) -> list[dict[str, Any]]:
-        """Produits récurrents pour la carte, avec le nombre de jours avant le prochain achat."""
+        """Recurring products for the card, with the number of days until the next purchase."""
         aujourdhui = self._aujourdhui()
         lignes = []
         for cle_produit, produit in self.stockage.donnees.recurrents.items():
@@ -808,7 +809,7 @@ class Planificateur:
 
     @callback
     def async_reserve_present(self, cle_produit: str) -> None:
-        """« J'en ai » : le produit n'est plus à acheter."""
+        """ "I have it": the product no longer needs buying."""
         donnees = self.stockage.donnees
         donnees.placard_epuise.pop(cle_produit, None)
         if cle_produit in donnees.maison:
@@ -817,7 +818,7 @@ class Planificateur:
 
     @callback
     def async_reserve_manquant(self, cle_produit: str) -> None:
-        """« Il n'y en a plus » depuis la carte, par clé de produit."""
+        """ "There's none left" from the card, by product key."""
         donnees = self.stockage.donnees
         produits_placard = self.produits_placard()
         if cle_produit in donnees.maison:
@@ -838,7 +839,7 @@ class Planificateur:
 
     @callback
     def async_reserve_retirer(self, cle_produit: str) -> None:
-        """Sortir un produit de la réserve (frigo, maison ou placard)."""
+        """Takes a product out of the reserve (fridge, household items or pantry)."""
         donnees = self.stockage.donnees
         donnees.frigo.pop(cle_produit, None)
         donnees.maison.pop(cle_produit, None)
@@ -848,7 +849,7 @@ class Planificateur:
         self._signaler_changement()
 
     def propositions_placard(self) -> list[dict[str, str]]:
-        """Produits de l'index qui ne sont pas encore au placard, pour la liste de la carte."""
+        """Index products that aren't in the pantry yet, for the card's list."""
         placard = self.placard()
         return sorted(
             ({"key": c, "name": nom} for c, nom in propositions().items() if not est_au_placard(c, placard)),
@@ -857,7 +858,7 @@ class Planificateur:
 
     @callback
     def async_reserve_au_placard(self, *, noms: list[str] | None = None, cle_produit: str | None = None) -> None:
-        """Ranger au placard des produits choisis ou saisis dans la carte, ou un produit de la maison."""
+        """Stores in the pantry products chosen or entered in the card, or a household product."""
         donnees = self.stockage.donnees
         if cle_produit is not None:
             if cle_produit not in donnees.maison:
@@ -881,7 +882,7 @@ class Planificateur:
 
     @callback
     def async_valider_placard(self, manquants: list[str]) -> None:
-        """Première vérification du placard : seuls les produits décochés sont à racheter."""
+        """First pantry check: only the unchecked products need rebuying."""
         donnees = self.stockage.donnees
         noms = self.produits_placard()
         for cle_produit in manquants:

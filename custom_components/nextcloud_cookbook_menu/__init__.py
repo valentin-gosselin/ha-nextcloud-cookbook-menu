@@ -1,4 +1,4 @@
-"""Intégration Nextcloud Cookbook Menu : menu de la semaine et liste de courses depuis Nextcloud Cookbook."""
+"""Nextcloud Cookbook Menu integration: weekly menu and shopping list from Nextcloud Cookbook."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 @dataclass(slots=True)
 class CookbookMenuData:
-    """Objets partagés par les plateformes d'une entrée."""
+    """Objects shared by an entry's platforms."""
 
     client: CookbookClient
     coordinator: CookbookCoordinator
@@ -51,11 +51,11 @@ type CookbookMenuConfigEntry = ConfigEntry[CookbookMenuData]
 
 
 def create_client(hass: HomeAssistant, data: dict) -> CookbookClient:
-    """Construit le client à partir des données d'une entrée ou d'un formulaire.
+    """Build the client from a config entry's or a form's data.
 
-    Session dédiée et SANS cookies : Nextcloud pose un cookie de session qui, dans une
-    session partagée, continuerait d'authentifier les requêtes même après révocation du
-    mot de passe d'application (réauthentification jamais déclenchée).
+    Dedicated session with NO cookies: Nextcloud sets a session cookie that, in a shared
+    session, would keep authenticating requests even after the application password is
+    revoked (reauthentication would never be triggered).
     """
     return CookbookClient(
         async_create_clientsession(
@@ -68,7 +68,7 @@ def create_client(hass: HomeAssistant, data: dict) -> CookbookClient:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Enregistre les actions et les phrases vocales du domaine."""
+    """Register the domain's services and voice phrases."""
     async_setup_services(hass)
     async_enregistrer_phrases(hass)
     async_enregistrer_commandes(hass)
@@ -81,7 +81,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry) -> bool:
-    """Met en place une entrée : premier chargement des recettes (test-before-setup)."""
+    """Set up a config entry: first load of the recipes (test-before-setup)."""
     client = create_client(hass, dict(entry.data))
     coordinator = CookbookCoordinator(hass, entry, client)
     try:
@@ -102,9 +102,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.runtime_data.sync.async_demarrer()
 
-    # Chaque nuit : part des plats de la veille retirée du frigo, produits expirés oubliés,
-    # produits récurrents remis dans les courses. Sans @callback, Home Assistant exécuterait
-    # ceci dans un fil d'exécution séparé, alors que le planificateur touche à l'état de HA.
+    # Every night: yesterday's dish portions are removed from the fridge, forgotten expired
+    # products are dropped, and recurring products are put back on the shopping list. Without
+    # @callback, Home Assistant would run this in a separate thread, while the planner touches
+    # HA state.
     @callback
     def _chaque_nuit(_maintenant: datetime) -> None:
         planificateur.async_consommer()
@@ -115,7 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry) -> bool:
-    """Décharge une entrée, arrête ses minuteurs et ferme sa session HTTP."""
+    """Unload a config entry, stop its timers, and close its HTTP session."""
     entry.runtime_data.timers.async_tout_arreter()
     entry.runtime_data.sync.async_arreter()
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):  # pragma: no cover
@@ -125,5 +126,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry) -> None:
-    """Suppression de l'intégration : on efface aussi le menu stocké."""
+    """Remove the integration: also erase the stored menu."""
     await StockagePlanificateur(hass, entry.entry_id).async_supprimer()

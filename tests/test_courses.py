@@ -1,4 +1,4 @@
-"""Liste de courses dans Home Assistant : calcul, achats et frigo (stories 2.2 et 2.10)."""
+"""Shopping list in Home Assistant: calculation, purchases, and fridge (stories 2.2 and 2.10)."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ MENU = "todo.valentin_cloud_exemple_fr_menu_de_la_semaine"
 
 @pytest.fixture(autouse=True)
 async def contexte(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-    freezer.move_to("2026-09-16 12:00:00+02:00")  # un mercredi
+    freezer.move_to("2026-09-16 12:00:00+02:00")  # a Wednesday
     await hass.config.async_update(language="fr", time_zone="Europe/Paris")
 
 
@@ -56,7 +56,7 @@ async def test_courses_suivent_le_menu(hass: HomeAssistant, entree) -> None:
     await ajouter(hass, "salade cesar")
     lignes = await courses(hass)
     assert lignes["Citron (1)"]["description"] == "Salade César au poulet pour 2"
-    assert not any(libelle.startswith("À vérifier") for libelle in lignes)  # plus de ligne de rappel
+    assert not any(libelle.startswith("À vérifier") for libelle in lignes)  # no more reminder line
     assert hass.states.get(COURSES).state == str(len(lignes))
     await hass.services.async_call(
         TODO_DOMAIN, "remove_item", {"entity_id": MENU, "item": "Salade César au poulet"}, blocking=True
@@ -76,18 +76,18 @@ async def test_cocher_c_est_acheter(hass: HomeAssistant, entree) -> None:
     await cocher(hass, "Tomates (2)")
     frigo = entree.runtime_data.planner.stockage.donnees.frigo
     assert frigo["tomate"]["quantites"] == {"pièce": 2}
-    assert frigo["tomate"]["expire"] == "2026-09-21"  # tomates : 5 jours (table par produit)
+    assert frigo["tomate"]["expire"] == "2026-09-21"  # tomatoes: 5 days (per-product table)
     ligne = (await courses(hass))["Tomates (2)"]
     assert ligne["status"] == "completed"
     assert ligne["description"] == "Carry de poulet pour 6, déjà au frigo : 2"
 
-    # Plus de couverts : il ne manque que la différence.
+    # More servings: only the difference is missing.
     await ajouter(hass, "couscous", description="pour 2")
     ligne = (await courses(hass))["Tomates (1)"]
     assert ligne["status"] == "needs_action"
     assert "déjà au frigo : 2" in ligne["description"]
 
-    # Décocher annule l'achat.
+    # Unchecking cancels the purchase.
     await cocher(hass, "Tomates (1)")
     await cocher(hass, "Tomates (3)", "needs_action")
     assert "tomate" not in frigo
@@ -98,19 +98,19 @@ async def test_epicerie_expire_plus_tard(hass: HomeAssistant, entree) -> None:
     await ajouter(hass, "couscous")
     await cocher(hass, "Merguez (4)")
     donnees = entree.runtime_data.planner.stockage.donnees
-    assert donnees.frigo["merguez"]["expire"] == "2026-09-23"  # frais : 7 jours
+    assert donnees.frigo["merguez"]["expire"] == "2026-09-23"  # fresh: 7 days
 
-    # Épicerie : 60 jours (produit sans rapport avec l'index du placard).
+    # Pantry item: 60 days (product unrelated to the pantry index).
     frigo.ajouter(donnees.frigo, "sachet", "Sachet", {"pièce": 1}, Rayon.EPICERIE_SALEE, date(2026, 9, 16))
     assert donnees.frigo["sachet"]["expire"] == "2026-11-15"
 
-    # Les pois chiches se gardent : ils rejoignent le placard, pas le frigo (story 2.14).
+    # Chickpeas keep: they join the pantry, not the fridge (story 2.14).
     await cocher(hass, "Pois chiches (150 g)")
     assert "pois chiche" not in donnees.frigo
     assert donnees.placard_ajouts == {"pois chiche": "Pois chiches"}
     assert not any(libelle.startswith("Pois chiches") for libelle in await courses(hass))
 
-    # Produit sans quantité : coché il entre au frigo, décoché il en sort.
+    # Product with no quantity: checking it adds it to the fridge, unchecking removes it.
     await ajouter(hass, "cordon bleu")
     await cocher(hass, "Beurre")
     assert "beurre" in donnees.frigo
@@ -119,7 +119,7 @@ async def test_epicerie_expire_plus_tard(hass: HomeAssistant, entree) -> None:
 
 
 async def test_recette_modifiee_apres_achat(hass: HomeAssistant, entree, recettes) -> None:
-    """Critère du party mode du 16/09 : pas de réapparition silencieuse."""
+    """Criterion from the party mode of 09/16: no silent reappearance."""
     await ajouter(hass, "carry", description="pour 6")
     await cocher(hass, "Oignons (2)")
     carry = recettes["2176038"]
@@ -152,9 +152,9 @@ async def test_plat_cuisine_consomme_le_frigo(hass: HomeAssistant, entree) -> No
 
     await modifier_plat(hass, "Carry de poulet", status="completed")
     assert frigo["tomate"]["quantites"]["pièce"] == pytest.approx(3 - 200 / 120, abs=1e-3)
-    assert (await courses(hass))["Tomates (1)"]["status"] == "completed"  # le couscous reste couvert
+    assert (await courses(hass))["Tomates (1)"]["status"] == "completed"  # the couscous stays covered
 
-    # Décoché par erreur : sa part revient au frigo.
+    # Unchecked by mistake: its share goes back to the fridge.
     await modifier_plat(hass, "Carry de poulet", status="needs_action")
     assert frigo["tomate"]["quantites"]["pièce"] == pytest.approx(3, abs=1e-3)
 
@@ -167,9 +167,9 @@ async def test_date_passee_consomme_et_restes_reutilises(hass: HomeAssistant, en
     planificateur.async_consommer()
     await hass.async_block_till_done()
     assert planificateur.menu[0].consumed
-    assert "oignon" not in planificateur.stockage.donnees.frigo  # 200 g utilisés = 2 oignons
+    assert "oignon" not in planificateur.stockage.donnees.frigo  # 200 g used = 2 onions
 
-    # Restes : 1 citron acheté pour ½ citron, réutilisé la semaine suivante.
+    # Leftovers: 1 lemon bought for half a lemon, reused the following week.
     await ajouter(hass, "salade cesar")
     await cocher(hass, "Citron (1)")
     await modifier_plat(hass, "Salade César au poulet", status="completed")
@@ -177,7 +177,7 @@ async def test_date_passee_consomme_et_restes_reutilises(hass: HomeAssistant, en
     await ajouter(hass, "salade cesar", description="pour 1")
     assert (await courses(hass))["Citron (1)"]["status"] == "completed"
 
-    # Passé sa durée de conservation (21 jours pour un citron), le reste est oublié.
+    # Past its shelf life (21 days for a lemon), the leftover is forgotten.
     freezer.move_to("2026-10-09 00:05:00+02:00")
     planificateur.async_consommer()
     assert "citron" not in planificateur.stockage.donnees.frigo

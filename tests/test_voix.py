@@ -1,4 +1,4 @@
-"""Analyse des demandes vocales (code pur)."""
+"""Parsing of voice requests (pure code)."""
 
 from __future__ import annotations
 
@@ -45,14 +45,14 @@ def test_langue() -> None:
 @pytest.mark.parametrize(
     ("texte", "code_langue", "attendu"),
     [
-        # La langue de la phrase l'emporte sur celle du pipeline (Home Assistant en anglais).
+        # The sentence's language takes precedence over the pipeline's (Home Assistant in English).
         ("Ajoute une salade César au menu jeudi pour quatre", "en", "fr"),
         ("Add a caesar salad to the menu on thursday for four", "fr", "en"),
         ("Il n'y a plus d'huile d'olive", "en", "fr"),
         ("we're out of eggs", "fr", "en"),
         ("Qu'est-ce qu'on mange ce soir", "en", "fr"),
         ("what's for dinner", "fr", "en"),
-        # Rien de décisif : on garde la langue du pipeline.
+        # Nothing decisive: keep the pipeline's language.
         ("pizza", "fr", "fr"),
         ("pizza", "en", "en"),
         ("", None, "en"),

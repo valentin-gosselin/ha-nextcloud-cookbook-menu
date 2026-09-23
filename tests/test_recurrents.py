@@ -1,4 +1,4 @@
-"""Produits récurrents : ce qui se consomme hors menu (story 2.15)."""
+"""Recurring products: what gets consumed outside the menu (story 2.15)."""
 
 from __future__ import annotations
 
@@ -20,12 +20,12 @@ async def contexte(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
 
 
 async def test_beurre_des_tartines(hass: HomeAssistant, mock_client, config_entry, freezer) -> None:
-    """Le beurre ne vient d'aucune recette : il revient dans les courses à chaque période."""
+    """Butter comes from no recipe: it comes back on the shopping list every period."""
     await installer(hass, config_entry)
     planificateur = config_entry.runtime_data.planner
     planificateur.async_recurrent_ajouter("Beurre")
     await hass.async_block_till_done()
-    ligne = (await courses(hass))["Beurre (250 g)"]  # une plaquette, pas 10 g
+    ligne = (await courses(hass))["Beurre (250 g)"]  # one stick, not 10 g
     assert ligne["description"] == "à racheter chaque semaine"
 
     await cocher(hass, "Beurre (250 g)")
@@ -34,13 +34,13 @@ async def test_beurre_des_tartines(hass: HomeAssistant, mock_client, config_entr
     assert donnees.recurrents["beurre"]["dernier_achat"] == "2026-09-16"
     assert "Beurre (250 g)" not in await courses(hass)
 
-    # Six jours plus tard, rien. Le septième, il revient malgré le stock resté au frigo.
+    # Six days later, nothing. On the seventh, it comes back despite the stock left in the fridge.
     freezer.move_to("2026-09-22 09:00:00+02:00")
-    async_fire_time_changed(hass)  # le passage à minuit recalcule la liste
+    async_fire_time_changed(hass)  # the midnight rollover recalculates the list
     await hass.async_block_till_done()
     assert not any(libelle.startswith("Beurre") for libelle in await courses(hass))
     freezer.move_to("2026-09-23 09:00:00+02:00")
-    async_fire_time_changed(hass)  # le passage à minuit recalcule la liste
+    async_fire_time_changed(hass)  # the midnight rollover recalculates the list
     await hass.async_block_till_done()
     assert (await courses(hass))["Beurre (250 g)"]["status"] == "needs_action"
 
@@ -51,12 +51,12 @@ async def test_frequence_par_produit(hass: HomeAssistant, mock_client, config_en
     planificateur.async_recurrent_ajouter("Café", 3)
     await hass.async_block_till_done()
     await cocher(hass, "Café (1)")
-    freezer.move_to("2026-10-01 09:00:00+02:00")  # 15 jours : pas encore
-    async_fire_time_changed(hass)  # le passage à minuit recalcule la liste
+    freezer.move_to("2026-10-01 09:00:00+02:00")  # 15 days: not yet
+    async_fire_time_changed(hass)  # the midnight rollover recalculates the list
     await hass.async_block_till_done()
     assert not any(libelle.startswith("Café") for libelle in await courses(hass))
-    freezer.move_to("2026-10-07 09:00:00+02:00")  # 3 semaines
-    async_fire_time_changed(hass)  # le passage à minuit recalcule la liste
+    freezer.move_to("2026-10-07 09:00:00+02:00")  # 3 weeks
+    async_fire_time_changed(hass)  # the midnight rollover recalculates the list
     await hass.async_block_till_done()
     assert any(libelle.startswith("Café") for libelle in await courses(hass))
     [recurrent] = planificateur.recurrents()
@@ -89,7 +89,7 @@ async def test_websocket_recurrents(
 
 
 async def test_dates_d_achat_memorisees(hass: HomeAssistant, mock_client, config_entry) -> None:
-    """Les dates servent aux futures propositions de récurrence."""
+    """The dates are used for future recurrence suggestions."""
     from .test_menu import ajouter
 
     await installer(hass, config_entry)

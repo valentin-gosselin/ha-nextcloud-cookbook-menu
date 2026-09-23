@@ -1,74 +1,74 @@
 # Changelog
 
-Toutes les évolutions notables de ce projet sont consignées ici.
-Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versionnage [SemVer](https://semver.org/lang/fr/).
+All notable changes to this project are recorded here.
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [SemVer](https://semver.org/).
 
 ## [1.3.0] - 2026-09-23
 
-### Ajouté
-- Plusieurs minuteurs en parallèle, pour suivre plusieurs plats : l'intégration expose ses propres capteurs « Minuteur 1, 2, 3... » (nombre réglable de 1 à 10 dans les options) avec l'heure de fin et l'étape en cours. L'option « Entités minuteur » accepte désormais plusieurs `timer.*` : l'intégration prend le premier au repos.
-- Action `stop_timer` : arrête un minuteur (ou tous), et annule l'entité minuteur qu'il occupait. La croix de la carte l'appelle.
-- L'action `start_timer` répond le numéro du minuteur et l'entité utilisée, et l'événement les indique aussi.
+### Added
+- Several timers at once, to follow several dishes: the integration exposes its own "Timer 1, 2, 3..." sensors (1 to 10, set in the options) with the end time and the step they come from. The *Timer entities* option now accepts several `timer.*` entities: the first idle one is used.
+- `stop_timer` action: stops one timer (or all of them) and cancels the timer entity it was using. The cross in the card calls it.
+- `start_timer` answers the timer number and the entity used, and the event carries them too.
 
 ## [1.2.0] - 2026-09-23
 
-### Ajouté
-- Minuteurs côté Home Assistant : un minuteur lancé depuis une recette démarre aussi un minuteur Assist sur l'appareil vocal choisi dans les options (il sonne dessus), démarre l'entité `timer` choisie, et émet l'événement `nextcloud_cookbook_menu_timer_started` pour les automatisations. Nouvelle action `start_timer`. Sans rien régler, le compte à rebours de la carte fonctionne comme avant.
-- Carte Réserve : bouton « Retirer du stock » sur chaque produit, pour jeter un produit périmé ou corriger une erreur.
-- Produits récurrents : ce qui part hors menu (beurre des tartines, lait, café) revient dans la liste à sa fréquence, une semaine par défaut, réglable par produit dans la carte Réserve.
+### Added
+- Timers in Home Assistant: a timer started from a recipe also starts an Assist timer on the voice device chosen in the options (it rings there), starts the chosen `timer` entity, and fires the `nextcloud_cookbook_menu_timer_started` event for automations. New `start_timer` action. With nothing configured, the countdown in the card works as before.
+- Stock card: a *Remove from stock* button on every product, to throw away something expired or fix a mistake.
+- Recurring products: what goes outside the menu (butter for toast, milk, coffee) comes back on the list at its own pace, once a week by default, adjustable per product in the stock card.
 
-### Modifié
-- Achats au conditionnement réel : une recette qui demande 10 g de beurre fait acheter une plaquette de 250 g, 9 œufs deviennent une boîte de 12. Le reste sert aux plats suivants au lieu de racheter chaque semaine.
-- Durées de conservation par produit : ail, oignon et pommes de terre 30 jours, œufs 21, tomates et salade 5, viande hachée 2, au lieu de 7 jours pour tout le frais. Un produit inconnu compte désormais 7 jours et non 60.
-- Morceaux de boucherie et poissons reconnus (bavette, entrecôte, magret, dorade...) : ils étaient classés en épicerie, donc gardés 60 jours.
-- Carte Réserve en onglets (« À racheter », « Acheté pour le menu », « Racheté régulièrement », « Toujours là », « Maison ») avec un compteur par onglet, et lignes compactes à boutons en icônes : la carte tient sur un écran au lieu de dérouler tout le stock. L'onglet choisi est retenu sur l'appareil.
-- Les sections de la carte Réserve disent ce qu'elles font : « Toujours là » (présent ou manquant) et « Acheté pour le menu » (quantités et péremption).
-- Les minuteurs s'appellent « Étape 3 - Salade César » au lieu du seul nom de la recette.
-- Un produit qui se garde (index du placard : levure, miel, pâtes, conserves...) coché dans les courses rejoint le **placard** et non le frigo. Les produits déjà au frigo qui sont dans l'index y sont déplacés à la mise à jour.
+### Changed
+- Purchases use real pack sizes: a recipe asking for 10 g of butter buys a 250 g pack, nine eggs become a box of twelve. What is left over serves the next dishes instead of buying again every week.
+- Shelf life per product: garlic, onions and potatoes 30 days, eggs 21, tomatoes and salad 5, minced meat 2, instead of 7 days for everything fresh. An unknown product now counts 7 days and no longer 60.
+- Cuts of meat and fish are recognised (flank steak, rib steak, duck breast, sea bream...): they were filed as groceries, hence kept for 60 days.
+- Stock card in tabs (*To buy again*, *Bought for the menu*, *Bought regularly*, *Always in stock*, *Household*) with a counter on each, and compact rows with icon buttons: the card fits one screen instead of unrolling the whole stock. The chosen tab is remembered on the device.
+- The sections of the stock card say what they do: *Always in stock* (in stock or missing) and *Bought for the menu* (quantities and expiry).
+- Timers are named "Step 3 - Caesar salad" instead of the recipe name alone.
+- A product that keeps (the pantry index: baking powder, honey, pasta, canned food...) checked on the shopping list joins the **pantry**, not the fridge. Products already in the fridge that are in the index are moved there on update.
 
 ## [1.1.0] - 2026-09-19
 
-### Ajouté
-- Carte `custom:cookbook-recipes-card` : consultation des recettes en grille de vignettes, recherche et filtre par catégorie, sans passer par le menu. La fiche ouverte depuis cette carte propose le jour, les couverts et l'ajout au menu.
-- Les photos sont servies en vignette (`.../image/<entrée>/<recette>/thumb`), pas en pleine taille, pour la grille.
+### Added
+- `custom:cookbook-recipes-card`: browse the recipes as a grid of thumbnails, with search and a filter per category, without going through the menu. The recipe opened from this card offers the day, the servings and adding to the menu.
+- Photos are served as thumbnails (`.../image/<entry>/<recipe>/thumb`) instead of full size, for the grid.
 
-### Corrigé
-- La tâche de minuit (consommation, expiration) s'exécutait hors de la boucle Home Assistant, ce qui est interdit pour du code qui touche à l'état.
-- La ressource Lovelace laissée par le domaine `cookbook_menu` (avant la 1.0.0) est retirée automatiquement.
+### Fixed
+- The nightly task (consumption, expiry) ran outside the Home Assistant event loop, which is not allowed for code that touches the state.
+- The Lovelace resource left by the `cookbook_menu` domain (before 1.0.0) is removed automatically.
 
 ## [1.0.0] - 2026-09-18
 
-Première version publique.
+First public release.
 
-### Modifié
-- Le domaine devient `nextcloud_cookbook_menu` et l'intégration s'appelle « Nextcloud Cookbook Menu ». Le menu et la réserve d'une installation `cookbook_menu` sont repris automatiquement, mais l'entrée doit être supprimée puis recréée.
-- La ligne « À vérifier au placard » et son option sont supprimées au profit de la réserve. Les lignes ajoutées à la main deviennent des produits « maison ».
-- Home Assistant 2026.9.0 minimum.
+### Changed
+- The domain becomes `nextcloud_cookbook_menu` and the integration is called "Nextcloud Cookbook Menu". The menu and the stock of a `cookbook_menu` installation are picked up automatically, but the entry has to be deleted and added again.
+- The "check the pantry" line and its option are replaced by the stock. Lines added by hand become household products.
+- Home Assistant 2026.9.0 or newer.
 
-### Corrigé
-- Voix : une phrase française dite à un Home Assistant réglé en anglais était analysée avec les règles anglaises (« Ajoute une salade César au menu jeudi pour quatre » devenait un plat libre sans recette, sans jour ni couverts). La langue de la phrase prime désormais sur celle du pipeline. Au passage, l'anglais ne dit plus « on tomorrow ».
+### Fixed
+- Voice: a French sentence said to a Home Assistant set to English was parsed with the English rules ("Ajoute une salade César au menu jeudi pour quatre" became a free dish with no recipe, no day and no servings). The language of the sentence now wins over the language of the pipeline. English no longer says "on tomorrow" either.
 
-### Ajouté
-- Voix : beaucoup plus de tournures comprises sans LLM (ajouter au menu, demander le menu, retirer, historique, « il n'y a plus de »), en français et en anglais. 132 phrases réelles sont rejouées à chaque test, contre-exemples compris (« ajoute du beurre à ma liste de courses » ne crée pas de plat).
-- Carte réserve : le champ « Ajouter au placard » ouvre la liste des produits de l'index pas encore au placard, filtrée pendant la frappe, avec sélection multiple. La saisie libre reste possible.
-- Index d'environ 300 produits de placard (épices, herbes sèches, condiments, pâtes, riz, farines, conserves...) : un produit ajouté à la main qui en fait partie rejoint le placard et non la maison. Carte réserve : ajout au placard, « Au placard » pour un produit de la maison, sortie du placard. Minuteurs visibles dans la fiche recette.
-- Réserve : placard (présent ou manquant), frigo (cocher une ligne de courses, c'est acheter ; les plats cuisinés ou passés consomment ; restes réutilisés ; expiration 7 jours pour le frais, 60 pour l'épicerie) et maison (achats hors menu). Carte `custom:cookbook-stock-card`, phrase « il n'y a plus de... », action `out_of_stock`, outils LLM.
-- Unités d'achat : l'ail en gousses ou en têtes, les herbes en bouquets, les légumes à la pièce, le beurre au poids, les sachets et boîtes. Blancs et jaunes rejoignent les œufs, le jus de citron les citrons. L'eau et le laurier sont au placard par défaut.
-- Fiche recette dans la carte : photo, temps, ingrédients à l'échelle des couverts, étapes cochables, minuteurs lancés depuis les durées des étapes, écran maintenu allumé.
-- Carte de tableau de bord `custom:cookbook-menu-card`, installée automatiquement : recherche de recette pendant la frappe, jour, couverts, ajout, et menu affiché avec « cuisiné » et suppression.
-- Entités « Recette à ajouter » (toutes les recettes par leur nom), « Jour », « Couverts » et bouton « Ajouter au menu ».
-- Connexion « Se connecter avec Nextcloud » (Login Flow v2) : plus besoin de créer et recopier un mot de passe d'application. La saisie manuelle reste possible.
-- Documentation complète (README), auto-évaluation `quality_scale.yaml`, icône et logo.
-- Historique des plats : action `get_history`, question vocale « Quand est-ce qu'on a mangé du carry ? », durée de conservation réglable. `new_week` garde les plats à venir.
-- Outils pour les agents LLM (API Assist) : chercher une recette, ajouter au menu, retirer, lire le menu, consulter l'historique.
-- Voix avec l'agent Assist par défaut, en français et en anglais : ajouter un plat au menu (jour et couverts compris), demander ce qu'on mange, retirer un plat.
-- Synchronisation facultative du menu et de la liste de courses vers des listes todo existantes (celle ouverte au magasin), sans jamais toucher aux lignes ajoutées ailleurs. Les cochages faits dans la liste cible sont remontés.
-- Actions `add_to_menu`, `remove_from_menu`, `set_servings`, `new_week` et `search_recipes`, avec réponses exploitables par les scripts. Les jours s'écrivent en toutes lettres (« jeudi », « demain »).
-- Placard : produits de base jamais ajoutés aux courses (liste réglable), avec une ligne de rappel à vérifier avant de partir. Un produit du placard ajouté à la main est signalé épuisé et revient au placard une fois coché.
-- Liste « Liste de courses » calculée depuis le menu : quantités mises à l'échelle des couverts, produits fusionnés entre recettes, arrondis à l'achat, rangés par rayon. Les lignes cochées ou ajoutées à la main ne sont jamais écrasées.
-- Liste « Menu de la semaine » : un plat par ligne, lié automatiquement à la recette la plus proche (tolérant aux accents et aux fautes), jour en échéance, couverts réglables dans la description.
-- Configuration par l'UI (URL, utilisateur, mot de passe d'application), avec test de connexion, réauthentification et reconfiguration.
-- Options du foyer : couverts par défaut, catégories exclues, intervalle de rafraîchissement.
-- Analyse des lignes d'ingrédients en français (quantités, fractions, plages, unités, sections, notes, lignes multiples) et clé de fusion des produits. Validée sur un corpus réel de 545 lignes.
-- Lecture des recettes Nextcloud Cookbook avec cache (détail rechargé seulement si la recette a changé) et diagnostics sans secret.
-- Squelette de l'intégration `nextcloud_cookbook_menu`, CI (hassfest, HACS, ruff, pytest), release HACS et script de déploiement vers le HA de dev.
+### Added
+- Voice: many more wordings understood without an LLM (add to the menu, ask for the menu, remove, history, "we're out of"), in French and in English. 132 real sentences are replayed by every test run, counter-examples included ("add butter to my shopping list" must not create a dish).
+- Stock card: the *Add to pantry* field opens the list of known products not yet in the pantry, filtered as you type, with multiple selection. Free text is still accepted.
+- An index of about 300 pantry products (spices, dried herbs, condiments, pasta, rice, flours, canned food...): a product added by hand that belongs to it joins the pantry instead of the household. Stock card: add to the pantry, move a household product to the pantry, remove from the pantry. Timers are shown inside the recipe view.
+- Stock: pantry (in stock or missing), fridge (checking a shopping line means buying it; cooked or past dishes use their share; leftovers are reused; 7 days for fresh products, 60 for groceries) and household (purchases outside the menu). `custom:cookbook-stock-card` card, "we're out of..." sentence, `out_of_stock` action, LLM tools.
+- Purchase units: garlic in cloves or heads, herbs in bunches, vegetables by the piece, butter by weight, sachets and tins. Whites and yolks join the eggs, lemon juice joins the lemons. Water and bay leaves are pantry staples by default.
+- Recipe view in the card: photo, times, ingredients scaled to the servings, steps you can check off, timers started from the durations in the steps, screen kept on.
+- `custom:cookbook-menu-card` dashboard card, registered automatically: recipe search as you type, day, servings, add, and the menu with "cooked" and removal.
+- *Recipe to add* (every recipe by name), *Day*, *Servings* entities and an *Add to menu* button.
+- "Sign in with Nextcloud" (Login Flow v2): no need to create and copy an app password. Entering one by hand is still possible.
+- Full documentation (README), `quality_scale.yaml` self-assessment, icon and logo.
+- Dish history: `get_history` action, spoken question "when did we last eat curry?", adjustable retention. `new_week` keeps upcoming dishes.
+- Tools for LLM conversation agents (Assist API): search a recipe, add to the menu, remove, read the menu, look at the history.
+- Voice with the default Assist agent, in French and in English: add a dish to the menu (day and servings included), ask what is for dinner, remove a dish.
+- Optional copy of the menu and the shopping list to existing to-do lists (the one you open at the store), never touching lines added elsewhere. Items checked in the target list are brought back.
+- `add_to_menu`, `remove_from_menu`, `set_servings`, `new_week` and `search_recipes` actions, with responses scripts can use. Days can be written out ("thursday", "tomorrow").
+- Pantry: staples never added to the shopping list (adjustable list), with a reminder line to check before leaving. A pantry staple added by hand is marked missing and goes back to the pantry once checked.
+- A *Shopping list* computed from the menu: quantities scaled to the servings, products merged across recipes, rounded to what you buy, sorted by aisle. Checked lines and lines added by hand are never overwritten.
+- A *Weekly menu* list: one dish per line, linked automatically to the closest recipe (accents and typos tolerated), day as the due date, servings adjustable in the description.
+- Configuration from the UI (URL, user, app password), with a connection test, re-authentication and reconfiguration.
+- Household options: default servings, excluded categories, refresh interval.
+- Parsing of French ingredient lines (quantities, fractions, ranges, units, sections, notes, multiple lines) and a merge key per product. Validated against a real corpus of 545 lines.
+- Reading Nextcloud Cookbook recipes with a cache (details reloaded only when the recipe changed) and diagnostics with no secrets.
+- Skeleton of the `nextcloud_cookbook_menu` integration, CI (hassfest, HACS, ruff, pytest), HACS release and a deployment script to the development Home Assistant.

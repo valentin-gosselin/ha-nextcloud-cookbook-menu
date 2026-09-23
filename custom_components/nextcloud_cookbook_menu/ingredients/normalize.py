@@ -1,14 +1,14 @@
-"""Clé de fusion d'un nom d'ingrédient : deux lignes de même clé désignent le même produit à acheter."""
+"""Merge key for an ingredient name: two lines with the same key designate the same product to buy."""
 
 from __future__ import annotations
 
 import re
 import unicodedata
 
-# Mots vides retirés de la clé.
+# Stop words removed from the key.
 _MOTS_VIDES = {"de", "d", "du", "des", "la", "le", "les", "l", "a", "au", "aux", "en", "et", "un", "une"}
 
-# Qualificatifs qui ne changent pas le produit acheté (préparation, taille, maturité).
+# Qualifiers that do not change the product bought (preparation, size, ripeness).
 _QUALIFICATIFS = {
     "emince",
     "rape",
@@ -78,10 +78,10 @@ _QUALIFICATIFS = {
     "gro",
 }
 
-# « haché » ne change pas le produit, sauf pour la viande (steak haché, boeuf haché).
+# "chopped/minced" does not change the product, except for meat (minced steak, minced beef).
 _VIANDES = {"boeuf", "porc", "veau", "viande", "poulet", "agneau", "dinde", "volaille"}
 
-# Mots invariables qui se terminent par s ou x au singulier.
+# Invariable words that already end in s or x in the singular.
 _INVARIABLES = {
     "pois",
     "radis",
@@ -111,7 +111,7 @@ _INVARIABLES = {
     "ras",
 }
 
-# Équivalences de clés (après normalisation), pour les produits écrits de plusieurs façons.
+# Key equivalences (after normalization), for products written in several different ways.
 EQUIVALENCES: dict[str, str] = {
     "poudre amande": "amande poudre",
     "sucre poudre": "sucre",
@@ -139,27 +139,28 @@ EQUIVALENCES: dict[str, str] = {
 
 
 def sans_accents(texte: str) -> str:
-    """Minuscules, sans accents, ligatures dépliées."""
+    """Lowercase, no accents, ligatures expanded."""
     texte = texte.casefold().replace("œ", "oe").replace("æ", "ae")
     return "".join(c for c in unicodedata.normalize("NFD", texte) if unicodedata.category(c) != "Mn")
 
 
 def singulier(mot: str) -> str:
-    """Singulier approximatif d'un mot français (sans accents)."""
+    """Approximate singular of a French word (without accents)."""
     if len(mot) <= 3 or mot in _INVARIABLES:
         return mot
     if mot.endswith(("eaux", "eux", "oux")):
         return mot[:-1]
     if mot.endswith("aux"):
         return mot[:-3] + "al"
-    # Les mots en -is, -us, -os, -as sont presque toujours invariables (radis, couscous, anchois).
+    # Words ending in -is, -us, -os, -as are almost always invariable in French (e.g. "radis",
+    # "couscous", "anchois").
     if mot.endswith("s") and not mot.endswith(("ss", "is", "us", "os", "as")):
         return mot[:-1]
     return mot
 
 
 def cle(nom: str) -> str:
-    """Clé de fusion d'un nom d'ingrédient."""
+    """Merge key for an ingredient name."""
     texte = sans_accents(nom)
     texte = texte.replace("(s)", "s")
     texte = re.sub(r"\([^)]*\)", " ", texte)
@@ -177,7 +178,7 @@ def cle(nom: str) -> str:
             continue
         garde.append(mot)
     resultat = " ".join(garde) or " ".join(mots)
-    # « crème fraîche » est un produit : on remet « fraiche » si le nom commence par crème.
+    # "crème fraîche" is a product on its own: we put "fraiche" back if the name starts with crème.
     if resultat == "creme" and "fraiche" in mots:
         resultat = "creme fraiche"
     return EQUIVALENCES.get(resultat, resultat)

@@ -1,4 +1,4 @@
-"""Clés de fusion."""
+"""Merge keys."""
 
 from __future__ import annotations
 

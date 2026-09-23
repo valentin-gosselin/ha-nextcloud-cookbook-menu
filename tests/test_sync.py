@@ -1,4 +1,4 @@
-"""Synchronisation vers des listes existantes (story 2.5)."""
+"""Synchronization to existing lists (story 2.5)."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ COURSES_CIBLE = "todo.liste_du_foyer"
 
 
 class ListeSimulee(TodoListEntity):
-    """Liste todo complète (description et échéance), stockée en mémoire."""
+    """Full todo list (description and due date), stored in memory."""
 
     _attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM
@@ -120,7 +120,7 @@ async def test_recopie_menu_et_courses(hass: HomeAssistant, entree, freezer) -> 
     assert menu["Salade César au poulet"]["due"] == "2026-09-17"
     courses = await cible(hass, COURSES_CIBLE)
     assert "Citron (1)" in courses
-    assert "description" not in courses["Citron (1)"]  # liste sans description
+    assert "description" not in courses["Citron (1)"]  # list without a description field
 
 
 async def test_lignes_du_foyer_jamais_touchees(hass: HomeAssistant, entree, freezer) -> None:
@@ -159,7 +159,7 @@ async def test_mise_a_jour_et_cochage_remonte(hass: HomeAssistant, entree, freez
     assert "Escalope de poulet (1)" not in courses
     assert (await cible(hass, MENU_CIBLE))["Salade César au poulet"]["description"] == "8 couverts"
 
-    # Cochée au magasin, dans la liste du foyer.
+    # Checked off at the store, in the household list.
     await hass.services.async_call(
         TODO_DOMAIN,
         "update_item",
@@ -171,12 +171,12 @@ async def test_mise_a_jour_et_cochage_remonte(hass: HomeAssistant, entree, freez
     citron = next(ligne for ligne in planificateur.liste_de_courses() if ligne.libelle == "Citron (2)")
     assert citron.fait
 
-    # Décochée chez nous : redescend dans la cible.
+    # Unchecked on our side: flows back down to the target.
     planificateur.async_modifier_course(citron.uid, texte=None, description=None, fait=False)
     await attendre(hass, freezer)
     assert (await cible(hass, COURSES_CIBLE))["Citron (2)"]["status"] == "needs_action"
 
-    # Plat marqué cuisiné dans la cible : remonté au menu.
+    # Dish marked as cooked in the target: reflected back up to the menu.
     await hass.services.async_call(
         TODO_DOMAIN,
         "update_item",
@@ -191,7 +191,7 @@ async def test_ligne_cochee_d_emblee_et_date_retiree(hass: HomeAssistant, entree
     planificateur = entree.runtime_data.planner
     planificateur.async_ajouter_course("Pain")
     plat = planificateur.async_ajouter_plat("carry", jour=None)
-    # Déjà acheté avant la première synchronisation : la ligne arrive cochée.
+    # Already bought before the first sync: the line arrives checked off.
     thym = next(ligne for ligne in planificateur.liste_de_courses() if ligne.libelle.startswith("Thym"))
     planificateur.async_modifier_course(thym.uid, texte=None, description=None, fait=True)
     await attendre(hass, freezer)
@@ -211,7 +211,7 @@ async def test_ligne_cochee_d_emblee_et_date_retiree(hass: HomeAssistant, entree
 async def test_cible_indisponible_ou_erreur(hass: HomeAssistant, entree, freezer, caplog) -> None:
     synchro: Synchroniseur = entree.runtime_data.sync
     hass.states.async_set(MENU_CIBLE, "unavailable")
-    hass.states.async_set("todo.fantome", "0")  # un état sans entité : get_items échoue
+    hass.states.async_set("todo.fantome", "0")  # a state without an entity: get_items fails
     hass.config_entries.async_update_entry(entree, options={**entree.options, "sync_shopping_entity": "todo.fantome"})
     await ajouter(hass, "carry")
     await synchro.async_synchroniser()

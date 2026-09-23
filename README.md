@@ -208,6 +208,24 @@ script:
 - **Shopping list**: recomputed locally, instantly, whenever the menu, the options or the recipes change.
 - **Storage**: the menu, check states and history are stored in Home Assistant (`.storage/nextcloud_cookbook_menu.<entry>`), not in Nextcloud.
 
+## Languages
+
+The interface (configuration, options, actions, entities and both cards) is available in **English and French**.
+
+Two parts of the integration are language-dependent and only know these two languages:
+
+- the **ingredient parser** (quantities, units, plurals, notes), written for French first, with common English units;
+- the **voice sentences**, and the pantry index of products that keep.
+
+So a translation of the interface alone would promise more than the integration delivers. Contributions are welcome, and the pieces to add for a new language are:
+
+1. `custom_components/nextcloud_cookbook_menu/translations/<code>.json`, copied from `en.json`;
+2. the `TEXTES` and `TEXTES_RESERVE` tables in `frontend/cookbook-menu-card.js` (card texts);
+3. the sentence patterns in `assist.py` and the parsing rules in `voix.py`;
+4. units in `ingredients/units.py`, the aisles in `ingredients/aisles.py` and the pantry index in `ingredients/catalogue_placard.py`.
+
+Tests are the reference: `tests/fixtures/phrases_vocales.json` replays 132 sentences, and `tests/ingredients/` checks the parser against a corpus of 545 ingredient lines.
+
 ## Known limitations
 
 - Ingredients are free text in Nextcloud Cookbook. The parser is written for **French** first (and common English units), and is tested against 545 real ingredient lines. An unrecognised line keeps its original text, without quantity.

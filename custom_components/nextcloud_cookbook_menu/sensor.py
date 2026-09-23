@@ -1,4 +1,4 @@
-"""Capteurs des minuteurs de cuisson : heure de fin et étape en cours."""
+"""Sensors for cooking timers: end time and current step."""
 
 from __future__ import annotations
 
@@ -19,10 +19,10 @@ async def async_setup_entry(
     entry: CookbookMenuConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Un capteur par minuteur, selon le nombre réglé dans les options."""
+    """One sensor per timer, matching the count set in the options."""
     gestionnaire = entry.runtime_data.timers
     nombre = len(gestionnaire.minuteurs)
-    # Le nombre a pu baisser : on retire les capteurs devenus inutiles.
+    # The count may have gone down: remove sensors that are no longer needed.
     registre = er.async_get(hass)
     for entree_registre in er.async_entries_for_config_entry(registre, entry.entry_id):
         identifiant = entree_registre.unique_id.removeprefix(f"{entry.entry_id}_timer_")
@@ -32,7 +32,7 @@ async def async_setup_entry(
 
 
 class MinuteurSensor(SensorEntity):
-    """Heure de fin du minuteur, vide quand il ne tourne pas."""
+    """Timer end time, empty when it isn't running."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False

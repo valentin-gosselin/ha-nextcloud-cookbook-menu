@@ -1,4 +1,4 @@
-"""Analyse d'une demande vocale libre : « une salade césar jeudi pour quatre »."""
+"""Parsing of a free-form voice request: "a caesar salad thursday for four"."""
 
 from __future__ import annotations
 
@@ -37,15 +37,15 @@ _ARTICLES = {
 
 @dataclass(frozen=True, slots=True)
 class Demande:
-    """Plat, jour et couverts extraits d'une phrase."""
+    """Dish, day and headcount extracted from a sentence."""
 
     plat: str
     jour: str | None = None
     couverts: int | None = None
 
 
-# Mots qui trahissent la langue de la phrase. Les mots communs aux deux langues (« menu »,
-# « salade », les chiffres) sont écartés : seuls les mots outils comptent.
+# Words that give away the sentence's language. Words common to both languages ("menu",
+# "salad", numbers) are excluded: only function words count.
 _MARQUEURS = {
     "fr": re.compile(
         r"\b(?:ajoute|ajouter|ajoutes|rajoute|rajouter|mets|met|mettre|prevois|planifie|retire|retirer"
@@ -64,15 +64,15 @@ _MARQUEURS = {
 
 
 def langue(code: str | None) -> str:
-    """« fr » pour toute variante du français, « en » sinon."""
+    """ "fr" for any variant of French, "en" otherwise."""
     return "fr" if (code or "").lower().startswith("fr") else "en"
 
 
 def detecter_langue(texte: str | None, code_langue: str | None) -> str:
-    """Langue de la phrase dite, plutôt que celle réglée dans Home Assistant.
+    """Language of the spoken sentence, rather than the one configured in Home Assistant.
 
-    Les phrases sont reconnues quelle que soit la langue du pipeline : une phrase française dite à
-    un Home Assistant en anglais doit être analysée et répondue en français.
+    Sentences are recognized regardless of the pipeline's language: a French sentence spoken to
+    a Home Assistant instance set up in English must still be parsed and answered in French.
     """
     texte = (texte or "").replace("’", "'")
     scores = {cle: len(marqueurs.findall(texte)) for cle, marqueurs in _MARQUEURS.items()}
@@ -82,7 +82,7 @@ def detecter_langue(texte: str | None, code_langue: str | None) -> str:
 
 
 def analyser_demande(texte: str, code_langue: str | None) -> Demande:
-    """Sépare le plat du jour et des couverts, dans l'ordre où on les dit."""
+    """Split the dish from the day and headcount, in the order they're spoken."""
     cle = langue(code_langue)
     reste = re.sub(r"\s+", " ", texte.replace("’", "'")).strip(" .!?,")
     couverts = None

@@ -1,4 +1,4 @@
-"""Calcul de la liste de courses (code pur)."""
+"""Shopping list calculation (pure code)."""
 
 from __future__ import annotations
 
@@ -30,12 +30,12 @@ def par_cle(lignes):
 
 
 def test_salade_cesar_pour_deux() -> None:
-    """Critère de la story 2.2 : recette pour 4 ramenée à 2."""
+    """Story 2.2 criterion: recipe for 4 scaled down to 2."""
     lignes, _ = calculer([recette("69603", 2)])
     produits = par_cle(lignes)
     assert produits["escalope poulet"].libelle == "Escalope de poulet (1)"
     assert produits["salade"].libelle == "Salade verte (1)"
-    assert produits["citron"].libelle == "Citron (1)"  # 0,5 + 0,5 pour 4, soit 0,5 pour 2, arrondi à 1
+    assert produits["citron"].libelle == "Citron (1)"  # 0.5 + 0.5 for 4, i.e. 0.5 for 2, rounded up to 1
     assert "Parmesan" in produits["parmesan"].libelle
     assert produits["parmesan"].sources == {"Salade César au poulet": 2}
 
@@ -44,7 +44,7 @@ def test_fusion_entre_recettes_et_sources() -> None:
     lignes, _ = calculer([recette("2176038", 2), recette("68238", 2)])
     tomates = par_cle(lignes)["tomate"]
     assert tomates.sources == {"Carry de poulet": 2, "Couscous": 2}
-    assert tomates.libelle == "Tomates (2)"  # 70 g ramenés à la pièce, plus 1
+    assert tomates.libelle == "Tomates (2)"  # 70 g converted to whole units, plus 1
 
 
 def test_ordre_par_rayon_sans_tenir_compte_des_accents() -> None:
@@ -129,6 +129,6 @@ def test_rayons(cle, attendu) -> None:
 
 
 def test_aucun_produit_du_corpus_sans_rayon() -> None:
-    """Tous les produits alimentaires du corpus réel ont un rayon connu."""
+    """All food products in the real corpus have a known aisle."""
     lignes, _ = calculer([recette(i, r["yield"]) for i, r in CORPUS.items() if r["category"] != "Produits Ménagers"])
     assert [ligne.cle for ligne in lignes if ligne.rayon is Rayon.AUTRE] == []

@@ -1,4 +1,4 @@
-"""Tests du flux de configuration et des options."""
+"""Tests for the config flow and options."""
 
 from __future__ import annotations
 
@@ -94,7 +94,7 @@ DEMANDE = DemandeConnexion(
 
 
 async def suivre_connexion(hass: HomeAssistant, result: dict, identifiants, erreur_demarrage=None) -> dict:
-    """Choisit « Se connecter avec Nextcloud » et simule l'accès accordé dans le navigateur."""
+    """Picks "Sign in with Nextcloud" and simulates access being granted in the browser."""
     with (
         patch(
             "custom_components.nextcloud_cookbook_menu.config_flow.async_demarrer_connexion",
@@ -111,7 +111,7 @@ async def suivre_connexion(hass: HomeAssistant, result: dict, identifiants, erre
             return result
         assert result["url"] == DEMANDE.url_connexion
         await hass.async_block_till_done()
-        # Le frontend reprend le flux quand l'étape externe est terminée.
+        # The frontend resumes the flow once the external step is done.
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
     return result
@@ -262,7 +262,7 @@ async def test_options(hass, mock_client, config_entry) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Avant la 1.3.0, l'option ne gardait qu'une entité minuteur : elle devient une liste.
+    # Before 1.3.0, the option only kept a single timer entity: it becomes a list.
     hass.config_entries.async_update_entry(
         config_entry, options={**config_entry.options, "timer_entity": "timer.cuisine"}
     )

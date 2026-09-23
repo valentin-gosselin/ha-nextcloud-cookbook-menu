@@ -1,8 +1,8 @@
-"""Outils pour les agents de conversation LLM (story 3.2).
+"""Tools for LLM conversation agents (story 3.2).
 
-HA exige que les outils d'une intégration soient préfixés par son domaine (depuis 2026.9) :
-ils se nomment « nextcloud_cookbook_menu__<outil> ».
-Chaque outil appelle le planificateur, comme les actions et la voix.
+HA requires an integration's tools to be prefixed with its domain (since 2026.9):
+they are named "nextcloud_cookbook_menu__<tool>".
+Each tool calls the planner, just like the actions and voice commands.
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ def _plat(plat: Any) -> dict[str, Any]:
 
 
 class OutilCookbook(Tool):
-    """Base : récupère le planificateur et convertit les erreurs en réponse lisible."""
+    """Base: fetches the planner and converts errors into a readable response."""
 
     async def _executer(self, planificateur: Planificateur, arguments: dict[str, Any]) -> JsonObjectType:
         raise NotImplementedError  # pragma: no cover
@@ -187,7 +187,7 @@ class LireReserve(OutilCookbook):
 
 @callback
 def async_get_tools(hass: HomeAssistant, llm_context: LLMContext, api_id: str) -> LLMTools | None:
-    """Outils Nextcloud Cookbook Menu pour l'API Assist, si l'intégration est configurée."""
+    """Nextcloud Cookbook Menu tools for the Assist API, if the integration is configured."""
     if api_id != LLM_API_ASSIST or _planificateur(hass) is None:
         return None
     return LLMTools(

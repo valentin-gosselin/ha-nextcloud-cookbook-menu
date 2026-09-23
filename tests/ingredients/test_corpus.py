@@ -1,7 +1,7 @@
-"""Parseur contre le corpus réel : 545 lignes de 59 recettes Nextcloud Cookbook (export du 16/09/2026).
+"""Parser against the real corpus: 545 lines from 59 Nextcloud Cookbook recipes (export from 16/09/2026).
 
-Les attendus (`attendus_parseur.json`) ont été relus ligne par ligne. Quand le parseur se trompe
-encore, l'attendu contient la bonne réponse : ces lignes comptent comme ratées.
+The expected values (`attendus_parseur.json`) were reviewed line by line. When the parser still
+gets it wrong, the expected value holds the correct answer: these lines count as failures.
 """
 
 from __future__ import annotations
@@ -42,7 +42,7 @@ def test_precision_sur_le_corpus_reel() -> None:
     precision = 1 - len(rates) / len(attendus)
     detail = "\n".join(f"{ligne!r}\n  obtenu : {o}\n  attendu : {a}" for ligne, (o, a) in rates.items())
     assert precision >= SEUIL, f"précision {precision:.1%} < {SEUIL:.0%}\n{detail}"
-    # Ratés connus et acceptés au 16/09/2026 : si l'un d'eux se corrige, mettre à jour cette liste.
+    # Known and accepted failures as of 16/09/2026: if one of them gets fixed, update this list.
     assert set(rates) == {"4 Tortillas", "225 g de macarons un peu rassis"}, detail
 
 

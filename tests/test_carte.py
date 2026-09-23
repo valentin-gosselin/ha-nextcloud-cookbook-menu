@@ -1,4 +1,4 @@
-"""Carte de tableau de bord : commande websocket, recipe_id et enregistrement de la ressource (story 2.7)."""
+"""Dashboard card: websocket command, recipe_id, and resource registration (story 2.7)."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ async def test_commande_recettes(hass: HomeAssistant, entree, hass_ws_client: We
 
 
 async def test_commande_catalogue(hass: HomeAssistant, entree, hass_ws_client: WebSocketGenerator) -> None:
-    """Catalogue des recettes pour la carte de consultation (story 2.13)."""
+    """Recipe catalog for the browsing card (story 2.13)."""
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "nextcloud_cookbook_menu/catalog"})
     reponse = await client.receive_json()
@@ -87,7 +87,7 @@ async def test_fichier_de_la_carte_present() -> None:
 
 
 async def test_enregistrement_ignore_sans_serveur_http(hass: HomeAssistant) -> None:
-    await frontend.async_enregistrer_carte(hass)  # pas de hass.http en test : rien ne se passe
+    await frontend.async_enregistrer_carte(hass)  # no hass.http in tests: nothing happens
 
 
 def _hass_avec_ressources(ressources) -> MagicMock:
@@ -112,7 +112,7 @@ async def test_creation_de_la_ressource() -> None:
 
 
 async def test_ancienne_ressource_supprimee() -> None:
-    """Renommage du domaine : la ressource du domaine cookbook_menu est retirée (story 2.13)."""
+    """Domain rename: the cookbook_menu domain's resource is removed (story 2.13)."""
     ressources = MagicMock(loaded=True)
     ressources.async_items.return_value = [
         {"id": "vieille", "url": "/cookbook_menu_static/cookbook-menu-card.js?v=1789716075"},

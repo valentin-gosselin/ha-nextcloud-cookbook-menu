@@ -1,4 +1,4 @@
-"""Fiche recette pour la carte : ingrédients analysés, étapes avec minuteurs, photo servie par HA."""
+"""Recipe card data: parsed ingredients, steps with timers, photo served by HA."""
 
 from __future__ import annotations
 
@@ -20,12 +20,12 @@ from .ingredients.parser import analyser
 URL_IMAGE = "/api/nextcloud_cookbook_menu/image/{entry_id}/{recipe_id}"
 URL_IMAGE_TAILLE = f"{URL_IMAGE}/{{taille}}"
 VALIDITE_IMAGE = timedelta(hours=24)
-# Tailles servies par l'application Cookbook de Nextcloud.
+# Sizes served by Nextcloud's Cookbook app.
 TAILLES = ("full", "thumb", "thumb16")
 
 
 def image_signee(hass: HomeAssistant, entry_id: str, recipe_id: str, taille: str = "full") -> str:
-    """Adresse de la photo, signée par Home Assistant pour 24 h (Nextcloud exige les identifiants)."""
+    """Photo URL, signed by Home Assistant for 24 hours (Nextcloud requires credentials)."""
     chemin = (
         URL_IMAGE.format(entry_id=entry_id, recipe_id=recipe_id)
         if taille == "full"
@@ -35,7 +35,7 @@ def image_signee(hass: HomeAssistant, entry_id: str, recipe_id: str, taille: str
 
 
 def ingredients_structures(recette: Recipe) -> list[dict[str, Any]]:
-    """Lignes d'ingrédients analysées, que la carte remet à l'échelle des couverts choisis."""
+    """Parsed ingredient lines, which the card rescales to the chosen headcount."""
     lignes: list[dict[str, Any]] = []
     for brut in recette.ingredients:
         analyses = analyser(brut)
@@ -61,7 +61,7 @@ def ingredients_structures(recette: Recipe) -> list[dict[str, Any]]:
 
 
 def etapes_structurees(recette: Recipe) -> list[dict[str, Any]]:
-    """Étapes avec la position des durées détectées (pour en faire des boutons minuteurs)."""
+    """Steps with the position of detected durations (to turn them into timer buttons)."""
     return [
         {
             "text": etape,
@@ -75,7 +75,7 @@ def etapes_structurees(recette: Recipe) -> list[dict[str, Any]]:
 
 
 def fiche(hass: HomeAssistant, entry_id: str, recette: Recipe, couverts: int) -> dict[str, Any]:
-    """Tout ce que la fenêtre de recette affiche."""
+    """Everything the recipe window displays."""
     entree = hass.config_entries.async_get_entry(entry_id)
     nextcloud = entree.data[CONF_URL].rstrip("/") if entree else ""
     return {
@@ -98,7 +98,7 @@ def fiche(hass: HomeAssistant, entry_id: str, recette: Recipe, couverts: int) ->
 
 
 class VueImageRecette(HomeAssistantView):
-    """Photo d'une recette relayée depuis Nextcloud (l'accès à Nextcloud exige les identifiants)."""
+    """Recipe photo relayed from Nextcloud (accessing Nextcloud requires credentials)."""
 
     url = URL_IMAGE
     extra_urls: ClassVar[list[str]] = [URL_IMAGE_TAILLE]

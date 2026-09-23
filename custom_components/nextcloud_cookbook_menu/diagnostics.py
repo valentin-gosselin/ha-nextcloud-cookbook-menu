@@ -1,4 +1,4 @@
-"""Diagnostics téléchargeables, sans secret."""
+"""Downloadable diagnostics, with no secrets."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ A_MASQUER = {CONF_PASSWORD, CONF_USERNAME}
 
 
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: CookbookMenuConfigEntry) -> dict[str, Any]:
-    """Diagnostics d'une entrée."""
+    """Diagnostics for a config entry."""
     coordinateur = entry.runtime_data.coordinator
     index = coordinateur.data
     categories: dict[str, int] = {}

@@ -1,7 +1,7 @@
-"""Unités de mesure rencontrées dans les recettes (français d'abord, anglais courant ensuite).
+"""Measurement units found in recipes (French first, common English next).
 
-Chaque unité canonique appartient à une famille. Seules les unités d'une même famille
-convertible (masse, volume) peuvent s'additionner entre elles.
+Each canonical unit belongs to a family. Only units from the same convertible family
+(mass, volume) can be added together.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from enum import StrEnum
 
 
 class Famille(StrEnum):
-    """Famille d'unités."""
+    """Unit family."""
 
     MASSE = "masse"
     VOLUME = "volume"
@@ -22,11 +22,11 @@ class Famille(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class Unite:
-    """Unité canonique."""
+    """Canonical unit."""
 
     code: str
     famille: Famille
-    # Facteur vers l'unité de base de la famille (g pour la masse, ml pour le volume).
+    # Factor to the family's base unit (g for mass, ml for volume).
     facteur: float = 1.0
 
 
@@ -82,21 +82,21 @@ UNITES: dict[str, Unite] = {
     )
 }
 
-# Variantes écrites -> code canonique. Les expressions régulières sont appliquées sur un
-# texte en minuscules ; l'ordre compte (les plus longues d'abord).
+# Written variants -> canonical code. The regular expressions are applied to lowercased
+# text; order matters (the longest ones first).
 _VARIANTES: list[tuple[str, str]] = [
-    # Cuillères à soupe
+    # Tablespoons
     (r"cuill?(?:e|è)res?\s+(?:à|a)\s+soupe", "c. à s."),
     (r"cuil\.?\s*(?:à|a)\s*soupe", "c. à s."),
     (r"c\.?\s*(?:à|a)\.?\s*s(?:oupe)?\.?", "c. à s."),
     (r"càs|cas\b|cs|c\.s\.|tbsp|tablespoons?", "c. à s."),
-    # Cuillères à café
+    # Teaspoons
     (r"cuill?(?:e|è)res?\s+(?:à|a)\s+(?:café|cafe|thé|the)", "c. à c."),
     (r"cuil\.?\s*(?:à|a)\s*(?:café|cafe)", "c. à c."),
     (r"c\.?\s*(?:à|a)\.?\s*c(?:afé)?\.?", "c. à c."),
     (r"càc|cc|c\.c\.|tsp|teaspoons?", "c. à c."),
     (r"cuill?(?:e|è)res?|cuil\.", "cuillère"),
-    # Masse
+    # Mass
     (r"milligrammes?|mg", "mg"),
     (r"kilogrammes?|kilos?|kg", "kg"),
     (r"grammes?|gr\.?|g", "g"),
@@ -105,7 +105,7 @@ _VARIANTES: list[tuple[str, str]] = [
     (r"centilitres?|cl", "cl"),
     (r"décilitres?|decilitres?|dl", "dl"),
     (r"litres?|l", "l"),
-    # Contenants et pièces
+    # Containers and pieces
     (r"pinc(?:é|e)es?", "pincée"),
     (r"gousses?|gou\.", "gousse"),
     (r"branches?", "branche"),
@@ -145,16 +145,17 @@ _MOTIF = re.compile(
 
 
 def lire_unite(texte: str) -> tuple[str | None, str]:
-    """Lit une unité au début de `texte`. Renvoie (code canonique ou None, reste du texte)."""
+    """Reads a unit at the start of `texte`. Returns (canonical code or None, rest of the text)."""
     correspondance = _MOTIF.match(texte)
     if correspondance is None:
         return None, texte
     groupe = next(nom for nom, valeur in correspondance.groupdict().items() if valeur is not None)
     code = _VARIANTES[int(groupe[1:])][1]
-    # La fin de motif exige un séparateur : « g » de « gros » ou « l » de « lait » ne sont pas des unités.
+    # The end of the pattern requires a separator: the "g" in "gros" or the "l" in "lait"
+    # are not units.
     return code, texte[correspondance.end() :].lstrip(" .")
 
 
 def famille(code: str | None) -> Famille | None:
-    """Famille d'une unité canonique."""
+    """Family of a canonical unit."""
     return UNITES[code].famille if code in UNITES else None

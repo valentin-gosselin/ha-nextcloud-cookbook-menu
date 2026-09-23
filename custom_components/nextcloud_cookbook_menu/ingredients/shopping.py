@@ -1,7 +1,7 @@
-"""Calcul de la liste de courses : menu + recettes -> produits à acheter.
+"""Shopping list computation: menu + recipes -> products to buy.
 
-Code pur et déterministe (mêmes entrées, même sortie), pour que le recalcul à chaque
-changement soit sans surprise et entièrement testable.
+Pure, deterministic code (same inputs, same output), so recomputing on every change is
+predictable and fully testable.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from .pantry import est_au_placard
 from .parser import Ingredient, analyser
 from .units import UNITES, Famille
 
-# Clés dont le nom affiché vient d'un alias (« Œufs ») et ne doit pas être remplacé.
+# Keys whose displayed name comes from an alias ("Œufs") and must not be replaced.
 _NOMS_IMPOSES = {cible for cible, _, _ in ALIAS.values()}
 
 _PLURIELS = {"morceau": "morceaux", "noix": "noix", "tête": "têtes", "pincée": "pincées", "boîte": "boîtes"}
@@ -25,7 +25,7 @@ _PLURIELS = {"morceau": "morceaux", "noix": "noix", "tête": "têtes", "pincée"
 
 @dataclass(frozen=True, slots=True)
 class Contribution:
-    """Une recette du menu, avec son facteur d'échelle."""
+    """A recipe from the menu, with its scaling factor."""
 
     recette: str
     couverts: int
@@ -35,13 +35,13 @@ class Contribution:
 
 @dataclass(slots=True)
 class LigneCourses:
-    """Un produit à acheter, agrégé sur toutes les recettes du menu."""
+    """A product to buy, aggregated over every recipe in the menu."""
 
     cle: str
     nom: str
     rayon: Rayon
-    # Quantités par « mesure » : "g", "ml", "c. à c." (cuillères ramenées en c. à c.), une unité de
-    # contenant ("gousse"...), ou "pièce" pour les quantités sans unité.
+    # Quantities per "measure": "g", "ml", "c. à c." (spoons brought back to c. à c.), a container
+    # unit ("gousse"...), or "pièce" for quantities with no unit.
     quantites: dict[str, float] = field(default_factory=dict)
     sans_quantite: bool = False
     sources: dict[str, int] = field(default_factory=dict)
@@ -52,7 +52,7 @@ class LigneCourses:
         return f"{self.nom} ({quantites})" if quantites else self.nom
 
     def mesure(self) -> dict[str, float]:
-        """Quantités arrondies à l'achat, pour comparer deux calculs."""
+        """Quantities rounded to what is actually bought, to compare two computations."""
         return {m: arrondir(m, q, self.cle) for m, q in self.quantites.items()}
 
 
@@ -75,7 +75,7 @@ def _mesure_et_valeur(ingredient: Ingredient, facteur: float) -> tuple[str, floa
 
 
 def arrondir(mesure: str, valeur: float, cle: str | None = None) -> float:
-    """Quantité réellement achetée : au paquet quand on le connaît, sinon au pas courant."""
+    """Quantity actually bought: rounded to the package when known, otherwise to the usual step."""
     if cle is not None and (paquet := conditionnement(cle, mesure)):
         return math.ceil(round(valeur / paquet, 6)) * paquet
     if mesure == "g":
@@ -86,19 +86,19 @@ def arrondir(mesure: str, valeur: float, cle: str | None = None) -> float:
         return math.ceil(round(valeur, 6) / pas) * pas
     if mesure == "c. à c.":
         return math.ceil(round(valeur, 6) * 2) / 2
-    # Pièces et contenants : entier supérieur.
+    # Pieces and containers: round up to the next integer.
     return float(max(1, math.ceil(round(valeur, 6))))
 
 
 def _nombre(valeur: float) -> str:
-    """Au dixième supérieur, virgule décimale : 1,25 donne « 1,3 »."""
+    """Rounded up to the nearest tenth, decimal comma: 1.25 gives "1,3"."""
     valeur = math.ceil(round(valeur * 10, 6)) / 10
     texte = f"{valeur:.1f}".rstrip("0").rstrip(".")
     return texte.replace(".", ",")
 
 
 def formater_quantites(quantites: dict[str, float], cle: str | None = None) -> str:
-    """« 1 kg + 2 gousses », avec arrondi à l'achat et unités lisibles."""
+    """ "1 kg + 2 gousses" (1 kg + 2 cloves), with rounding to the purchase and readable units."""
     morceaux = []
     for mesure, valeur in quantites.items():
         arrondi = arrondir(mesure, valeur, cle)
@@ -134,9 +134,10 @@ def calculer(
     placard: Iterable[str] = (),
     epuises: Iterable[str] = (),
 ) -> tuple[list[LigneCourses], list[str]]:
-    """Lignes de courses triées par rayon, et noms des produits du placard écartés.
+    """Shopping lines sorted by aisle, and names of the pantry products left out.
 
-    `epuises` : clés de produits du placard signalés épuisés, qui redeviennent des courses normales.
+    `epuises`: keys of pantry products flagged as out of stock, which become normal
+    shopping items again.
     """
     placard = set(placard)
     epuises = set(epuises)
@@ -167,8 +168,8 @@ def calculer(
                 elif len(ingredient.nom) < len(ligne.nom) and ligne.cle not in _NOMS_IMPOSES:
                     ligne.nom = ingredient.nom
                 if cle not in comptees:
-                    # Une recette qui cite deux fois un produit (« sel » dans la salade et la sauce)
-                    # ne compte ses couverts qu'une fois.
+                    # A recipe that mentions a product twice ("salt" in the salad and the sauce)
+                    # only counts its servings once.
                     comptees.add(cle)
                     ligne.sources[contribution.recette] = (
                         ligne.sources.get(contribution.recette, 0) + contribution.couverts
@@ -184,10 +185,10 @@ def calculer(
 
 
 def trier(lignes: Iterable[LigneCourses]) -> list[LigneCourses]:
-    """Ordre de passage en magasin : par rayon, puis par nom sans accents."""
+    """Walk-through order in store: by aisle, then by name without accents."""
     return sorted(lignes, key=lambda produit: (produit.rayon, sans_accents(produit.nom)))
 
 
 def augmentation(avant: dict[str, float], apres: dict[str, float]) -> dict[str, float]:
-    """Mesures dont la quantité arrondie a augmenté (écart), vide si rien n'a augmenté."""
+    """Measures whose rounded quantity increased (the delta), empty if nothing increased."""
     return {m: apres[m] - avant.get(m, 0) for m in apres if apres[m] > avant.get(m, 0) + 1e-9}

@@ -1,6 +1,6 @@
-"""Traitement des ingrédients : analyse des lignes, unités, clés de fusion.
+"""Ingredient processing: line parsing, units, merge keys.
 
-Code Python pur, sans dépendance à Home Assistant, pour être testable isolément.
+Pure Python code, with no dependency on Home Assistant, so it can be tested in isolation.
 """
 
 from .normalize import cle

@@ -1,4 +1,4 @@
-"""Lecture des unités."""
+"""Unit parsing."""
 
 from __future__ import annotations
 

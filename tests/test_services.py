@@ -1,4 +1,4 @@
-"""Actions de service (story 2.4)."""
+"""Service actions (story 2.4)."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ JEUDI = date(2026, 9, 17)
 
 @pytest.fixture(autouse=True)
 async def langue_et_date(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-    freezer.move_to("2026-09-16 12:00:00+02:00")  # un mercredi
+    freezer.move_to("2026-09-16 12:00:00+02:00")  # a Wednesday
     await hass.config.async_update(language="fr", time_zone="Europe/Paris")
 
 
@@ -118,10 +118,10 @@ async def test_nouvelle_semaine(hass: HomeAssistant, entree) -> None:
     planificateur = entree.runtime_data.planner
     from datetime import date as _date
 
-    planificateur.async_ajouter_plat("carry", jour=_date(2026, 9, 14))  # passé
-    planificateur.async_ajouter_plat("tartiflette", jour=_date(2026, 9, 18))  # à venir
-    planificateur.async_ajouter_plat("restes", fait=True)  # cuisiné, sans date
-    planificateur.async_ajouter_plat("chili")  # sans date, pas cuisiné
+    planificateur.async_ajouter_plat("carry", jour=_date(2026, 9, 14))  # past
+    planificateur.async_ajouter_plat("tartiflette", jour=_date(2026, 9, 18))  # upcoming
+    planificateur.async_ajouter_plat("restes", fait=True)  # cooked, no date
+    planificateur.async_ajouter_plat("chili")  # no date, not cooked
     planificateur.async_ajouter_course("Pain", fait=True)
     planificateur.async_ajouter_course("Lessive")
     planificateur.stockage.donnees.historique.append(

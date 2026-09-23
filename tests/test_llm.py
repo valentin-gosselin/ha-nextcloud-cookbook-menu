@@ -1,4 +1,4 @@
-"""Outils LLM (story 3.2)."""
+"""LLM tools (story 3.2)."""
 
 from __future__ import annotations
 

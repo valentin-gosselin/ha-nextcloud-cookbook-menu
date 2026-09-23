@@ -1,4 +1,4 @@
-"""Minuteurs de cuisson tenus par l'intégration : trois en parallèle, pour suivre plusieurs plats."""
+"""Cooking timers managed by the integration: three in parallel, to track multiple dishes."""
 
 from __future__ import annotations
 
@@ -13,11 +13,11 @@ from homeassistant.util import dt as dt_util
 
 @dataclass(slots=True)
 class Minuteur:
-    """Un minuteur en cours : ce que la fiche a lancé."""
+    """A running timer: what the recipe card started."""
 
     nom: str | None = None
     fin: datetime | None = None
-    # Entité timer.* de l'utilisateur démarrée en même temps, s'il en a réglé.
+    # The user's timer.* entity started at the same time, if they set one.
     entite: str | None = None
 
     @property
@@ -26,7 +26,7 @@ class Minuteur:
 
 
 class GestionnaireMinuteurs:
-    """Les minuteurs de l'entrée (trois par défaut), exposés en capteurs et pilotés par les actions."""
+    """The entry's timers (three by default), exposed as sensors and driven by actions."""
 
     def __init__(self, hass: HomeAssistant, nombre: int) -> None:
         self.hass = hass
@@ -50,7 +50,7 @@ class GestionnaireMinuteurs:
 
     @callback
     def async_demarrer(self, nom: str, secondes: int, entite: str | None = None) -> int | None:
-        """Occupe le premier minuteur libre. Renvoie son numéro, ou None s'ils tournent tous."""
+        """Claim the first free timer. Return its number, or None if they're all running."""
         index = next((i for i, m in enumerate(self.minuteurs) if m.libre), None)
         if index is None:
             return None
@@ -69,7 +69,7 @@ class GestionnaireMinuteurs:
 
     @callback
     def async_arreter(self, numero: int) -> Minuteur | None:
-        """Libère un minuteur (fin atteinte ou arrêt demandé). Renvoie ce qu'il contenait."""
+        """Free a timer (end reached or stop requested). Return what it contained."""
         if not 1 <= numero <= len(self.minuteurs):
             return None
         index = numero - 1

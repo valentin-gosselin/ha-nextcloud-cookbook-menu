@@ -1,4 +1,4 @@
-"""Règles du parseur, une par une."""
+"""Parser rules, one by one."""
 
 from __future__ import annotations
 

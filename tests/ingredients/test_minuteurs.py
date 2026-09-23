@@ -1,4 +1,4 @@
-"""Durées des étapes (minuteurs de la fiche recette)."""
+"""Step durations (recipe sheet timers)."""
 
 from __future__ import annotations
 

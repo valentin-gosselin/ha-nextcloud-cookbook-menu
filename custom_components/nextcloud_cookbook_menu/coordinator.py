@@ -1,4 +1,4 @@
-"""Coordinateur : index des recettes Nextcloud Cookbook, rafraîchi périodiquement."""
+"""Coordinator: index of Nextcloud Cookbook recipes, refreshed periodically."""
 
 from __future__ import annotations
 
@@ -28,14 +28,14 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass(slots=True)
 class RecipeIndex:
-    """Recettes disponibles, après exclusion des catégories choisies dans les options."""
+    """Recipes available, after excluding the categories chosen in the options."""
 
     recipes: dict[str, Recipe] = field(default_factory=dict)
     excluded: dict[str, Recipe] = field(default_factory=dict)
 
 
 class CookbookCoordinator(DataUpdateCoordinator[RecipeIndex]):
-    """Charge la liste des recettes et ne recharge le détail que des recettes modifiées."""
+    """Loads the recipe list and only reloads the details of recipes that changed."""
 
     config_entry: CookbookMenuConfigEntry
 

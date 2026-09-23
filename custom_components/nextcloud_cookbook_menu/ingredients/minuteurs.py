@@ -1,8 +1,8 @@
-"""Durées écrites dans les étapes d'une recette, pour en faire des minuteurs.
+"""Durations written in a recipe's steps, to turn them into timers.
 
-Exemples réels : « 25 mn », « 40 à 45 minutes », « 1-2 minutes », « 2 ou 3 min », « 1/2 heure »,
-« 1 h 30 », « 30 secondes ». Pour une plage, le minuteur prend la plus petite valeur : on vérifie
-la cuisson au plus tôt.
+Real-world examples: "25 mn", "40 to 45 minutes", "1-2 minutes", "2 or 3 min", "1/2 hour",
+"1 h 30", "30 seconds". For a range, the timer takes the smallest value: we check on the
+cooking as early as possible.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ _DUREE = re.compile(
 
 @dataclass(frozen=True, slots=True)
 class Minuteur:
-    """Une durée trouvée dans un texte."""
+    """A duration found in a text."""
 
     texte: str
     debut: int
@@ -52,15 +52,15 @@ def _valeur(texte: str) -> float:
 
 
 def trouver_minuteurs(texte: str) -> list[Minuteur]:
-    """Durées d'une étape, dans l'ordre du texte."""
+    """Durations found in a step, in text order."""
     resultat: list[Minuteur] = []
     for correspondance in _DUREE.finditer(texte or ""):
         unite = _UNITES[correspondance.group("unite").lower()]
         secondes = _valeur(correspondance.group("a")) * unite
-        # « 1 h 30 » : minutes après les heures.
+        # "1 h 30": minutes after the hours.
         if correspondance.group("complement") and unite == 3600:
             secondes += int(correspondance.group("complement")) * 60
-        # « s » seul après un nombre est trop ambigu (« 2 s » peut être une coquille) sauf « sec ».
+        # "s" alone after a number is too ambiguous ("2 s" could be a typo) except for "sec".
         if correspondance.group("unite") == "s" and secondes < 5:
             continue
         if secondes <= 0:

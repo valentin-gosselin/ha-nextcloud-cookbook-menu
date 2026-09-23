@@ -1,4 +1,4 @@
-"""Libellés écrits dans les listes (hors traductions HA, qui ne couvrent pas le contenu des éléments)."""
+"""Labels written into lists (outside HA translations, which don't cover list item content)."""
 
 from __future__ import annotations
 
@@ -31,5 +31,5 @@ _LIBELLES = {
 
 
 def libelles(hass: HomeAssistant) -> dict[str, str]:
-    """Libellés dans la langue de l'instance (français, sinon anglais)."""
+    """Labels in the instance's language (French, otherwise English)."""
     return _LIBELLES["fr" if hass.config.language.startswith("fr") else "en"]

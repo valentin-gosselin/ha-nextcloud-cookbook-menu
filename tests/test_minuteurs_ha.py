@@ -1,4 +1,4 @@
-"""Minuteurs de cuisson côté Home Assistant (story 2.14)."""
+"""Cooking timers on the Home Assistant side (story 2.14)."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ async def lancer(hass: HomeAssistant, **donnees) -> None:
 
 
 async def test_evenement_toujours_emis(hass: HomeAssistant, mock_client, config_entry) -> None:
-    """Sans rien configurer, l'intégration émet un événement : les automatisations font le reste."""
+    """With nothing configured, the integration fires an event: automations handle the rest."""
     await installer(hass, config_entry)
     evenements = async_capture_events(hass, EVENEMENT_MINUTEUR)
     await lancer(hass)
@@ -40,14 +40,14 @@ async def test_evenement_toujours_emis(hass: HomeAssistant, mock_client, config_
         "timer": 1,
         "entity_id": None,
     }
-    # Le minuteur occupe le premier capteur de l'intégration.
+    # The timer occupies the integration's first sensor.
     gestionnaire = config_entry.runtime_data.timers
     assert gestionnaire.minuteurs[0].nom == "Étape 3 - Carry de poulet"
     assert hass.states.get("sensor.valentin_cloud_exemple_fr_timer_1").state != "unknown"
 
 
 async def test_entites_minuteur(hass: HomeAssistant, mock_client, config_entry) -> None:
-    """Plusieurs minuteurs à soi : on prend le premier au repos, puis le suivant."""
+    """Several timers of one's own: take the first idle one, then the next."""
     await installer(hass, config_entry, **{CONF_TIMER_ENTITY: ["timer.cuisine", "timer.four"]})
     hass.states.async_set("timer.cuisine", "idle")
     hass.states.async_set("timer.four", "idle")
@@ -62,18 +62,18 @@ async def test_entites_minuteur(hass: HomeAssistant, mock_client, config_entry) 
     gestionnaire = config_entry.runtime_data.timers
     assert [m.entite for m in gestionnaire.minuteurs] == ["timer.cuisine", "timer.four", None]
 
-    # Arrêt du deuxième : son entité est annulée, le minuteur redevient libre.
+    # Stopping the second: its entity is cancelled, the timer becomes free again.
     await hass.services.async_call(DOMAIN, "stop_timer", {"timer": 2}, blocking=True)
     assert annulations[0].data == {"entity_id": "timer.four"}
     assert gestionnaire.minuteurs[1].libre
 
-    # Arrêt de tous.
+    # Stop all.
     await hass.services.async_call(DOMAIN, "stop_timer", {}, blocking=True)
     assert all(m.libre for m in gestionnaire.minuteurs)
 
 
 async def test_tous_les_minuteurs_occupes(hass: HomeAssistant, mock_client, config_entry) -> None:
-    """Au-delà du nombre réglé, la carte garde son compte à rebours mais HA ne suit plus."""
+    """Beyond the configured count, the card keeps its countdown but HA stops tracking it."""
     from custom_components.nextcloud_cookbook_menu.const import CONF_TIMERS_COUNT
 
     await installer(hass, config_entry, **{CONF_TIMERS_COUNT: 2})
@@ -98,7 +98,7 @@ async def test_appareil_vocal(hass: HomeAssistant, mock_client, config_entry) ->
 
 
 async def test_appareil_sans_minuteur(hass: HomeAssistant, mock_client, config_entry) -> None:
-    """Un appareil qui ne sait pas tenir de minuteur ne doit pas passer inaperçu."""
+    """A device that can't hold a timer must not go unnoticed."""
     await installer(hass, config_entry, **{CONF_TIMER_DEVICE: "grille-pain"})
     with (
         patch(
@@ -119,7 +119,7 @@ async def test_minuteur_sans_nom(hass: HomeAssistant, mock_client, config_entry)
 
 
 async def test_fin_du_minuteur_libere_la_place(hass: HomeAssistant, mock_client, config_entry, freezer) -> None:
-    """Une fois la durée écoulée, le minuteur se libère tout seul."""
+    """Once the duration has elapsed, the timer frees itself."""
     from datetime import timedelta
 
     from pytest_homeassistant_custom_component.common import async_fire_time_changed

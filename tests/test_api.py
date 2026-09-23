@@ -1,4 +1,4 @@
-"""Tests du client HTTP Cookbook (réponses simulées)."""
+"""Tests for the Cookbook HTTP client (simulated responses)."""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ BASE = "https://cloud.exemple.fr"
 
 @pytest.fixture
 async def client(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> CookbookClient:
-    # aioclient_mock doit être actif avant la création de la session.
+    # aioclient_mock must be active before the session is created.
     return CookbookClient(async_get_clientsession(hass), f"{BASE}/", "valentin", "secret")
 
 

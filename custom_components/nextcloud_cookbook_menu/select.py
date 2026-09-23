@@ -1,4 +1,4 @@
-"""Listes déroulantes : recette à ajouter et jour prévu."""
+"""Dropdown lists: recipe to add and planned day."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ async def async_setup_entry(
 
 
 class RecetteSelect(CookbookMenuControle, SelectEntity):
-    """Toutes les recettes, par leur nom."""
+    """All recipes, by name."""
 
     def __init__(self, entry: CookbookMenuConfigEntry) -> None:
         super().__init__(entry, "recipe")
@@ -38,7 +38,7 @@ class RecetteSelect(CookbookMenuControle, SelectEntity):
 
 
 class JourSelect(CookbookMenuControle, SelectEntity):
-    """Jour prévu pour le plat à ajouter (libellés traduits)."""
+    """Planned day for the dish to add (translated labels)."""
 
     def __init__(self, entry: CookbookMenuConfigEntry) -> None:
         super().__init__(entry, "day")

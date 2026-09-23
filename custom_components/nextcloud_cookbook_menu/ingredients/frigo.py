@@ -1,8 +1,8 @@
-"""Frigo : ce qui a été acheté pour le menu et pas encore consommé (code pur).
+"""Fridge: what was bought for the menu and not consumed yet (pure code).
 
-Les quantités sont exprimées dans les mesures de la liste de courses (g, ml, pièce, gousse...).
-Le frais expire au bout de 7 jours, l'épicerie au bout de 60 : au-delà, on considère le produit
-consommé ou jeté, pour ne jamais croire longtemps à un stock qui n'existe plus.
+Quantities are expressed in the shopping list's measures (g, ml, piece, clove...). Fresh
+items expire after 7 days, pantry items after 60: beyond that, the product is considered
+consumed or thrown out, so we never trust stock that no longer exists for long.
 """
 
 from __future__ import annotations
@@ -14,14 +14,14 @@ from .aisles import Rayon
 
 DUREE_FRAIS = timedelta(days=7)
 DUREE_EPICERIE = timedelta(days=60)
-# Seuls ces rayons se gardent longtemps. Un produit non reconnu est traité comme du frais :
-# au pire il est oublié trop tôt et revient dans les courses, alors qu'une viande gardée
-# 60 jours ferait croire qu'on l'a encore.
+# Only these aisles keep for a long time. An unrecognized product is treated as fresh:
+# at worst it is forgotten too early and comes back on the shopping list, whereas meat kept
+# for 60 days would make us think we still have it.
 _RAYONS_LONGS = {Rayon.EPICERIE_SALEE, Rayon.EPICERIE_SUCREE, Rayon.SURGELES, Rayon.BOISSONS, Rayon.MAISON}
 
 
-# Durées de conservation par produit, quand le rayon ne suffit pas : l'ail et les pommes de terre
-# tiennent des semaines, la viande et la salade quelques jours.
+# Shelf life per product, when the aisle is not enough: garlic and potatoes keep for weeks,
+# meat and lettuce only a few days.
 DUREES_PRODUITS: dict[str, int] = {
     "ail": 30,
     "oignon": 30,
@@ -61,7 +61,7 @@ DUREES_PRODUITS: dict[str, int] = {
 
 
 def duree_de_vie(rayon: Rayon, cle: str | None = None) -> timedelta:
-    """Durée de conservation : la table par produit d'abord, le rayon ensuite."""
+    """Shelf life: the per-product table first, then the aisle."""
     if cle:
         mots = cle.split()
         for longueur in range(len(mots), 0, -1):
@@ -78,7 +78,7 @@ def ajouter(
     rayon: Rayon,
     jour: date,
 ) -> None:
-    """Range un achat. L'expiration repart de l'achat le plus récent."""
+    """Files away a purchase. The expiry date resets from the most recent purchase."""
     entree = frigo.setdefault(cle, {"nom": nom, "quantites": {}})
     for mesure, valeur in quantites.items():
         entree["quantites"][mesure] = round(entree["quantites"].get(mesure, 0) + valeur, 4)
@@ -86,7 +86,7 @@ def ajouter(
 
 
 def retirer(frigo: dict[str, dict[str, Any]], cle: str, quantites: dict[str, float]) -> None:
-    """Retire des quantités ; le produit disparaît quand il ne reste plus rien."""
+    """Removes quantities; the product disappears once nothing is left."""
     entree = frigo.get(cle)
     if entree is None:
         return
@@ -102,7 +102,7 @@ def retirer(frigo: dict[str, dict[str, Any]], cle: str, quantites: dict[str, flo
 
 
 def expirer(frigo: dict[str, dict[str, Any]], jour: date) -> list[str]:
-    """Retire les produits expirés. Renvoie leurs noms."""
+    """Removes expired products. Returns their names."""
     expires = [c for c, e in frigo.items() if e.get("expire") and date.fromisoformat(e["expire"]) < jour]
     noms = [frigo[c]["nom"] for c in expires]
     for c in expires:
@@ -111,5 +111,5 @@ def expirer(frigo: dict[str, dict[str, Any]], jour: date) -> list[str]:
 
 
 def manque(besoin: dict[str, float], stock: dict[str, float]) -> dict[str, float]:
-    """Ce qu'il reste à acheter, par mesure (vide si le stock couvre tout)."""
+    """What is still left to buy, per measure (empty if stock covers everything)."""
     return {m: round(v - stock.get(m, 0), 4) for m, v in besoin.items() if v - stock.get(m, 0) > 1e-6}

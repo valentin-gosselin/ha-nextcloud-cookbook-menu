@@ -1,14 +1,14 @@
-/* Carte « Nextcloud Cookbook Menu » pour Home Assistant.
+/* "Nextcloud Cookbook Menu" card for Home Assistant.
  *
- * Servie et enregistrée automatiquement par l'intégration nextcloud_cookbook_menu.
+ * Served and registered automatically by the nextcloud_cookbook_menu integration.
  *
- * Configuration :
+ * Configuration:
  *   type: custom:cookbook-menu-card
- *   title: "Menu de la semaine"   (facultatif)
- *   config_entry_id: "..."        (facultatif, s'il y a plusieurs comptes)
+ *   title: "Menu de la semaine"   (optional)
+ *   config_entry_id: "..."        (optional, when there are several accounts)
  *
- * Recherche d'une recette pendant la frappe (sans tenir compte des accents), choix du jour et
- * des couverts, ajout au menu, puis affichage du menu avec « cuisiné » et suppression.
+ * Recipe search while typing (accent-insensitive), choice of day and servings, adding to
+ * the menu, then displaying the menu with "cooked" and removal.
  */
 
 const TEXTES = {
@@ -140,7 +140,7 @@ function nombre(valeur, unite, langue) {
     arrondi = valeur >= 10 ? Math.round(valeur) : Math.round(valeur * 10) / 10;
     if (unite === "kg" || unite === "l") arrondi = Math.round(valeur * 100) / 100;
   } else if (valeur >= 2) {
-    // On n'achète ni ne coupe « 3¼ carottes » : au-delà de 2, on arrondit à l'entier.
+    // We neither buy nor cut "3¼ carrots": beyond 2, we round to the nearest integer.
     arrondi = Math.round(valeur);
   } else {
     arrondi = Math.round(valeur * 4) / 4;
@@ -229,7 +229,7 @@ const STYLE_FICHE = `
         .ajout-fiche .message:empty { display: none; }
 `;
 
-// Fenêtre de recette, partagée par la carte du menu et la carte des recettes.
+// Recipe dialog, shared by the menu card and the recipes card.
 const AvecFiche = (Base) =>
   class extends Base {
     _initFiche() {
@@ -433,7 +433,7 @@ const AvecFiche = (Base) =>
         const bouton = e.target.closest(".lancer");
         if (bouton) {
           e.stopPropagation();
-          // « Étape 3 - Salade César » : on sait où on en est quand le minuteur sonne.
+          // "Step 3 - Caesar Salad": we know where we are when the timer rings.
         this._lancerMinuteur(Number(bouton.dataset.secondes), `${t.etape} ${bouton.dataset.etape} - ${f.name}`);
           return;
         }
@@ -467,7 +467,7 @@ const AvecFiche = (Base) =>
     }
 
     _lancerMinuteur(secondes, libelle) {
-      // Minuteur côté Home Assistant (appareil vocal, entité minuteur, événement) en plus de la carte.
+      // Timer on the Home Assistant side (voice device, timer entity, event) in addition to the card.
       const donnees = { seconds: secondes, name: libelle };
       if (this._entree) donnees.config_entry_id = this._entree;
       this._hass
@@ -479,7 +479,7 @@ const AvecFiche = (Base) =>
     }
 
     _rendreMinuteurs() {
-      // Barre de la carte, et barre collée en haut de la fiche recette quand elle est ouverte.
+      // Card's bar, and bar stuck to the top of the recipe sheet when it is open.
       const conteneurs = ["minuteurs", "minuteurs-fiche"].map((id) => this.shadowRoot.getElementById(id)).filter(Boolean);
       if (!conteneurs.length) return;
       const t = this._t;
@@ -530,7 +530,7 @@ const AvecFiche = (Base) =>
           oscillateur.stop(contexte.currentTime + decalage + 0.25);
         });
       } catch (err) {
-        /* son indisponible : le clignotement suffit */
+        /* sound unavailable: the blinking is enough */
       }
       if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
     }
@@ -546,7 +546,7 @@ class CookbookMenuCard extends AvecFiche(HTMLElement) {
     this._ouvert = false;
     this._surligne = 0;
     this._recette = null;
-    this._jour = null; // null = sans date, sinon « AAAA-MM-JJ »
+    this._jour = null; // null = no date, otherwise "YYYY-MM-DD"
     this._couverts = null;
     this._message = "";
     this._erreur = "";
@@ -989,7 +989,7 @@ class CookbookStockCard extends HTMLElement {
     this._desabonner = null;
     this._erreur = "";
     this._gererPlacard = false;
-    // Ajout au placard : texte saisi, produits cochés (clé -> nom), popover ouvert ou non.
+    // Adding to the pantry: typed text, checked products (key -> name), popover open or not.
     this._saisie = "";
     this._choisis = new Map();
     this._popover = false;
@@ -1066,14 +1066,14 @@ class CookbookStockCard extends HTMLElement {
     try {
       localStorage.setItem("cookbook-stock-card-onglet", valeur);
     } catch (err) {
-      /* navigation privée : l'onglet n'est pas retenu, tant pis */
+      /* private browsing: the tab is not remembered, too bad */
     }
   }
 
   _sections() {
     const t = this._t;
     const r = this._reserve;
-    // Onglet : libellé court, pour tenir dans une colonne étroite. Nom complet en titre de section.
+    // Tab: short label, to fit in a narrow column. Full name as the section title.
     return [
       {
         cle: "racheter",
@@ -1343,7 +1343,7 @@ class CookbookStockCard extends HTMLElement {
           (p) => `<label role="option" aria-selected="${this._choisis.has(p.key)}"><input type="checkbox" data-choix="${echapper(p.key)}" data-nom="${echapper(p.name)}" ${this._choisis.has(p.key) ? "checked" : ""}> ${echapper(p.name)}</label>`,
         )
         .join("");
-      // Saisie libre en tête si rien ne correspond, en fin de liste sinon.
+      // Free-text entry first if nothing matches, at the end of the list otherwise.
       liste.innerHTML = options ? options + libre : libre || `<div class="vide">${echapper(t.aucuneProposition)}</div>`;
     }
     const choisis = this.shadowRoot.getElementById("choisis");
@@ -1372,7 +1372,7 @@ class CookbookStockCard extends HTMLElement {
         this._rendrePropositions();
       }
     });
-    // Garder le focus dans le champ quand on coche : le popover reste ouvert.
+    // Keep the focus in the field when checking a box: the popover stays open.
     liste.addEventListener("mousedown", (e) => e.preventDefault());
     liste.addEventListener("change", (e) => {
       const case_ = e.target.closest("[data-choix]");
@@ -1389,7 +1389,7 @@ class CookbookStockCard extends HTMLElement {
       this._rendrePropositions();
     });
     champ.addEventListener("blur", () => {
-      // Un nouveau rendu retire le champ du DOM : ce n'est pas l'utilisateur qui quitte le champ.
+      // A new render removes the field from the DOM: it is not the user leaving the field.
       if (!champ.isConnected) return;
       this._popover = false;
       this._rendrePropositions();
@@ -1403,7 +1403,7 @@ class CookbookStockCard extends HTMLElement {
     this.shadowRoot.getElementById("ajout").addEventListener("submit", (e) => {
       e.preventDefault();
       const noms = [...this._choisis.values()];
-      // Rien de coché : le texte saisi est ajouté tel quel.
+      // Nothing checked: the typed text is added as-is.
       if (!noms.length && this._saisie.trim()) noms.push(this._saisie.trim());
       if (!noms.length) return;
       this._agir("to_pantry", null, { names: noms }).then(() => {
@@ -1431,7 +1431,7 @@ class CookbookRecipesCard extends AvecFiche(HTMLElement) {
     this._requete = "";
     this._erreur = "";
     this._chargement = null;
-    // La fenêtre de recette propose d'ajouter le plat au menu.
+    // The recipe dialog offers to add the dish to the menu.
     this._ajoutDepuisFiche = true;
     this._initFiche();
   }

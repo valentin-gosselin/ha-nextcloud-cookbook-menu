@@ -1,4 +1,4 @@
-"""Jours écrits en toutes lettres (« jeudi », « demain ») vers une date."""
+"""Days written out in words ("thursday", "tomorrow") converted to a date."""
 
 from __future__ import annotations
 
@@ -18,9 +18,9 @@ _RELATIFS = {
 
 
 def lire_jour(valeur: str | date | None, aujourdhui: date) -> date | None:
-    """Date correspondant à `valeur` : date, ISO, jour de la semaine (prochaine occurrence) ou relatif.
+    """Date matching `valeur`: a date, ISO string, weekday name (next occurrence), or relative term.
 
-    Lève ValueError si le texte n'est pas compris.
+    Raises ValueError if the text isn't understood.
     """
     if valeur is None or isinstance(valeur, date):
         return valeur

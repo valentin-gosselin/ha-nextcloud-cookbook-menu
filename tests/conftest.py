@@ -1,4 +1,4 @@
-"""Fixtures communes des tests."""
+"""Common test fixtures."""
 
 from __future__ import annotations
 
@@ -27,25 +27,25 @@ DONNEES_ENTREE = {
 
 @pytest.fixture(autouse=True)
 async def auto_enable_custom_integrations(hass, enable_custom_integrations):
-    """Active les intégrations custom, et le composant homeassistant dont dépend conversation."""
+    """Enable custom integrations, and the homeassistant component that conversation depends on."""
     assert await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture
 def date_figee(freezer) -> None:
-    """Le 16/09/2026 à midi : les plats datés du 17 au 20 restent à venir, quel que soit le jour réel."""
+    """16/09/2026 at noon: dishes dated the 17th to the 20th remain upcoming, regardless of the actual day."""
     freezer.move_to("2026-09-16 12:00:00+02:00")
 
 
 @pytest.fixture
 def corpus() -> list[dict]:
-    """Corpus réel des recettes (export du 16/09/2026)."""
+    """Real recipe corpus (export from 16/09/2026)."""
     return json.loads((FIXTURES / "corpus_recettes.json").read_text(encoding="utf-8"))
 
 
 @pytest.fixture
 def recettes(corpus) -> dict[str, Recipe]:
-    """Recettes du corpus sous forme d'objets `Recipe`."""
+    """Corpus recipes as `Recipe` objects."""
     return {
         str(r["id"]): parse_recipe(
             {
@@ -64,7 +64,7 @@ def recettes(corpus) -> dict[str, Recipe]:
 
 @pytest.fixture
 def mock_client(recettes) -> Generator[AsyncMock]:
-    """Client Cookbook simulé, branché sur le corpus réel."""
+    """Mock Cookbook client, wired to the real corpus."""
     with (
         patch("custom_components.nextcloud_cookbook_menu.CookbookClient", autospec=True) as classe,
         patch("custom_components.nextcloud_cookbook_menu.config_flow.create_client") as creer_flux,
@@ -81,7 +81,7 @@ def mock_client(recettes) -> Generator[AsyncMock]:
 
 @pytest.fixture
 def config_entry() -> MockConfigEntry:
-    """Entrée de configuration type."""
+    """Sample config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="valentin @ cloud.exemple.fr",

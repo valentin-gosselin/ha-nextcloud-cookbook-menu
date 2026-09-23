@@ -1,4 +1,4 @@
-"""Recherche tolérante d'une recette par son nom (accents, casse, pluriels, fautes légères)."""
+"""Fuzzy search for a recipe by name (accents, case, plurals, minor typos)."""
 
 from __future__ import annotations
 
@@ -9,21 +9,21 @@ from difflib import SequenceMatcher
 from .api import Recipe
 from .ingredients.normalize import sans_accents, singulier
 
-# Mots sans valeur pour distinguer deux recettes.
+# Words that carry no weight when distinguishing two recipes.
 _MOTS_VIDES = {
     "de", "d", "du", "des", "la", "le", "les", "l", "a", "au", "aux", "en", "et", "un", "une",
     "facon", "maison", "recette", "the", "of", "with", "and",
 }  # fmt: skip
 
-# Score minimal pour lier automatiquement une ligne saisie dans l'UI à une recette.
+# Minimum score to automatically link a line entered in the UI to a recipe.
 SEUIL_LIEN = 0.75
-# Deux recettes dont les scores sont plus proches que cet écart sont jugées ambiguës.
+# Two recipes whose scores are closer than this gap are considered ambiguous.
 ECART_AMBIGUITE = 0.05
 
 
 @dataclass(frozen=True, slots=True)
 class Correspondance:
-    """Une recette candidate et son score (0 à 1)."""
+    """A candidate recipe and its score (0 to 1)."""
 
     recette: Recipe
     score: float
@@ -42,7 +42,7 @@ def _ressemblance(a: str, b: str) -> float:
 
 
 def score(requete: str, nom: str) -> float:
-    """Score de correspondance entre une requête et un nom de recette."""
+    """Match score between a query and a recipe name."""
     mots_requete, mots_nom = _mots(requete), _mots(nom)
     if not mots_requete or not mots_nom:
         return 0.0
@@ -56,7 +56,7 @@ def score(requete: str, nom: str) -> float:
 
 
 def chercher(requete: str, recettes: list[Recipe], limite: int = 5) -> list[Correspondance]:
-    """Recettes classées par score décroissant (scores nuls exclus)."""
+    """Recipes ranked by descending score (zero scores excluded)."""
     candidats = [Correspondance(r, score(requete, r.name)) for r in recettes]
     candidats = [c for c in candidats if c.score > 0]
     candidats.sort(key=lambda c: (-c.score, c.recette.name.casefold()))
@@ -64,14 +64,14 @@ def chercher(requete: str, recettes: list[Recipe], limite: int = 5) -> list[Corr
 
 
 def est_ambigu(candidats: list[Correspondance]) -> bool:
-    """Vrai si la meilleure recette n'est pas nettement devant la deuxième."""
+    """True if the best recipe isn't clearly ahead of the second one."""
     if len(candidats) < 2 or candidats[0].score == 1.0:
         return False
     return candidats[0].score - candidats[1].score < ECART_AMBIGUITE
 
 
 def lien_automatique(requete: str, recettes: list[Recipe]) -> tuple[Recipe | None, list[Correspondance]]:
-    """Recette à lier sans demander (score suffisant et pas d'ambiguïté), et les candidats."""
+    """Recipe to link without asking (score high enough and no ambiguity), and the candidates."""
     candidats = chercher(requete, recettes)
     if candidats and candidats[0].score >= SEUIL_LIEN and not est_ambigu(candidats):
         return candidats[0].recette, candidats

@@ -1,4 +1,4 @@
-"""Listes todo : « Menu de la semaine » et « Liste de courses »."""
+"""Todo lists: "Menu de la semaine" and "Liste de courses"."""
 
 from __future__ import annotations
 
@@ -23,12 +23,12 @@ async def async_setup_entry(
     entry: CookbookMenuConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Crée les listes d'une entrée."""
+    """Create a config entry's lists."""
     async_add_entities([MenuTodoListEntity(entry), CoursesTodoListEntity(entry)])
 
 
 class CookbookMenuEntity(TodoListEntity):
-    """Base commune : appareil de service, nom traduit, abonnement au planificateur."""
+    """Common base: service device, translated name, subscription to the planner."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False
@@ -61,12 +61,12 @@ class CookbookMenuEntity(TodoListEntity):
         if ecrire:
             self.async_write_ha_state()
 
-    def _elements(self) -> list[TodoItem]:  # pragma: no cover - abstraite
+    def _elements(self) -> list[TodoItem]:  # pragma: no cover - abstract
         raise NotImplementedError
 
 
 class MenuTodoListEntity(CookbookMenuEntity):
-    """Menu de la semaine : un plat par ligne, jour en échéance, couverts en description."""
+    """Weekly menu: one dish per row, day as the due date, servings in the description."""
 
     _attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM
@@ -111,7 +111,7 @@ class MenuTodoListEntity(CookbookMenuEntity):
         )
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        # HA transmet l'élément complet (champs existants fusionnés avec les modifications).
+        # HA sends the complete item (existing fields merged with the changes).
         self.planificateur.async_modifier_plat(
             item.uid or "",
             texte=item.summary,
@@ -128,7 +128,7 @@ class MenuTodoListEntity(CookbookMenuEntity):
 
 
 class CoursesTodoListEntity(CookbookMenuEntity):
-    """Liste de courses : produits calculés depuis le menu, puis lignes ajoutées à la main."""
+    """Shopping list: products computed from the menu, plus lines added by hand."""
 
     _attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM

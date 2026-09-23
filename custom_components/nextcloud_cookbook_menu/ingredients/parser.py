@@ -1,8 +1,8 @@
-"""Analyse d'une ligne d'ingrédient en texte libre, en français d'abord.
+"""Parsing of a free-text ingredient line, French first.
 
-Exemples réels : « 0,5 Citron(s) », « 2 c. à soupe d'huile d'olive », « 1 verre 1/2 de vin blanc sec »,
-« 7-8 champignons », « Sel, poivre », « Meringue : ». Une ligne non comprise garde son texte brut
-comme nom, sans quantité ni unité : mieux vaut un libellé intact qu'une interprétation fausse.
+Real-world examples: "0.5 Citron(s)", "2 tbsp olive oil", "1 1/2 glass dry white wine",
+"7-8 mushrooms", "Salt, pepper", "Meringue:". A line that is not understood keeps its raw
+text as the name, with no quantity or unit: an intact label beats a wrong interpretation.
 """
 
 from __future__ import annotations
@@ -33,7 +33,7 @@ _NOMBRES_EN_LETTRES = {
     "demie": 0.5,
 }
 
-# Quantités vagues : pas de nombre, mais on garde la mention.
+# Vague quantities: no number, but we keep the mention.
 _QUANTITES_VAGUES = ("un peu", "quelques", "un filet", "une pointe", "un trait")
 
 _NOMBRE = r"(?:\d+(?:[.,]\d+)?(?:\s*/\s*\d+)?|[½¼¾⅓⅔⅛])"
@@ -43,7 +43,7 @@ _QUANTITE = re.compile(
     r"(?=\s|[a-zA-Zàâäéèêëîïôöùûüç(]|$)",
 )
 
-# Adjectifs qui peuvent s'intercaler entre la quantité et l'unité, ou juste après l'unité.
+# Adjectives that can slip in between the quantity and the unit, or right after the unit.
 _ADJECTIFS = (
     r"(?:grosses?|gros|petites?|petits?|belles?|beaux?|bonnes?|bons?|grandes?|grands?"
     r"|épaisses?|épais|rases?|bombées?|baby|bien\s+pleines?)"
@@ -55,7 +55,7 @@ _CONDIMENTS_ASSOCIES = {"sel", "poivre", "muscade", "huile", "huile d'olive"}
 
 @dataclass(frozen=True, slots=True)
 class Ingredient:
-    """Ligne d'ingrédient analysée."""
+    """A parsed ingredient line."""
 
     brut: str
     nom: str
@@ -69,7 +69,7 @@ class Ingredient:
 
     @property
     def cle(self) -> str:
-        """Clé de fusion du produit."""
+        """Merge key of the product."""
         return cle(self.nom)
 
 
@@ -106,10 +106,10 @@ def _est_section(ligne: str) -> bool:
 
 
 def _decouper(ligne: str) -> list[str]:
-    """Sépare les lignes qui contiennent plusieurs ingrédients.
+    """Splits lines that contain several ingredients.
 
-    Exemples : « Sel, poivre », « 1/2 verre d'eau, 1/2 verre de sucre ». Les virgules entre
-    parenthèses ne séparent rien (« Épices (cumin, paprika) »).
+    Examples: "Salt, pepper", "1/2 glass water, 1/2 glass sugar". Commas inside parentheses
+    do not split anything ("Spices (cumin, paprika)").
     """
     if "(" in ligne:
         return [ligne]
@@ -122,7 +122,7 @@ def _decouper(ligne: str) -> list[str]:
         tous_courts = all(len(m.split()) <= 3 for m in morceaux)
         if sans_quantite and tous_courts:
             return morceaux
-    # « 1/2 verre d'eau, 1/2 verre de sucre » : chaque morceau commence par une quantité.
+    # "1/2 glass water, 1/2 glass sugar": each piece starts with a quantity.
     par_virgule = [m.strip() for m in re.split(r"(?<!\d),\s*|,\s+", ligne)]
     if len(par_virgule) > 1 and all(_QUANTITE.match(m) for m in par_virgule):
         return par_virgule
@@ -130,7 +130,7 @@ def _decouper(ligne: str) -> list[str]:
 
 
 def _extraire_notes(nom: str) -> tuple[str, list[str], bool]:
-    """Sort du nom les parenthèses, les précisions après virgule et les compléments."""
+    """Pulls the parentheses, the details after a comma and the extras out of the name."""
     notes: list[str] = []
     facultatif = False
 
@@ -160,7 +160,7 @@ def _extraire_notes(nom: str) -> tuple[str, list[str], bool]:
             garder(correspondance.group(0))
             nom = nom[: correspondance.start()]
 
-    # Alternative simple « X ou Y » : on garde X comme produit, Y en note.
+    # Simple "X or Y" alternative: we keep X as the product, Y as a note.
     correspondance = re.search(r"\s+ou\s+(?P<alt>.+)$", nom, re.IGNORECASE)
     if correspondance:
         garder(f"ou {correspondance.group('alt')}")
@@ -202,28 +202,29 @@ def _analyser_un(ligne: str, brut: str) -> Ingredient:
                 quantite = float(_NOMBRES_EN_LETTRES[mot.group(1).lower()])
                 reste = reste[mot.end() :]
 
-    # Adjectif avant l'unité : « 1 grosses poignées de coriandre ».
+    # Adjective before the unit: "1 grosses poignées de coriandre" (1 big handfuls of coriander).
     avant_unite = re.match(rf"^{_ADJECTIFS}\s+", reste, re.IGNORECASE)
     candidat = reste[avant_unite.end() :] if avant_unite else reste
     unite, apres = lire_unite(candidat)
     if unite is not None and quantite is None and vague is None and not re.match(r"^\s*(?:de|d')", apres):
-        # Une unité sans quantité n'est admise que suivie de « de » (« paquet de crêpes »).
+        # A unit with no quantity is only accepted when followed by "de" ("paquet de crêpes",
+        # a pack of pancakes).
         unite, apres = None, candidat
     if unite is not None:
         reste = apres
-        # « 1 verre 1/2 de vin » : fraction après l'unité.
+        # "1 verre 1/2 de vin" (1 1/2 glass of wine): fraction after the unit.
         fraction = re.match(r"^\s*(\d+\s*/\s*\d+|[½¼¾])\s+", reste)
         if fraction and quantite is not None:
             quantite = round(quantite + _nombre(fraction.group(1)), 4)
             reste = reste[fraction.end() :]
-        # « 1 feuille ou pincée de quatre-épices » : unité alternative ignorée.
+        # "1 feuille ou pincée de quatre-épices" (1 leaf or pinch of allspice): alternative unit ignored.
         alternative = re.match(r"^\s*ou\s+(\w+)\s+", reste, re.IGNORECASE)
         if alternative and lire_unite(alternative.group(1) + " ")[0]:
             reste = reste[alternative.end() :]
         reste = re.sub(rf"^\s*(?:{_ADJECTIFS}\s+)+", "", reste, flags=re.IGNORECASE)
         reste = re.sub(r"^\s*,\s*", "", reste)
     elif avant_unite is None and quantite is not None:
-        # « 1/4 de litre de lait » : « de » entre la quantité et l'unité.
+        # "1/4 de litre de lait" (1/4 of a litre of milk): "de" between the quantity and the unit.
         de_unite = re.match(r"^(?:de|d')\s*", reste, re.IGNORECASE)
         if de_unite:
             unite_de, apres_de = lire_unite(reste[de_unite.end() :])
@@ -233,7 +234,7 @@ def _analyser_un(ligne: str, brut: str) -> Ingredient:
     reste = re.sub(r"^(?:hach[ée]e?s?|émincée?s?)\s+", "", reste.strip(), flags=re.IGNORECASE)
     reste = re.sub(r"^(?:de\s+la\s+|de\s+l'|du\s+|des\s+|de\s+|d')", "", reste.strip(), flags=re.IGNORECASE)
 
-    # Conditionnement : « 1 barquette de 250gr de tomates » -> taille en note.
+    # Packaging: "1 barquette de 250gr de tomates" (1 tray of 250g tomatoes) -> size goes into the note.
     notes: list[str] = list(notes_parentheses)
     conditionnement = re.match(
         r"^(?P<taille>\d+(?:[.,]\d+)?\s*(?:g|gr|kg|ml|cl|l)\b(?:\s+net)?(?:\s+égoutté)?)\s+(?:de|d')\s*",
@@ -247,7 +248,7 @@ def _analyser_un(ligne: str, brut: str) -> Ingredient:
     nom, autres_notes, facultatif = _extraire_notes(reste)
     notes.extend(autres_notes)
     facultatif = facultatif or any(re.search(r"facultatif|optionnel", n, re.IGNORECASE) for n in notes_parentheses)
-    # R. « bouquet garni » : l'unité fait partie du nom.
+    # R. "bouquet garni": the unit is actually part of the name.
     if unite == "bouquet" and nom.lower() == "garni":
         nom, unite = "bouquet garni", None
     if not nom:
@@ -266,9 +267,9 @@ def _analyser_un(ligne: str, brut: str) -> Ingredient:
 
 
 def analyser(ligne: str) -> list[Ingredient]:
-    """Analyse une ligne.
+    """Parses a line.
 
-    Renvoie une liste : une ligne peut contenir plusieurs ingrédients, ou n'être qu'un titre de section.
+    Returns a list: a line can contain several ingredients, or be just a section title.
     """
     brut = ligne if isinstance(ligne, str) else ""
     propre = _nettoyer(brut)
@@ -281,10 +282,10 @@ def analyser(ligne: str) -> list[Ingredient]:
     for morceau in morceaux:
         try:
             ingredient = _analyser_un(morceau, brut)
-        except ValueError, ZeroDivisionError, IndexError:  # pragma: no cover - filet de sécurité
+        except ValueError, ZeroDivisionError, IndexError:  # pragma: no cover - safety net
             ingredient = Ingredient(brut=brut, nom=morceau)
         resultat.append(ingredient)
-    # « 1 pincée de muscade et poivre » : même quantité pour des condiments associés.
+    # "1 pincée de muscade et poivre" (1 pinch of nutmeg and pepper): same quantity for paired condiments.
     if len(resultat) == 1 and " et " in resultat[0].nom:
         gauche, droite = resultat[0].nom.split(" et ", 1)
         if gauche.lower() in _CONDIMENTS_ASSOCIES and droite.lower() in _CONDIMENTS_ASSOCIES:

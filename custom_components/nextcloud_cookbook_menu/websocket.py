@@ -1,4 +1,4 @@
-"""Commandes websocket pour la carte de tableau de bord."""
+"""Websocket commands for the dashboard card."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ def async_enregistrer_commandes(hass: HomeAssistant) -> None:
 )
 @callback
 def ws_recettes(hass: HomeAssistant, connexion: websocket_api.ActiveConnection, message: dict[str, Any]) -> None:
-    """Recettes proposables (libellé et identifiant) et entités de l'entrée, pour la carte."""
+    """Selectable recipes (label and id) and the entry's entities, for the card."""
     entrees = [
         e
         for e in hass.config_entries.async_loaded_entries(DOMAIN)
@@ -60,7 +60,7 @@ def ws_recettes(hass: HomeAssistant, connexion: websocket_api.ActiveConnection, 
 )
 @callback
 def ws_catalogue(hass: HomeAssistant, connexion: websocket_api.ActiveConnection, message: dict[str, Any]) -> None:
-    """Toutes les recettes avec leur vignette et leur catégorie, pour la carte de consultation."""
+    """All recipes with their thumbnail and category, for the browsing card."""
     entree = _entree(hass, message)
     if entree is None:
         connexion.send_error(message["id"], "not_found", "Nextcloud Cookbook Menu is not set up")
@@ -100,7 +100,7 @@ def _entree(hass: HomeAssistant, message: dict[str, Any]) -> Any:
 )
 @callback
 def ws_reserve(hass: HomeAssistant, connexion: websocket_api.ActiveConnection, message: dict[str, Any]) -> None:
-    """Réserve (placard, frigo, maison), puis chaque changement."""
+    """Stock (pantry, fridge, household), then every subsequent change."""
     entree = _entree(hass, message)
     if entree is None:
         connexion.send_error(message["id"], "not_found", "Nextcloud Cookbook Menu is not set up")
@@ -109,7 +109,7 @@ def ws_reserve(hass: HomeAssistant, connexion: websocket_api.ActiveConnection, m
 
     @callback
     def envoyer() -> None:
-        # Les propositions de l'index ne servent qu'à la carte (pas à l'outil LLM `get_stock`).
+        # Index suggestions are only for the card (not for the `get_stock` LLM tool).
         reserve = {**planificateur.reserve(), "suggestions": planificateur.propositions_placard()}
         connexion.send_message(websocket_api.event_message(message["id"], reserve))
 
@@ -136,7 +136,7 @@ def ws_reserve(hass: HomeAssistant, connexion: websocket_api.ActiveConnection, m
 def ws_reserve_modifier(
     hass: HomeAssistant, connexion: websocket_api.ActiveConnection, message: dict[str, Any]
 ) -> None:
-    """« Il n'y en a plus », « j'en ai », « sortir de la réserve », « au placard », vérification."""
+    """ "None left", "I have some", "take out of stock", "to pantry", check."""
     entree = _entree(hass, message)
     if entree is None:
         connexion.send_error(message["id"], "not_found", "Nextcloud Cookbook Menu is not set up")
@@ -182,7 +182,7 @@ def ws_reserve_modifier(
 )
 @callback
 def ws_fiche(hass: HomeAssistant, connexion: websocket_api.ActiveConnection, message: dict[str, Any]) -> None:
-    """Fiche d'une recette, par identifiant ou par plat du menu (couverts du plat)."""
+    """Recipe sheet, by id or by menu dish (using that dish's servings)."""
     entrees = [
         e
         for e in hass.config_entries.async_loaded_entries(DOMAIN)

@@ -1,4 +1,4 @@
-"""Liste « Menu de la semaine » et planificateur (story 2.1)."""
+"""Weekly menu list and planner (story 2.1)."""
 
 from __future__ import annotations
 
@@ -231,7 +231,7 @@ def test_donnees_aller_retour() -> None:
     assert DonneesPlanificateur.depuis_dict(donnees.en_dict()) == donnees
     assert DonneesPlanificateur.depuis_dict(None) == DonneesPlanificateur()
     assert PlatMenu.depuis_dict({"uid": 1, "servings": 0}).servings == 1
-    # Migration : anciennes lignes manuelles vers la maison.
+    # Migration: old manual lines moved to home stock.
     migre = DonneesPlanificateur.depuis_dict(
         {"courses_manuelles": [{"summary": "Papier toilette", "done": True}, {"summary": " "}]}
     )

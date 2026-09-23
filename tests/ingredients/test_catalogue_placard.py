@@ -1,4 +1,4 @@
-"""Index des produits de placard (story 2.11)."""
+"""Pantry product index (story 2.11)."""
 
 from __future__ import annotations
 

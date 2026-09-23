@@ -1,4 +1,4 @@
-"""Stockage persistant d'une entrée : menu, état de la liste de courses, placard, historique."""
+"""Persistent storage for a config entry: menu, shopping list state, pantry, history."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from .ingredients.normalize import cle
 
 VERSION_STOCKAGE = 1
 DELAI_SAUVEGARDE = 2
-# Le domaine s'appelait « cookbook_menu » avant la 1.0.0.
+# The domain was called "cookbook_menu" before 1.0.0.
 ANCIEN_DOMAINE = "cookbook_menu"
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass(slots=True)
 class PlatMenu:
-    """Un plat du menu."""
+    """A dish in the menu."""
 
     uid: str
     summary: str
@@ -34,7 +34,7 @@ class PlatMenu:
     recipe_id: str | None = None
     day: date | None = None
     done: bool = False
-    # Sa part d'ingrédients a déjà été retirée du frigo (plat cuisiné ou date passée).
+    # Its share of ingredients has already been removed from the fridge (dish cooked or date past).
     consumed: bool = False
 
     def en_dict(self) -> dict[str, Any]:
@@ -58,28 +58,28 @@ class PlatMenu:
 
 @dataclass(slots=True)
 class DonneesPlanificateur:
-    """Tout ce qui est persisté pour une entrée."""
+    """Everything persisted for a config entry."""
 
     menu: list[PlatMenu] = field(default_factory=list)
-    # Produits du placard signalés manquants : clé produit -> nom saisi.
+    # Pantry products reported missing: product key -> entered name.
     placard_epuise: dict[str, str] = field(default_factory=dict)
-    # Produits rangés au placard à la main, en plus des options : clé produit -> nom.
+    # Products stocked in the pantry by hand, on top of the options: product key -> name.
     placard_ajouts: dict[str, str] = field(default_factory=dict)
-    # Produits des options sortis du placard depuis la carte : clés.
+    # Option products taken out of the pantry from the card: keys.
     placard_retires: list[str] = field(default_factory=list)
-    # Frigo : clé produit -> {nom, quantites {mesure: valeur}, expire (date ISO)}.
+    # Fridge: product key -> {name, quantities {unit: value}, expiry (ISO date)}.
     frigo: dict[str, dict[str, Any]] = field(default_factory=dict)
-    # Maison (hors menu et hors placard) : clé -> {nom, present (bool), description}.
+    # Household (outside the menu and the pantry): key -> {name, present (bool), description}.
     maison: dict[str, dict[str, Any]] = field(default_factory=dict)
-    # Produits récurrents (beurre des tartines) : clé -> {nom, semaines, dernier_achat}.
+    # Recurring products (butter for toast): key -> {name, weeks, last_purchase}.
     recurrents: dict[str, dict[str, Any]] = field(default_factory=dict)
-    # Dates des derniers achats par produit, pour proposer des récurrences.
+    # Dates of the last purchases per product, to suggest recurrences.
     achats: dict[str, list[str]] = field(default_factory=dict)
-    # Le placard a été vérifié une première fois dans la carte.
+    # The pantry has been checked for the first time in the card.
     placard_verifie: bool = False
-    # Plats passés : {day, recipe_id, summary, servings}.
+    # Past dishes: {day, recipe_id, summary, servings}.
     historique: list[dict[str, Any]] = field(default_factory=list)
-    # Synchronisation : entité cible -> notre uid -> {uid cible, dernier état poussé}.
+    # Sync: target entity -> our uid -> {target uid, last pushed state}.
     synchro: dict[str, dict[str, dict[str, Any]]] = field(default_factory=dict)
 
     def en_dict(self) -> dict[str, Any]:
@@ -102,7 +102,7 @@ class DonneesPlanificateur:
         if not donnees:
             return cls()
         maison = dict(donnees.get("maison", {}))
-        # Migration : les anciennes lignes manuelles deviennent des produits « maison ».
+        # Migration: old manual lines become "maison" (household) products.
         for manuelle in donnees.get("courses_manuelles", []):
             nom = str(manuelle.get("summary", "")).strip()
             if nom:
@@ -116,14 +116,14 @@ class DonneesPlanificateur:
                 )
         placard_ajouts = dict(donnees.get("placard_ajouts", {}))
         placard_epuise = dict(donnees.get("placard_epuise", {}))
-        # Migration : un produit de placard rangé en « maison » avant l'index rejoint le placard.
+        # Migration: a pantry product stocked under "maison" before the index rejoins the pantry.
         for cle_produit in [c for c in maison if est_produit_de_placard(c)]:
             produit = maison.pop(cle_produit)
             placard_ajouts.setdefault(cle_produit, produit["nom"])
             if not produit.get("present"):
                 placard_epuise.setdefault(cle_produit, produit["nom"])
         frigo = dict(donnees.get("frigo", {}))
-        # Migration : un produit qui se garde, acheté pour le menu, était rangé au frigo.
+        # Migration: a shelf-stable product, bought for the menu, used to be stored in the fridge.
         for cle_produit in [c for c in frigo if est_produit_de_placard(c)]:
             placard_ajouts.setdefault(cle_produit, frigo.pop(cle_produit)["nom"])
         return cls(
@@ -142,7 +142,7 @@ class DonneesPlanificateur:
 
 
 class StockagePlanificateur:
-    """Enveloppe du `Store` HA, avec sauvegarde différée."""
+    """Wrapper around HA's `Store`, with delayed saving."""
 
     def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
         self._hass = hass
@@ -158,9 +158,9 @@ class StockagePlanificateur:
         return self.donnees
 
     async def _async_lire_ancien_domaine(self) -> dict[str, Any] | None:
-        """Reprend le menu et la réserve laissés par le domaine « cookbook_menu » (avant la 1.0.0).
+        """Recover the menu and stock left by the "cookbook_menu" domain (before 1.0.0).
 
-        Une seule entrée était possible en pratique : le fichier est repris s'il est unique.
+        Only one entry was possible in practice: the file is picked up if it is unique.
         """
         dossier = Path(self._hass.config.path(".storage"))
 

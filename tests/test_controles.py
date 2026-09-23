@@ -1,4 +1,4 @@
-"""Entités de sélection : recette, jour, couverts, bouton (story 2.6)."""
+"""Selection entities: recipe, day, servings, button (story 2.6)."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ BOUTON = "button.valentin_cloud_exemple_fr_ajouter_au_menu"
 
 @pytest.fixture(autouse=True)
 async def contexte(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-    freezer.move_to("2026-09-16 12:00:00+02:00")  # un mercredi
+    freezer.move_to("2026-09-16 12:00:00+02:00")  # a Wednesday
     await hass.config.async_update(language="fr", time_zone="Europe/Paris")
 
 
@@ -39,7 +39,7 @@ async def choisir(hass: HomeAssistant, entite: str, option: str) -> None:
 async def test_liste_des_recettes_par_nom(hass: HomeAssistant, entree) -> None:
     etat = hass.states.get(RECETTE)
     options = etat.attributes["options"]
-    assert len(options) == 57  # hors catégorie exclue « Produits Ménagers »
+    assert len(options) == 57  # excluding the excluded category "Produits Ménagers"
     assert options[:3] == [
         "Aperol Spritz",
         "Banana bread aux pépites de chocolat sans sucre ajouté",
@@ -63,7 +63,7 @@ async def test_ajout_par_les_entites(hass: HomeAssistant, entree) -> None:
         "4 couverts",
     )
     assert "Escalope de poulet (2)" in await courses(hass)
-    assert hass.states.get(RECETTE).state == "unknown"  # choix vidé pour éviter un double ajout
+    assert hass.states.get(RECETTE).state == "unknown"  # selection cleared to avoid a double add
     assert hass.states.get(COUVERTS).state == "4"
 
 

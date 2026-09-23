@@ -1,4 +1,4 @@
-"""Recherche de recettes par nom, sur les 59 noms réels."""
+"""Recipe search by name, over the 59 real names."""
 
 from __future__ import annotations
 
@@ -34,8 +34,8 @@ def test_meilleure_recette(recettes, requete, attendu) -> None:
     [
         ("salade césar", "Salade César au poulet"),
         ("tartiflette", "Tartiflette"),
-        ("gratin", None),  # trois gratins : ambigu
-        ("pizza surgelée", None),  # plat libre
+        ("gratin", None),  # three gratins: ambiguous
+        ("pizza surgelée", None),  # free-form dish
         ("", None),
     ],
 )

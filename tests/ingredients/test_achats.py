@@ -1,4 +1,4 @@
-"""Unités d'achat et fusions (story 2.9)."""
+"""Purchase units and merges (story 2.9)."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def libelles(*lignes: str) -> dict[str, str]:
             "Persil plat (1 bouquet)",
         ),
         (("400 g d'oignons", "2 oignons"), "oignon", "Oignons (6)"),
-        # Conditionnements : on achète la plaquette et la boîte d'œufs, pas 150 g et 9 œufs.
+        # Packaging: we buy the pack and the box of eggs, not 150 g and 9 eggs.
         (("2 blancs d'oeuf", "50 g blanc d'oeuf", "3 oeufs", "2 jaunes d'œufs"), "oeuf", "Œufs (12)"),
         (("30 ml de jus de citron", "0,5 citron", "Zeste de 1/2 citron"), "citron", "Citron (2)"),
         (("1 noix de beurre", "1 c. à soupe de beurre", "100 g de beurre"), "beurre", "Beurre (250 g)"),
@@ -64,7 +64,7 @@ def test_fusion_generique() -> None:
 
 
 def test_toutes_les_recettes_ensemble() -> None:
-    """Simulation demandée par Valentin : les 57 recettes au menu, pour 2."""
+    """Simulation requested by Valentin: all 57 recipes on the menu, for 2."""
     recettes = [r for r in CORPUS if r["category"] != "Produits Ménagers"]
     lignes, ecartes = calculer(
         [Contribution(r["name"], 2, 2 / r["yield"], tuple(r["ingredients"])) for r in recettes],

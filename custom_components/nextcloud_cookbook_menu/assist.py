@@ -1,8 +1,8 @@
-"""Voix avec l'agent de conversation par défaut (story 3.1).
+"""Voice control with the default conversation agent (story 3.1).
 
-Les phrases sont enregistrées comme déclencheurs de phrases, le mécanisme des automatisations
-« Phrase » : il accepte des jokers ({demande}) que l'on analyse ensuite librement. Les ajouts et
-cochages de lignes de courses restent gérés par les intents natifs de Home Assistant.
+The phrases are registered as sentence triggers, the "Sentence" automation
+mechanism: it accepts wildcards ({demande}) that are parsed freely afterwards. Adding and
+checking off shopping list items are still handled by Home Assistant's native intents.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
     from .planner import Planificateur
 
-# Groupes de verbes, pour garder les motifs lisibles.
+# Verb groups, to keep the patterns readable.
 _AJOUTER = (
     "ajoute|ajoutes|ajouter|rajoute|rajoutes|rajouter|mets|met|mettre|note|inscris|programme"
     "|planifie|prévois|prevois|prépare|prepare"
@@ -46,7 +46,7 @@ _MENU = "(au|dans le) menu [de la semaine]"
 _THE_MENU = "[the] [weekly] (menu|meal plan)"
 
 PHRASES_AJOUT = [
-    # Français
+    # French
     f"({_AJOUTER}) {{demande}} {_MENU} [{{suite}}]",
     f"({_AJOUTER}) {_MENU} {{demande}}",
     f"{_MENU} {{suite}} ({_AJOUTER}) {{demande}}",
@@ -62,7 +62,7 @@ PHRASES_AJOUT = [
     f"(can you|could you|please) (add|put|plan|schedule) {{demande}} (to|on) {_THE_MENU} [{{suite}}]",
 ]
 PHRASES_MENU = [
-    # Français
+    # French
     "qu'est-ce qu'on (mange|cuisine|se fait|a prévu|a prevu) [{quand}]",
     "on (mange|cuisine|se fait) quoi [{quand}]",
     "on a prévu quoi [{quand}]",
@@ -80,7 +80,7 @@ PHRASES_MENU = [
     "(tell me|give me|remind me) [about] the (menu|meal plan) [{quand}]",
 ]
 PHRASES_HISTORIQUE = [
-    # Français
+    # French
     "quand (est-ce qu'on a|est-ce que j'ai|avons-nous|avons nous|a-t-on|a t on|on a|j'ai)"
     f" ({_MANGE_PASSE}) {{demande}}",
     "c'est quand la dernière fois (qu'on a|que j'ai) (mangé|fait|cuisiné) {demande}",
@@ -92,7 +92,7 @@ PHRASES_HISTORIQUE = [
     "how long since we (ate|had|cooked|made) {demande}",
 ]
 PHRASES_MANQUE = [
-    # Français
+    # French
     "il (n'y a|y a|n'y avait) plus [de|d'|du|des|le|la|les] {demande}",
     "(y'a|y a) plus [de|d'|du|des] {demande}",
     "(on n'a|on a|nous n'avons|j'ai|je n'ai|il ne reste|il reste) plus [de|d'|du|des|le|la|les] {demande}",
@@ -108,7 +108,7 @@ PHRASES_MANQUE = [
     "we need [some|more] {demande}",
 ]
 PHRASES_RETRAIT = [
-    # Français
+    # French
     f"({_RETIRER}) {{demande}} du menu [de la semaine]",
     f"({_RETIRER}) {{demande}} de la semaine",
     "(je ne veux plus|on ne veut plus|je veux plus) [de|d'|du|des] {demande} (au|dans le) menu",
@@ -206,7 +206,7 @@ def _planificateur(hass: HomeAssistant) -> Planificateur | None:
 
 
 def _texte_jour(jour: date, aujourdhui: date, textes: dict, *, dans_phrase: bool = False) -> str:
-    """« jeudi », « demain ». Au fil d'une phrase, l'anglais veut « on Thursday » mais « tomorrow »."""
+    """ "Thursday", "tomorrow". Mid-sentence, English wants "on Thursday" but just "tomorrow"."""
     if jour == aujourdhui:
         return textes["aujourd_hui"]
     if (jour - aujourdhui).days == 1:
@@ -216,7 +216,7 @@ def _texte_jour(jour: date, aujourdhui: date, textes: dict, *, dans_phrase: bool
 
 
 def texte_courses(nombre: int, textes: dict) -> str:
-    """Bilan des courses à ajouter à la réponse (vide si rien n'a changé)."""
+    """Shopping list summary to append to the response (empty if nothing changed)."""
     if nombre == 0:
         return ""
     if nombre == 1:
@@ -224,7 +224,8 @@ def texte_courses(nombre: int, textes: dict) -> str:
     return textes["ajout_courses"].format(n=nombre)
 
 
-# « on mange quoi demain » ressemble à « on mange des pâtes demain » : c'est une question.
+# "on mange quoi demain" (what are we eating tomorrow) looks like "on mange des pâtes demain"
+# (we're eating pasta tomorrow): it's actually a question.
 _INTERROGATIF = re.compile(r"^(?:quoi|qu'est-ce|que|quel|quelle|combien|what|which)\b", re.IGNORECASE)
 
 
@@ -235,7 +236,7 @@ def _valeur(resultat: RecognizeResult, nom: str) -> str:
 
 @callback
 def async_enregistrer_phrases(hass: HomeAssistant) -> CALLBACK_TYPE:
-    """Enregistre les phrases auprès de l'agent par défaut. Renvoie la fonction de retrait."""
+    """Registers the phrases with the default agent. Returns the removal function."""
     gestionnaire = get_agent_manager(hass)
 
     async def ajouter(entree: ConversationInput, resultat: RecognizeResult) -> str:
@@ -247,11 +248,11 @@ def async_enregistrer_phrases(hass: HomeAssistant) -> CALLBACK_TYPE:
         aujourdhui = dt_util.now().date()
         demande = analyser_demande(f"{_valeur(resultat, 'demande')} {_valeur(resultat, 'suite')}", code)
         if _INTERROGATIF.match(demande.plat):
-            # « on mange quoi demain » : c'est la question du menu, pas un plat à ajouter.
+            # "on mange quoi demain" (what are we eating tomorrow): this is the menu question, not a dish to add.
             return reponse_menu(planificateur, textes, demande.jour)
         if not demande.plat:
             return textes["plat_vide"]
-        # analyser_demande ne renvoie que des jours reconnus : lire_jour ne peut pas échouer ici.
+        # analyser_demande only returns recognized days: lire_jour cannot fail here.
         jour = lire_jour(demande.jour, aujourdhui)
         bilan = planificateur.async_ajouter_au_menu(demande.plat, jour=jour, couverts=demande.couverts)
         texte_jour = textes["jour"].format(jour=_texte_jour(jour, aujourdhui, textes, dans_phrase=True)) if jour else ""

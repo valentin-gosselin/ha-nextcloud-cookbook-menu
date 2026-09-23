@@ -1,8 +1,8 @@
-"""Synchronisation en écriture seule vers des listes todo existantes (story 2.5).
+"""Write-only synchronization to existing todo lists (story 2.5).
 
-Nos listes restent la source de vérité. On recopie leurs lignes dans la liste choisie par le
-foyer (celle qu'on ouvre au magasin), en ne touchant JAMAIS aux lignes qu'on n'a pas créées.
-Un cochage fait dans la liste cible est remonté dans la nôtre.
+Our lists stay the source of truth. Their lines are copied into the list the household
+chose (the one opened at the store), never touching lines we did not create ourselves.
+A checkbox ticked in the target list is reflected back into ours.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ DELAI = 1.0
 
 @dataclass(frozen=True, slots=True)
 class LigneSource:
-    """Ce qu'on veut voir dans la liste cible pour une de nos lignes."""
+    """What we want to see in the target list for one of our lines."""
 
     uid: str
     resume: str
@@ -40,7 +40,7 @@ class LigneSource:
 
 
 class Synchroniseur:
-    """Recopie le menu et la liste de courses vers les entités todo choisies dans les options."""
+    """Copies the menu and shopping list into the todo entities chosen in the options."""
 
     def __init__(self, hass: HomeAssistant, planificateur: Planificateur) -> None:
         self.hass = hass
@@ -52,7 +52,7 @@ class Synchroniseur:
 
     @property
     def cibles(self) -> dict[str, str]:
-        """Genre de liste ("menu" ou "courses") -> entité cible."""
+        """List kind ("menu" or "courses") -> target entity."""
         options = self.planificateur.coordinateur.config_entry.options
         cibles = {
             "menu": options.get(CONF_SYNC_MENU_ENTITY),
@@ -112,7 +112,7 @@ class Synchroniseur:
         return {element["uid"]: element for element in reponse[entite]["items"]}
 
     async def async_synchroniser(self) -> None:
-        """Aligne chaque liste cible sur la nôtre."""
+        """Aligns each target list on ours."""
         for genre, entite in self.cibles.items():
             try:
                 await self._synchroniser(genre, entite)
@@ -127,13 +127,13 @@ class Synchroniseur:
         avec_description = bool(fonctions & TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM)
         avec_echeance = bool(fonctions & TodoListEntityFeature.SET_DUE_DATE_ON_ITEM)
 
-        # Correspondances mémorisées : notre uid -> {uid cible, dernier état poussé}.
+        # Remembered mappings: our uid -> {target uid, last pushed state}.
         memoire: dict[str, dict[str, Any]] = self.planificateur.stockage.donnees.synchro.setdefault(entite, {})
         cible = await self._elements_cible(entite)
         sources = {source.uid: source for source in self._sources(genre)}
         modifie = False
 
-        # 1. Cochages faits dans la liste cible : remontés dans la nôtre.
+        # 1. Checkboxes ticked in the target list: reflected back into ours.
         for uid, lien in memoire.items():
             element = cible.get(lien["uid"])
             source = sources.get(uid)
@@ -147,14 +147,14 @@ class Synchroniseur:
         if modifie:
             sources = {source.uid: source for source in self._sources(genre)}
 
-        # 2. Lignes disparues chez nous : retirées de la cible (seulement celles qu'on a créées).
+        # 2. Lines that vanished on our side: removed from the target (only the ones we created).
         a_retirer = [lien["uid"] for uid, lien in memoire.items() if uid not in sources and lien["uid"] in cible]
         if a_retirer:
             await self._appeler("remove_item", entite, {"item": a_retirer})
         for uid in [uid for uid in memoire if uid not in sources]:
             del memoire[uid]
 
-        # 3. Ajouts et mises à jour.
+        # 3. Additions and updates.
         for source in sources.values():
             donnees: dict[str, Any] = {}
             if avec_description:
@@ -168,7 +168,7 @@ class Synchroniseur:
                 await self._appeler("add_item", entite, {"item": source.resume, **donnees})
                 nouveaux = {u: e for u, e in (await self._elements_cible(entite)).items() if u not in cible}
                 uid_cible = next((u for u, e in nouveaux.items() if e["summary"] == source.resume), None)
-                if uid_cible is None:  # pragma: no cover - liste cible qui réécrit les libellés
+                if uid_cible is None:  # pragma: no cover - target list that rewrites labels
                     continue
                 cible[uid_cible] = nouveaux[uid_cible]
                 if source.fait:

@@ -1,4 +1,4 @@
-"""Placard : produits de base qu'on a toujours et qu'on n'ajoute pas à chaque recette."""
+"""Pantry: staple products we always have and do not add for every recipe."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from collections.abc import Iterable
 
 from .normalize import cle
 
-# Placard par défaut, resserré sur l'universel (party mode du 16/09/2026). Le reste s'ajoute dans les options.
+# Default pantry, narrowed down to the universal staples (party mode on 16/09/2026). The rest is added in the options.
 PLACARD_PAR_DEFAUT: tuple[str, ...] = (
     "Sel",
     "Poivre",
@@ -29,19 +29,19 @@ PLACARD_PAR_DEFAUT: tuple[str, ...] = (
     "Laurier",
 )
 
-# Familles où toute variante reste un produit de placard (« poivre du moulin », « vinaigre de cidre »).
+# Families where every variant stays a pantry product ("peppercorns from the mill", "cider vinegar").
 _FAMILLES = {"sel", "poivre", "huile", "vinaigre", "laurier"}
 
 
 def cles_placard(noms: Iterable[str]) -> set[str]:
-    """Clés de fusion des produits du placard."""
+    """Merge keys of the pantry products."""
     return {c for c in (cle(nom) for nom in noms) if c}
 
 
 def est_au_placard(cle_produit: str, placard: set[str]) -> bool:
-    """Vrai si le produit est au placard, directement ou par sa famille.
+    """True if the product is in the pantry, directly or through its family.
 
-    Exemple : « huile » au placard couvre aussi « huile de sésame ».
+    Example: "huile" (oil) in the pantry also covers "huile de sésame" (sesame oil).
     """
     if cle_produit in placard:
         return True

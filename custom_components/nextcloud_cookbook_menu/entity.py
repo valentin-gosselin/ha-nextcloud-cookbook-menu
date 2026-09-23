@@ -1,4 +1,4 @@
-"""Base commune des entités de contrôle (sélection de recette, jour, couverts, bouton)."""
+"""Common base for control entities (recipe selection, day, servings, button)."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from .planner import Planificateur
 
 
 def info_appareil(entry: CookbookMenuConfigEntry) -> DeviceInfo:
-    """Appareil de service partagé par toutes les entités d'une entrée."""
+    """Service device shared by all entities of a config entry."""
     return DeviceInfo(
         identifiers={(DOMAIN, entry.entry_id)},
         name=entry.title,
@@ -23,7 +23,7 @@ def info_appareil(entry: CookbookMenuConfigEntry) -> DeviceInfo:
 
 
 class CookbookMenuControle(Entity):
-    """Entité liée au planificateur : nom traduit, appareil commun, mise à jour sur changement."""
+    """Entity tied to the planner: translated name, shared device, updates on change."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False

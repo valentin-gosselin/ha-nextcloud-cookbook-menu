@@ -1,4 +1,4 @@
-"""Corpus de variantes de commandes vocales, comprises sans LLM par l'agent Assist par défaut."""
+"""Corpus of voice command variants, understood without an LLM by the default Assist agent."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ CORPUS: dict[str, list[Any]] = json.loads(
 
 @pytest.fixture(autouse=True)
 async def contexte(hass: HomeAssistant, date_figee) -> None:
-    """Phrases en français, le 16/09/2026 : « jeudi » vaut le 17."""
+    """Sentences in French, on 2026-09-16: "jeudi" means the 17th."""
     await hass.config.async_update(language="fr", time_zone="Europe/Paris")
 
 
@@ -45,7 +45,7 @@ async def test_variantes_ajout(hass: HomeAssistant, entree) -> None:  # noqa: F8
 
 
 async def test_phrases_qui_ne_sont_pas_des_commandes_du_menu(hass: HomeAssistant, entree) -> None:  # noqa: F811
-    """Les listes natives de Home Assistant et le reste ne doivent pas atterrir dans le menu."""
+    """Home Assistant's native lists and everything else must not land in the menu."""
     planificateur = entree.runtime_data.planner
     echecs: list[tuple[str, str]] = []
     for texte in CORPUS["hors_menu"]:
@@ -61,7 +61,7 @@ async def test_variantes_menu(hass: HomeAssistant, entree) -> None:  # noqa: F81
     echecs: list[tuple[str, str]] = []
     for texte in CORPUS["menu"]:
         reponse = await dire(hass, texte)
-        # Sans jour dit, la réponse parle d'aujourd'hui et annonce le prochain plat.
+        # With no day stated, the response talks about today and announces the next dish.
         if "Carry de poulet" not in reponse:
             echecs.append((texte, reponse))
     assert not echecs, f"\n{_echecs(echecs)}"

@@ -1,7 +1,7 @@
-"""Client HTTP minimal pour l'API publique de Nextcloud Cookbook.
+"""Minimal HTTP client for the public Nextcloud Cookbook API.
 
-Référence : https://nextcloud.github.io/cookbook/dev/api/ (authentification basique
-avec un mot de passe d'application Nextcloud).
+Reference: https://nextcloud.github.io/cookbook/dev/api/ (basic authentication
+with a Nextcloud app password).
 """
 
 from __future__ import annotations
@@ -20,24 +20,24 @@ TIMEOUT = aiohttp.ClientTimeout(total=30)
 
 
 class CookbookError(Exception):
-    """Erreur générique du client Cookbook."""
+    """Generic error from the Cookbook client."""
 
 
 class CookbookConnectionError(CookbookError):
-    """Serveur injoignable ou réponse inexploitable."""
+    """Server unreachable or response could not be processed."""
 
 
 class CookbookAuthError(CookbookError):
-    """Identifiants refusés (401 ou 403)."""
+    """Credentials rejected (401 or 403)."""
 
 
 class CookbookNotFoundError(CookbookError):
-    """Ressource absente, ou application Cookbook non installée (404)."""
+    """Resource missing, or the Cookbook app is not installed (404)."""
 
 
 @dataclass(frozen=True, slots=True)
 class RecipeStub:
-    """Résumé d'une recette tel que renvoyé par la liste."""
+    """Recipe summary as returned by the list."""
 
     id: str
     name: str
@@ -46,7 +46,7 @@ class RecipeStub:
 
 @dataclass(frozen=True, slots=True)
 class Recipe:
-    """Recette complète, réduite aux champs utiles à l'intégration."""
+    """Full recipe, trimmed down to the fields the integration needs."""
 
     id: str
     name: str
@@ -74,7 +74,7 @@ def _parse_datetime(value: Any) -> datetime | None:
 
 
 def _parse_servings(value: Any) -> int:
-    """`recipeYield` est un entier selon l'API, mais les imports anciens peuvent contenir du texte."""
+    """`recipeYield` is an integer per the API, but older imports may contain text."""
     if isinstance(value, bool):
         return 1
     if isinstance(value, int | float):
@@ -87,7 +87,7 @@ def _parse_servings(value: Any) -> int:
 
 
 def _parse_duree(value: Any) -> int | None:
-    """Durée ISO 8601 (« PT1H30M0S ») en minutes, None si absente ou nulle."""
+    """ISO 8601 duration ("PT1H30M0S") in minutes, None if absent or zero."""
     if not isinstance(value, str):
         return None
     correspondance = re.fullmatch(r"P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?", value.strip())
@@ -99,7 +99,7 @@ def _parse_duree(value: Any) -> int | None:
 
 
 def _textes(value: Any) -> tuple[str, ...]:
-    """Liste de chaînes non vides. Accepte aussi les étapes schema.org {"text": ...}."""
+    """List of non-empty strings. Also accepts schema.org steps of the form {"text": ...}."""
     if isinstance(value, str):
         value = [value]
     if not isinstance(value, list):
@@ -125,7 +125,7 @@ def _parse_keywords(value: Any) -> tuple[str, ...]:
 
 
 def parse_recipe(data: dict[str, Any]) -> Recipe:
-    """Construit une `Recipe` à partir de la réponse JSON de `/recipes/{id}`."""
+    """Builds a `Recipe` from the JSON response of `/recipes/{id}`."""
     ingredients = data.get("recipeIngredient") or []
     category = data.get("recipeCategory")
     return Recipe(
@@ -147,7 +147,7 @@ def parse_recipe(data: dict[str, Any]) -> Recipe:
 
 
 class CookbookClient:
-    """Accès en lecture à Nextcloud Cookbook."""
+    """Read-only access to Nextcloud Cookbook."""
 
     def __init__(
         self,
@@ -166,7 +166,7 @@ class CookbookClient:
         }
 
     async def async_close(self) -> None:
-        """Ferme la session HTTP dédiée."""
+        """Closes the dedicated HTTP session."""
         await self._session.close()
 
     async def _get(self, path: str) -> Any:
@@ -190,7 +190,7 @@ class CookbookClient:
             raise CookbookConnectionError(str(err) or type(err).__name__) from err
 
     async def async_get_image(self, recipe_id: str, taille: str = "full") -> tuple[bytes, str] | None:
-        """Photo d'une recette (octets, type MIME), None si la recette n'en a pas."""
+        """Recipe photo (bytes, MIME type), None if the recipe doesn't have one."""
         try:
             async with self._session.get(
                 f"{self._base}{API_PREFIX}/recipes/{recipe_id}/image",
@@ -210,7 +210,7 @@ class CookbookClient:
             raise CookbookConnectionError(str(err) or type(err).__name__) from err
 
     async def async_get_categories(self) -> list[str]:
-        """Noms des catégories connues (sans l'entrée « * » des recettes non classées)."""
+        """Names of known categories (excluding the "*" entry for unclassified recipes)."""
         data = await self._get("/categories")
         if not isinstance(data, list):
             raise CookbookConnectionError("Format inattendu pour /categories")
@@ -220,7 +220,7 @@ class CookbookClient:
         )
 
     async def async_get_recipe_stubs(self) -> list[RecipeStub]:
-        """Liste résumée de toutes les recettes."""
+        """Summary list of all recipes."""
         data = await self._get("/recipes")
         if not isinstance(data, list):
             raise CookbookConnectionError("Format inattendu pour /recipes")
@@ -235,7 +235,7 @@ class CookbookClient:
         ]
 
     async def async_get_recipe(self, recipe_id: str) -> Recipe:
-        """Recette complète."""
+        """Full recipe."""
         data = await self._get(f"/recipes/{recipe_id}")
         if not isinstance(data, dict):
             raise CookbookConnectionError(f"Format inattendu pour la recette {recipe_id}")
@@ -244,7 +244,7 @@ class CookbookClient:
     async def async_get_recipes(
         self, stubs: list[RecipeStub], parallel: int, cache: dict[str, Recipe] | None = None
     ) -> dict[str, Recipe]:
-        """Détails des recettes, en réutilisant le cache quand `dateModified` n'a pas bougé."""
+        """Recipe details, reusing the cache when `dateModified` hasn't changed."""
         cache = cache or {}
         semaphore = asyncio.Semaphore(parallel)
         resultat: dict[str, Recipe] = {}
@@ -258,25 +258,25 @@ class CookbookClient:
                 try:
                     resultat[stub.id] = await self.async_get_recipe(stub.id)
                 except CookbookNotFoundError:
-                    # Supprimée entre la liste et le détail : on l'ignore.
+                    # Deleted between the list and the detail fetch: skip it.
                     return
 
-        # gather relaie directement la première erreur (pas d'ExceptionGroup à dépiler).
+        # gather re-raises the first error directly (no ExceptionGroup to unwrap).
         await asyncio.gather(*(charger(stub) for stub in stubs))
         return resultat
 
 
-# --- Login Flow v2 de Nextcloud ------------------------------------------------------------
+# --- Nextcloud Login Flow v2 ------------------------------------------------------------
 # https://docs.nextcloud.com/server/latest/developer_manual/client_apis/LoginFlow/index.html#login-flow-v2
-# L'utilisateur se connecte dans son navigateur et accorde l'accès ; Nextcloud crée alors un mot
-# de passe d'application nommé d'après l'User-Agent, que l'on récupère en interrogeant « poll ».
+# The user logs in through their browser and grants access; Nextcloud then creates an app
+# password named after the User-Agent, which we retrieve by polling "poll".
 
 AGENT_CONNEXION = "Nextcloud Cookbook Menu (Home Assistant)"
 
 
 @dataclass(frozen=True, slots=True)
 class DemandeConnexion:
-    """Connexion en attente : page à ouvrir et jeton d'interrogation."""
+    """Pending connection: page to open and polling token."""
 
     url_connexion: str
     url_poll: str
@@ -285,7 +285,7 @@ class DemandeConnexion:
 
 @dataclass(frozen=True, slots=True)
 class IdentifiantsNextcloud:
-    """Identifiants renvoyés par Nextcloud une fois l'accès accordé."""
+    """Credentials returned by Nextcloud once access is granted."""
 
     url: str
     utilisateur: str
@@ -293,7 +293,7 @@ class IdentifiantsNextcloud:
 
 
 async def async_demarrer_connexion(session: aiohttp.ClientSession, url: str) -> DemandeConnexion:
-    """Ouvre une demande Login Flow v2."""
+    """Opens a Login Flow v2 request."""
     try:
         async with session.post(
             f"{url.rstrip('/')}/index.php/login/v2", headers={"User-Agent": AGENT_CONNEXION}, timeout=TIMEOUT
@@ -321,7 +321,7 @@ async def async_attendre_connexion(
     intervalle: float = 2.0,
     duree_max: float = 1200.0,
 ) -> IdentifiantsNextcloud | None:
-    """Interroge Nextcloud jusqu'à ce que l'accès soit accordé. None si le délai expire."""
+    """Polls Nextcloud until access is granted. None if the timeout expires."""
     ecoule = 0.0
     while ecoule < duree_max:
         try:
@@ -339,7 +339,7 @@ async def async_attendre_connexion(
                         mot_de_passe=str(donnees["appPassword"]),
                     )
         except aiohttp.ClientError, TimeoutError, ValueError, KeyError, TypeError:
-            # Coupure passagère : on continue d'attendre jusqu'au délai.
+            # Transient outage: keep waiting until the timeout.
             pass
         await asyncio.sleep(intervalle)
         ecoule += intervalle

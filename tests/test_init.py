@@ -1,4 +1,4 @@
-"""Tests de la mise en place, du coordinateur et des diagnostics."""
+"""Tests for setup, the coordinator, and diagnostics."""
 
 from __future__ import annotations
 
@@ -81,7 +81,7 @@ async def test_diagnostics_sans_secret(hass, mock_client, config_entry, recettes
 
 
 async def test_client_sans_cookies(hass: HomeAssistant) -> None:
-    """Le client ne doit jamais conserver le cookie de session Nextcloud (voir create_client)."""
+    """The client must never keep the Nextcloud session cookie (see create_client)."""
     import aiohttp
 
     from custom_components.nextcloud_cookbook_menu import create_client
@@ -98,10 +98,10 @@ def _ecrire(chemin: Path, contenu: str) -> None:
 
 
 async def test_reprise_de_l_ancien_domaine(hass: HomeAssistant, tmp_path: Path) -> None:
-    """Le renommage du domaine en 1.0.0 ne doit pas perdre le menu ni la réserve."""
+    """Renaming the domain in 1.0.0 must not lose the menu or the pantry."""
     from custom_components.nextcloud_cookbook_menu.store import ANCIEN_DOMAINE, StockagePlanificateur
 
-    # Dossier de configuration à part : les autres tests partagent celui de la bibliothèque de test.
+    # Separate config folder: the other tests share the test library's own.
     hass.config.config_dir = str(tmp_path)
     dossier = tmp_path / ".storage"
     ancien = json.dumps(
@@ -118,7 +118,7 @@ async def test_reprise_de_l_ancien_domaine(hass: HomeAssistant, tmp_path: Path) 
     assert [p.summary for p in donnees.menu] == ["Carry de poulet"]
     assert donnees.placard_ajouts == {"ras el hanout": "Ras el hanout"}
 
-    # Deux fichiers (ou aucun) : on ne devine pas, on repart de zéro.
+    # Two files (or none): we don't guess, we start fresh.
     await hass.async_add_executor_job(_ecrire, dossier / f"{ANCIEN_DOMAINE}.def456", "{}")
     assert (await StockagePlanificateur(hass, "autre").async_charger()).menu == []
 
@@ -129,6 +129,6 @@ async def test_reprise_de_l_ancien_domaine(hass: HomeAssistant, tmp_path: Path) 
     await hass.async_add_executor_job(nettoyer)
     assert (await StockagePlanificateur(hass, "encore").async_charger()).menu == []
 
-    # Fichier illisible : on n'empêche pas le démarrage.
+    # Unreadable file: startup is not blocked.
     await hass.async_add_executor_job(_ecrire, dossier / f"{ANCIEN_DOMAINE}.ghi789", "pas du json")
     assert (await StockagePlanificateur(hass, "malgre-tout").async_charger()).menu == []

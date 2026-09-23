@@ -1,4 +1,4 @@
-"""Nombre de couverts du plat à ajouter."""
+"""Number of servings for the dish to add."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ async def async_setup_entry(
 
 
 class CouvertsNumber(CookbookMenuControle, NumberEntity):
-    """Couverts : les couverts par défaut des options tant qu'on ne les change pas."""
+    """Servings: defaults to the options' servings until changed."""
 
     _attr_native_min_value = 1
     _attr_native_max_value = 30

@@ -1,4 +1,4 @@
-"""Flux de configuration de Nextcloud Cookbook Menu : ajout, réauthentification, reconfiguration et options."""
+"""Config flow for Nextcloud Cookbook Menu: setup, reauthentication, reconfiguration and options."""
 
 from __future__ import annotations
 
@@ -69,7 +69,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _liste(valeur: Any) -> list[str]:
-    """L'option n'acceptait qu'une entité minuteur avant la 1.3.0."""
+    """The option only accepted a single timer entity before 1.3.0."""
     if not valeur:
         return []
     return [valeur] if isinstance(valeur, str) else list(valeur)
@@ -107,12 +107,12 @@ def _schema_connexion(defauts: Mapping[str, Any]) -> vol.Schema:
 
 
 class CookbookMenuConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Flux de configuration."""
+    """Config flow."""
 
     VERSION = 1
 
     async def _tester(self, donnees: dict[str, Any]) -> dict[str, str]:
-        """Teste la connexion (test-before-configure) et renvoie les erreurs du formulaire."""
+        """Tests the connection (test-before-configure) and returns the form errors."""
         client = create_client(self.hass, donnees)
         try:
             await client.async_get_categories()
@@ -137,7 +137,7 @@ class CookbookMenuConfigFlow(ConfigFlow, domain=DOMAIN):
         self._identifiants: IdentifiantsNextcloud | None = None
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Première étape : l'adresse du serveur, puis le choix du mode de connexion."""
+        """First step: the server address, then the choice of connection method."""
         if user_input is not None:
             self._url = _normaliser_url(user_input[CONF_URL])
             self._verify_ssl = user_input.get(CONF_VERIFY_SSL, True)
@@ -145,11 +145,11 @@ class CookbookMenuConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=_schema_url({}))
 
     async def async_step_method(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Choix : connexion dans le navigateur (recommandée) ou mot de passe d'application saisi."""
+        """Choice: browser login (recommended) or manually entered app password."""
         return self.async_show_menu(step_id="method", menu_options=["login", "manual"])
 
     async def async_step_login(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Connexion dans le navigateur (Login Flow v2) : Nextcloud crée le mot de passe d'application."""
+        """Browser login (Login Flow v2): Nextcloud creates the app password."""
         if self._attente is None:
             session = async_get_clientsession(self.hass, verify_ssl=self._verify_ssl)
             try:
@@ -158,7 +158,7 @@ class CookbookMenuConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="login_flow_unavailable")
             except CookbookError:
                 return self.async_abort(reason="cannot_connect")
-            # Pas de démarrage immédiat : l'étape externe doit être affichée avant la reprise du flux.
+            # No immediate start: the external step must be shown before the flow resumes.
             self._attente = self.hass.async_create_task(self._async_attendre(session), eager_start=False)
             return self.async_external_step(step_id="login", url=self._demande.url_connexion)
         return self.async_external_step_done(next_step_id="login_done")
@@ -172,12 +172,12 @@ class CookbookMenuConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def async_remove(self) -> None:
-        """Flux abandonné (fenêtre fermée) : on arrête d'interroger Nextcloud."""
+        """Flow abandoned (window closed): stop polling Nextcloud."""
         if self._attente is not None and not self._attente.done():
             self._attente.cancel()
 
     async def async_step_login_done(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Accès accordé (ou délai expiré) : on vérifie puis on enregistre."""
+        """Access granted (or timed out): verify, then save."""
         if self._identifiants is None:
             return self.async_abort(reason="login_timeout")
         donnees = {
@@ -191,7 +191,7 @@ class CookbookMenuConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._async_enregistrer(donnees)
 
     async def async_step_manual(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Saisie manuelle d'un utilisateur et d'un mot de passe d'application."""
+        """Manual entry of a username and an app password."""
         errors: dict[str, str] = {}
         if user_input is not None:
             donnees = {**user_input, CONF_URL: self._url, CONF_VERIFY_SSL: self._verify_ssl}
@@ -213,7 +213,7 @@ class CookbookMenuConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_enregistrer(self, donnees: dict[str, Any]) -> ConfigFlowResult:
-        """Crée l'entrée, ou met à jour celle en cours de réauthentification (même compte exigé)."""
+        """Creates the entry, or updates the one being reauthenticated (same account required)."""
         await self.async_set_unique_id(f"{donnees[CONF_URL]}|{donnees[CONF_USERNAME]}".casefold())
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="wrong_account")
@@ -224,13 +224,13 @@ class CookbookMenuConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
-        """Mot de passe d'application refusé : nouvelle connexion ou nouveau mot de passe."""
+        """App password rejected: reconnect or enter a new one."""
         self._url = entry_data[CONF_URL]
         self._verify_ssl = entry_data.get(CONF_VERIFY_SSL, True)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Choix : se reconnecter avec Nextcloud ou saisir un nouveau mot de passe d'application."""
+        """Choice: reconnect with Nextcloud or enter a new app password."""
         entree = self._get_reauth_entry()
         return self.async_show_menu(
             step_id="reauth_confirm",
@@ -242,7 +242,7 @@ class CookbookMenuConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth_manual(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Nouveau mot de passe d'application saisi à la main."""
+        """New app password entered manually."""
         entree = self._get_reauth_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -262,7 +262,7 @@ class CookbookMenuConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Changement d'URL, d'utilisateur ou de mot de passe."""
+        """Change of URL, username, or password."""
         entree = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -284,15 +284,15 @@ class CookbookMenuConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: CookbookMenuConfigEntry) -> CookbookMenuOptionsFlow:
-        """Flux d'options."""
+        """Options flow."""
         return CookbookMenuOptionsFlow()
 
 
 class CookbookMenuOptionsFlow(OptionsFlowWithReload):
-    """Réglages du foyer : couverts, catégories exclues, rafraîchissement."""
+    """Household settings: servings, excluded categories, refresh interval."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Formulaire unique d'options."""
+        """Single options form."""
         if user_input is not None:
             user_input[CONF_SERVINGS] = int(user_input[CONF_SERVINGS])
             user_input[CONF_SCAN_INTERVAL_MINUTES] = int(user_input[CONF_SCAN_INTERVAL_MINUTES])

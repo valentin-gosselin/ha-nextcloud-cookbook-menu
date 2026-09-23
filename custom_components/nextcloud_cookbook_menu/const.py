@@ -1,4 +1,4 @@
-"""Constantes de l'intégration Nextcloud Cookbook Menu."""
+"""Constants for the Nextcloud Cookbook Menu integration."""
 
 from datetime import timedelta
 from typing import Final
@@ -16,7 +16,7 @@ CONF_TIMER_DEVICE: Final = "timer_device"
 CONF_TIMER_ENTITY: Final = "timer_entity"
 CONF_TIMERS_COUNT: Final = "timers_count"
 
-# Événement émis à chaque minuteur lancé depuis la fiche recette.
+# Event fired for each timer started from the recipe card.
 EVENEMENT_MINUTEUR: Final = "nextcloud_cookbook_menu_timer_started"
 
 DEFAULT_SERVINGS: Final = 2
@@ -25,5 +25,5 @@ DEFAULT_TIMERS_COUNT: Final = 3
 DEFAULT_SCAN_INTERVAL_MINUTES: Final = 30
 DEFAULT_SCAN_INTERVAL: Final = timedelta(minutes=DEFAULT_SCAN_INTERVAL_MINUTES)
 
-# Nombre maximal d'appels simultanés à l'API Cookbook lors du chargement des détails.
+# Maximum number of concurrent calls to the Cookbook API when loading details.
 MAX_PARALLEL_REQUESTS: Final = 4

@@ -1,8 +1,8 @@
-"""Carte de tableau de bord servie et enregistrée automatiquement par l'intégration.
+"""Dashboard card served and registered automatically by the integration.
 
-Le fichier JavaScript est exposé par un chemin statique, puis ajouté comme ressource Lovelace
-(mode stockage), comme la trakt-card : rien à installer à la main. Tout est protégé pour
-qu'un échec ici ne bloque jamais la mise en place de l'intégration.
+The JavaScript file is exposed through a static path, then added as a Lovelace resource
+(storage mode), like the trakt-card: nothing to install by hand. Everything is guarded so
+that a failure here never blocks the integration's setup.
 """
 
 from __future__ import annotations
@@ -17,17 +17,17 @@ _LOGGER = logging.getLogger(__name__)
 CHEMIN_BASE = "/nextcloud_cookbook_menu_static"
 FICHIER = "cookbook-menu-card.js"
 URL_CARTE = f"{CHEMIN_BASE}/{FICHIER}"
-# Le domaine s'appelait « cookbook_menu » avant la 1.0.0 : sa ressource ne sert plus à rien.
+# The domain was called "cookbook_menu" before 1.0.0: its resource is no longer of any use.
 ANCIENNE_URL_CARTE = "/cookbook_menu_static/"
 
 
 def version_carte() -> str:
-    """Version pour forcer le rechargement du navigateur quand le fichier change."""
+    """Version used to force the browser to reload when the file changes."""
     return str(int((Path(__file__).parent / FICHIER).stat().st_mtime))
 
 
 async def async_enregistrer_carte(hass: HomeAssistant) -> None:
-    """Sert le fichier de la carte et l'enregistre comme ressource Lovelace (une seule fois)."""
+    """Serves the card's file and registers it as a Lovelace resource (only once)."""
     if getattr(hass, "http", None) is None or "frontend" not in hass.config.components:
         return
     from homeassistant.components.frontend import add_extra_js_url

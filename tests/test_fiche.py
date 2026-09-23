@@ -1,4 +1,4 @@
-"""Fiche recette : données enrichies, commande websocket et photo (story 2.8)."""
+"""Recipe sheet: enriched data, websocket command and photo (story 2.8)."""
 
 from __future__ import annotations
 
@@ -115,7 +115,7 @@ async def test_vue_image(hass: HomeAssistant, entree, mock_client, hass_client: 
     assert reponse.status == HTTPStatus.OK
     assert await reponse.read() == b"JPEG"
 
-    # Vignette : la taille est passée à Nextcloud, les tailles inconnues sont refusées.
+    # Thumbnail: the size is passed to Nextcloud, unknown sizes are rejected.
     reponse = await client.get(f"{url}/thumb")
     assert reponse.status == HTTPStatus.OK
     assert mock_client.async_get_image.call_args[0][1] == "thumb"

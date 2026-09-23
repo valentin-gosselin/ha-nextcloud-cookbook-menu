@@ -1,4 +1,4 @@
-"""Rayon d'un produit, pour lire la liste de courses dans l'ordre de passage en magasin."""
+"""Aisle for a product, so the shopping list reads in walk-through order in store."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from enum import IntEnum
 
 
 class Rayon(IntEnum):
-    """Rayons dans l'ordre de passage le plus courant (surgelés vers la fin pour le froid)."""
+    """Aisles in the most common walk-through order (frozen last, to keep the cold chain)."""
 
     FRUITS_LEGUMES = 1
     CREMERIE = 2
@@ -20,7 +20,7 @@ class Rayon(IntEnum):
     AUTRE = 10
 
 
-# Règles évaluées dans l'ordre : préfixes multi-mots d'abord, puis premier mot de la clé.
+# Rules evaluated in order: multi-word prefixes first, then the first word of the key.
 _PREFIXES: list[tuple[str, Rayon]] = [
     ("beurre cacahuete", Rayon.EPICERIE_SALEE),
     ("lait coco", Rayon.EPICERIE_SALEE),
@@ -155,7 +155,7 @@ _PREMIER_MOT: dict[Rayon, set[str]] = {
         "cabillaud",
         "lardons",
         "canard",
-        # Morceaux de boucherie : sans eux, une bavette passait pour de l'épicerie (60 jours).
+        # Butcher's cuts: without them, a bavette steak counted as a grocery item (60 days).
         "bavette",
         "entrecote",
         "onglet",
@@ -181,7 +181,7 @@ _PREMIER_MOT: dict[Rayon, set[str]] = {
         "boudin",
         "andouille",
         "charcuterie",
-        # Poissons et fruits de mer.
+        # Fish and seafood.
         "dorade",
         "lieu",
         "colin",
@@ -282,7 +282,7 @@ _INDEX_PREMIER_MOT = {mot: rayon for rayon, mots in _PREMIER_MOT.items() for mot
 
 
 def rayon(cle: str) -> Rayon:
-    """Rayon d'une clé produit (voir `normalize.cle`)."""
+    """Aisle for a product key (see `normalize.cle`)."""
     for prefixe, rayon_prefixe in _PREFIXES:
         if cle == prefixe or cle.startswith(prefixe + " "):
             return rayon_prefixe

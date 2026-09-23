@@ -1,4 +1,4 @@
-"""Phrases avec l'agent de conversation par défaut (story 3.1)."""
+"""Sentences with the default conversation agent (story 3.1)."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from .test_menu import elements
 
 @pytest.fixture(autouse=True)
 async def contexte(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
-    freezer.move_to("2026-09-16 12:00:00+02:00")  # un mercredi
+    freezer.move_to("2026-09-16 12:00:00+02:00")  # a Wednesday
     await hass.config.async_update(language="fr", time_zone="Europe/Paris")
 
 
@@ -99,12 +99,12 @@ async def test_anglais(hass: HomeAssistant, entree) -> None:
 
 
 async def test_phrases_francaises_sur_un_home_assistant_en_anglais(hass: HomeAssistant, entree) -> None:
-    """La langue de la phrase prime sur celle du pipeline (bug vu sur le HA de dev en anglais)."""
+    """The sentence's language takes priority over the pipeline's (bug seen on the English dev HA)."""
     await hass.config.async_update(language="en")
     reponse = await dire(hass, "Ajoute une salade César au menu jeudi pour quatre", langue="en")
     assert reponse.startswith("C'est noté : Salade César au poulet demain pour 4.")
     [plat] = await elements(hass)
-    # La description suit la langue de Home Assistant, pas celle de la phrase.
+    # The description follows Home Assistant's language, not the sentence's.
     assert (plat["due"], plat["description"]) == ("2026-09-17", "4 servings")
     assert (await dire(hass, "Qu'est-ce qu'on mange demain", langue="en")).startswith("Demain : Salade")
     assert (await dire(hass, "il n'y a plus d'huile d'olive", langue="en")).startswith("C'est noté, huile")

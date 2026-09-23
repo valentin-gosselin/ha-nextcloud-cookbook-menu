@@ -1,4 +1,4 @@
-"""Actions de service : pilotage du menu par les automatisations, les scripts et la voix."""
+"""Service actions: menu control for automations, scripts, and voice."""
 
 from __future__ import annotations
 
@@ -149,7 +149,7 @@ async def _manque(appel: ServiceCall) -> None:
 
 
 def _entites_minuteur(entree: Any) -> list[str]:
-    """L'option n'acceptait qu'une entité minuteur avant la 1.3.0."""
+    """The option only accepted a single timer entity before 1.3.0."""
     valeur = entree.options.get(CONF_TIMER_ENTITY)
     if not valeur:
         return []
@@ -157,13 +157,13 @@ def _entites_minuteur(entree: Any) -> list[str]:
 
 
 async def _minuteur(appel: ServiceCall) -> ServiceResponse:
-    """Lance un minuteur : capteur de l'intégration, entité minuteur, appareil vocal, événement."""
+    """Starts a timer: integration sensor, timer entity, voice device, event."""
     hass = appel.hass
     entree = service.async_get_config_entry(hass, DOMAIN, appel.data.get(ATTR_CONFIG_ENTRY_ID))
     gestionnaire = entree.runtime_data.timers
     secondes = appel.data[ATTR_SECONDS]
     nom = appel.data.get(ATTR_NAME) or ""
-    # Première entité minuteur au repos, et pas déjà prise par un autre minuteur en cours.
+    # First idle timer entity that isn't already claimed by another timer in progress.
     occupees = {m.entite for m in gestionnaire.minuteurs if not m.libre}
     entite = next(
         (
@@ -211,7 +211,7 @@ async def _minuteur(appel: ServiceCall) -> ServiceResponse:
 
 
 async def _arreter_minuteur(appel: ServiceCall) -> None:
-    """Arrête un minuteur de l'intégration (ou tous), et l'entité minuteur qu'il occupait."""
+    """Stops a timer of the integration (or all of them), and the timer entity it was occupying."""
     hass = appel.hass
     entree = service.async_get_config_entry(hass, DOMAIN, appel.data.get(ATTR_CONFIG_ENTRY_ID))
     gestionnaire = entree.runtime_data.timers
@@ -239,7 +239,7 @@ async def _chercher(appel: ServiceCall) -> ServiceResponse:
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Enregistre les actions (une seule fois pour le domaine, règle action-setup)."""
+    """Registers the actions (once per domain, per the action-setup rule)."""
     hass.services.async_register(
         DOMAIN, SERVICE_ADD_TO_MENU, _ajouter, schema=SCHEMA_ADD, supports_response=SupportsResponse.OPTIONAL
     )

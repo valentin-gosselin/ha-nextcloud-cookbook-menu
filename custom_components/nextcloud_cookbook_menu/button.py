@@ -1,4 +1,4 @@
-"""Bouton « Ajouter au menu »."""
+"""'Add to menu' button."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ async def async_setup_entry(
 
 
 class AjouterButton(CookbookMenuControle, ButtonEntity):
-    """Ajoute au menu la recette, le jour et les couverts choisis."""
+    """Adds the selected recipe, day, and servings to the menu."""
 
     def __init__(self, entry: CookbookMenuConfigEntry) -> None:
         super().__init__(entry, "add_to_menu")
