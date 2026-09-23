@@ -56,14 +56,23 @@ from .const import (
     CONF_SYNC_SHOPPING_ENTITY,
     CONF_TIMER_DEVICE,
     CONF_TIMER_ENTITY,
+    CONF_TIMERS_COUNT,
     DEFAULT_HISTORY_MONTHS,
     DEFAULT_SCAN_INTERVAL_MINUTES,
     DEFAULT_SERVINGS,
+    DEFAULT_TIMERS_COUNT,
     DOMAIN,
 )
 from .ingredients.pantry import PLACARD_PAR_DEFAUT
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _liste(valeur: Any) -> list[str]:
+    """L'option n'acceptait qu'une entité minuteur avant la 1.3.0."""
+    if not valeur:
+        return []
+    return [valeur] if isinstance(valeur, str) else list(valeur)
 
 
 def _normaliser_url(url: str) -> str:
@@ -288,6 +297,7 @@ class CookbookMenuOptionsFlow(OptionsFlowWithReload):
             user_input[CONF_SERVINGS] = int(user_input[CONF_SERVINGS])
             user_input[CONF_SCAN_INTERVAL_MINUTES] = int(user_input[CONF_SCAN_INTERVAL_MINUTES])
             user_input[CONF_HISTORY_MONTHS] = int(user_input[CONF_HISTORY_MONTHS])
+            user_input[CONF_TIMERS_COUNT] = int(user_input[CONF_TIMERS_COUNT])
             return self.async_create_entry(data=user_input)
 
         options = self.config_entry.options
@@ -341,8 +351,12 @@ class CookbookMenuOptionsFlow(OptionsFlowWithReload):
                     CONF_TIMER_DEVICE, description={"suggested_value": options.get(CONF_TIMER_DEVICE)}
                 ): DeviceSelector(DeviceSelectorConfig(entity=[EntityFilterSelectorConfig(domain="assist_satellite")])),
                 vol.Optional(
-                    CONF_TIMER_ENTITY, description={"suggested_value": options.get(CONF_TIMER_ENTITY)}
-                ): EntitySelector(EntitySelectorConfig(domain="timer")),
+                    CONF_TIMER_ENTITY,
+                    description={"suggested_value": _liste(options.get(CONF_TIMER_ENTITY))},
+                ): EntitySelector(EntitySelectorConfig(domain="timer", multiple=True)),
+                vol.Required(
+                    CONF_TIMERS_COUNT, default=options.get(CONF_TIMERS_COUNT, DEFAULT_TIMERS_COUNT)
+                ): NumberSelector(NumberSelectorConfig(min=1, max=10, step=1, mode=NumberSelectorMode.BOX)),
                 vol.Required(
                     CONF_SCAN_INTERVAL_MINUTES,
                     default=options.get(CONF_SCAN_INTERVAL_MINUTES, DEFAULT_SCAN_INTERVAL_MINUTES),

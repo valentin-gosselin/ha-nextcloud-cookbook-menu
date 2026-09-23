@@ -106,7 +106,8 @@
           "sync_shopping_entity": "Recopier la liste de courses dans",
           "history_months": "Conservation de l'historique (mois)",
           "timer_device": "Appareil pour les minuteurs",
-          "timer_entity": "Entité minuteur"
+          "timer_entity": "Entité minuteur",
+          "timers_count": "Nombre de minuteurs"
         },
         "data_description": {
           "servings": "Nombre de personnes pour lesquelles un plat est prévu quand rien d'autre n'est précisé",
@@ -117,7 +118,8 @@
           "sync_shopping_entity": "Facultatif : la liste que vous ouvrez au magasin. Ce qui y est coché l'est aussi ici.",
           "history_months": "Les plats plus anciens sont oubliés à chaque nouvelle semaine",
           "timer_device": "Facultatif : un appareil vocal qui sait tenir des minuteurs (Voice, satellite ESPHome). Le minuteur lancé depuis une recette y sonne à la fin.",
-          "timer_entity": "Facultatif : un minuteur existant (timer.*) démarré en même temps, pour vos automatisations et vos afficheurs."
+          "timer_entity": "Facultatif : vos propres minuteurs (timer.*), démarrés en même temps. L'intégration prend le premier libre.",
+          "timers_count": "Minuteurs tenus en parallèle par l'intégration, pour suivre plusieurs plats à la fois."
         }
       }
     }
@@ -191,6 +193,11 @@
     "button": {
       "add_to_menu": {
         "name": "Ajouter au menu"
+      }
+    },
+    "sensor": {
+      "timer": {
+        "name": "Minuteur {number}"
       }
     }
   },

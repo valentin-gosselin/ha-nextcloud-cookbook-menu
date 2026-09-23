@@ -33,6 +33,8 @@ SERVICE_SEARCH_RECIPES = "search_recipes"
 SERVICE_GET_HISTORY = "get_history"
 SERVICE_OUT_OF_STOCK = "out_of_stock"
 SERVICE_START_TIMER = "start_timer"
+SERVICE_STOP_TIMER = "stop_timer"
+ATTR_TIMER = "timer"
 ATTR_PRODUCT = "product"
 ATTR_NAME = "name"
 ATTR_SECONDS = "seconds"
@@ -74,6 +76,9 @@ SCHEMA_START_TIMER = vol.Schema(
         vol.Required(ATTR_SECONDS): vol.All(vol.Coerce(int), vol.Range(min=1, max=24 * 3600)),
         vol.Optional(ATTR_NAME): cv.string,
     }
+)
+SCHEMA_STOP_TIMER = vol.Schema(
+    {**_ENTREE, vol.Optional(ATTR_TIMER): vol.All(vol.Coerce(int), vol.Range(min=1, max=10))}
 )
 SCHEMA_SEARCH = vol.Schema(
     {
@@ -143,17 +148,43 @@ async def _manque(appel: ServiceCall) -> None:
     _planificateur(appel).async_ajouter_course(appel.data[ATTR_PRODUCT])
 
 
-async def _minuteur(appel: ServiceCall) -> None:
-    """Lance un minuteur : événement pour les automatisations, minuteur Assist, entité minuteur."""
+def _entites_minuteur(entree: Any) -> list[str]:
+    """L'option n'acceptait qu'une entité minuteur avant la 1.3.0."""
+    valeur = entree.options.get(CONF_TIMER_ENTITY)
+    if not valeur:
+        return []
+    return [valeur] if isinstance(valeur, str) else list(valeur)
+
+
+async def _minuteur(appel: ServiceCall) -> ServiceResponse:
+    """Lance un minuteur : capteur de l'intégration, entité minuteur, appareil vocal, événement."""
     hass = appel.hass
     entree = service.async_get_config_entry(hass, DOMAIN, appel.data.get(ATTR_CONFIG_ENTRY_ID))
+    gestionnaire = entree.runtime_data.timers
     secondes = appel.data[ATTR_SECONDS]
     nom = appel.data.get(ATTR_NAME) or ""
+    # Première entité minuteur au repos, et pas déjà prise par un autre minuteur en cours.
+    occupees = {m.entite for m in gestionnaire.minuteurs if not m.libre}
+    entite = next(
+        (
+            e
+            for e in _entites_minuteur(entree)
+            if e not in occupees and (etat := hass.states.get(e)) and etat.state == "idle"
+        ),
+        None,
+    )
+    numero = gestionnaire.async_demarrer(nom, secondes, entite)
     hass.bus.async_fire(
         EVENEMENT_MINUTEUR,
-        {"config_entry_id": entree.entry_id, "name": nom, "seconds": secondes},
+        {
+            "config_entry_id": entree.entry_id,
+            "name": nom,
+            "seconds": secondes,
+            "timer": numero,
+            "entity_id": entite,
+        },
     )
-    if entite := entree.options.get(CONF_TIMER_ENTITY):
+    if entite:
         await hass.services.async_call(
             "timer",
             "start",
@@ -176,6 +207,18 @@ async def _minuteur(appel: ServiceCall) -> None:
                 translation_key="timer_device_unsupported",
                 translation_placeholders={"error": str(err)},
             ) from err
+    return {"timer": numero, "entity_id": entite}
+
+
+async def _arreter_minuteur(appel: ServiceCall) -> None:
+    """Arrête un minuteur de l'intégration (ou tous), et l'entité minuteur qu'il occupait."""
+    hass = appel.hass
+    entree = service.async_get_config_entry(hass, DOMAIN, appel.data.get(ATTR_CONFIG_ENTRY_ID))
+    gestionnaire = entree.runtime_data.timers
+    numeros = [appel.data[ATTR_TIMER]] if ATTR_TIMER in appel.data else list(range(1, len(gestionnaire.minuteurs) + 1))
+    for numero in numeros:
+        if (minuteur := gestionnaire.async_arreter(numero)) and minuteur.entite:
+            await hass.services.async_call("timer", "cancel", {"entity_id": minuteur.entite}, blocking=True)
 
 
 async def _chercher(appel: ServiceCall) -> ServiceResponse:
@@ -210,7 +253,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(DOMAIN, SERVICE_OUT_OF_STOCK, _manque, schema=SCHEMA_OUT_OF_STOCK)
-    hass.services.async_register(DOMAIN, SERVICE_START_TIMER, _minuteur, schema=SCHEMA_START_TIMER)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_START_TIMER,
+        _minuteur,
+        schema=SCHEMA_START_TIMER,
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(DOMAIN, SERVICE_STOP_TIMER, _arreter_minuteur, schema=SCHEMA_STOP_TIMER)
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_HISTORY,

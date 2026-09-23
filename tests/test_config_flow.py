@@ -262,11 +262,17 @@ async def test_options(hass, mock_client, config_entry) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # Avant la 1.3.0, l'option ne gardait qu'une entité minuteur : elle devient une liste.
+    hass.config_entries.async_update_entry(
+        config_entry, options={**config_entry.options, "timer_entity": "timer.cuisine"}
+    )
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     schema = result["data_schema"].schema
     selecteur = next(v for k, v in schema.items() if k == "excluded_categories")
     assert "Dessert" in selecteur.config["options"]
+    minuteurs = next(k for k in schema if k == "timer_entity")
+    assert minuteurs.description == {"suggested_value": ["timer.cuisine"]}
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -275,6 +281,8 @@ async def test_options(hass, mock_client, config_entry) -> None:
             "excluded_categories": ["Dessert"],
             "pantry": ["Sel", "Harissa"],
             "history_months": 12.0,
+            "timers_count": 2.0,
+            "timer_entity": ["timer.cuisine", "timer.four"],
             "scan_interval_minutes": 60.0,
         },
     )
@@ -285,8 +293,11 @@ async def test_options(hass, mock_client, config_entry) -> None:
         "excluded_categories": ["Dessert"],
         "pantry": ["Sel", "Harissa"],
         "history_months": 12,
+        "timers_count": 2,
+        "timer_entity": ["timer.cuisine", "timer.four"],
         "scan_interval_minutes": 60,
     }
+    assert len(config_entry.runtime_data.timers.minuteurs) == 2
     index = config_entry.runtime_data.coordinator.data
     assert all(r.category != "Dessert" for r in index.recipes.values())
     assert config_entry.runtime_data.coordinator.update_interval.total_seconds() == 3600

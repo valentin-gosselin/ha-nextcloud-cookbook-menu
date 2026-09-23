@@ -500,6 +500,12 @@ const AvecFiche = (Base) =>
         conteneur.querySelectorAll("button[data-arreter]").forEach((bouton) =>
           bouton.addEventListener("click", (e) => {
             e.stopPropagation();
+            const arrete = this._minuteurs.find((m) => String(m.id) === bouton.dataset.arreter);
+            if (arrete && arrete.numero) {
+              const donnees = { timer: arrete.numero };
+              if (this._entree) donnees.config_entry_id = this._entree;
+              this._hass.callService("nextcloud_cookbook_menu", "stop_timer", donnees).catch(() => {});
+            }
             this._minuteurs = this._minuteurs.filter((m) => String(m.id) !== bouton.dataset.arreter);
             this._rendreMinuteurs();
           }),

@@ -132,3 +132,17 @@ start_timer:
       example: "Étape 3 - Carry de poulet"
       selector:
         text:
+
+stop_timer:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: nextcloud_cookbook_menu
+    timer:
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 10
+          mode: box

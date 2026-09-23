@@ -16,16 +16,23 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api import CookbookClient
 from .assist import async_enregistrer_phrases
-from .const import DOMAIN
+from .const import CONF_TIMERS_COUNT, DEFAULT_TIMERS_COUNT, DOMAIN
 from .coordinator import CookbookCoordinator
 from .frontend import async_enregistrer_carte
+from .minuteurs import GestionnaireMinuteurs
 from .planner import Planificateur
 from .services import async_setup_services
 from .store import StockagePlanificateur
 from .sync import Synchroniseur
 from .websocket import async_enregistrer_commandes
 
-PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.NUMBER, Platform.SELECT, Platform.TODO]
+PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.TODO,
+]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
@@ -37,6 +44,7 @@ class CookbookMenuData:
     coordinator: CookbookCoordinator
     planner: Planificateur
     sync: Synchroniseur
+    timers: GestionnaireMinuteurs
 
 
 type CookbookMenuConfigEntry = ConfigEntry[CookbookMenuData]
@@ -85,7 +93,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry)
     await stockage.async_charger()
     planificateur = Planificateur(hass, coordinator, stockage)
     entry.runtime_data = CookbookMenuData(
-        client=client, coordinator=coordinator, planner=planificateur, sync=Synchroniseur(hass, planificateur)
+        client=client,
+        coordinator=coordinator,
+        planner=planificateur,
+        sync=Synchroniseur(hass, planificateur),
+        timers=GestionnaireMinuteurs(hass, int(entry.options.get(CONF_TIMERS_COUNT, DEFAULT_TIMERS_COUNT))),
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.runtime_data.sync.async_demarrer()
@@ -103,7 +115,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: CookbookMenuConfigEntry) -> bool:
-    """Décharge une entrée et ferme sa session HTTP."""
+    """Décharge une entrée, arrête ses minuteurs et ferme sa session HTTP."""
+    entry.runtime_data.timers.async_tout_arreter()
     entry.runtime_data.sync.async_arreter()
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):  # pragma: no cover
         return False
