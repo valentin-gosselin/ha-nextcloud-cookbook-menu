@@ -78,7 +78,11 @@ SCHEMA_START_TIMER = vol.Schema(
     }
 )
 SCHEMA_STOP_TIMER = vol.Schema(
-    {**_ENTREE, vol.Optional(ATTR_TIMER): vol.All(vol.Coerce(int), vol.Range(min=1, max=10))}
+    {
+        **_ENTREE,
+        vol.Exclusive(ATTR_TIMER, "cible"): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
+        vol.Exclusive(ATTR_NAME, "cible"): cv.string,
+    }
 )
 SCHEMA_SEARCH = vol.Schema(
     {
@@ -215,7 +219,13 @@ async def _arreter_minuteur(appel: ServiceCall) -> None:
     hass = appel.hass
     entree = service.async_get_config_entry(hass, DOMAIN, appel.data.get(ATTR_CONFIG_ENTRY_ID))
     gestionnaire = entree.runtime_data.timers
-    numeros = [appel.data[ATTR_TIMER]] if ATTR_TIMER in appel.data else list(range(1, len(gestionnaire.minuteurs) + 1))
+    if ATTR_TIMER in appel.data:
+        numeros = [appel.data[ATTR_TIMER]]
+    elif nom := appel.data.get(ATTR_NAME):
+        # The card stops a timer by name when it did not get its number back.
+        numeros = [i + 1 for i, m in enumerate(gestionnaire.minuteurs) if m.nom == nom]
+    else:
+        numeros = list(range(1, len(gestionnaire.minuteurs) + 1))
     for numero in numeros:
         if (minuteur := gestionnaire.async_arreter(numero)) and minuteur.entite:
             await hass.services.async_call("timer", "cancel", {"entity_id": minuteur.entite}, blocking=True)

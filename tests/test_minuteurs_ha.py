@@ -134,3 +134,21 @@ async def test_fin_du_minuteur_libere_la_place(hass: HomeAssistant, mock_client,
     assert gestionnaire.minuteurs[0].libre
     assert hass.states.get("sensor.valentin_cloud_exemple_fr_timer_1").state == "unknown"
     assert gestionnaire.async_arreter(99) is None
+
+
+async def test_arret_par_nom(hass: HomeAssistant, mock_client, config_entry) -> None:
+    """The card stops a timer by name when the answer with its number did not arrive."""
+    await installer(hass, config_entry, **{CONF_TIMER_ENTITY: ["timer.cuisine"]})
+    hass.states.async_set("timer.cuisine", "idle")
+    annulations = async_mock_service(hass, "timer", "cancel")
+    async_mock_service(hass, "timer", "start")
+    await lancer(hass)
+    gestionnaire = config_entry.runtime_data.timers
+    await hass.services.async_call(DOMAIN, "stop_timer", {"name": "Étape 3 - Carry de poulet"}, blocking=True)
+    assert gestionnaire.minuteurs[0].libre
+    assert annulations[0].data == {"entity_id": "timer.cuisine"}
+
+    # An unknown name stops nothing.
+    await lancer(hass)
+    await hass.services.async_call(DOMAIN, "stop_timer", {"name": "Étape 9"}, blocking=True)
+    assert not gestionnaire.minuteurs[0].libre

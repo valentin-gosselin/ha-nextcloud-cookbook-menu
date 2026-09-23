@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -84,6 +85,19 @@ async def test_ajout_par_identifiant(hass: HomeAssistant, entree) -> None:
 
 async def test_fichier_de_la_carte_present() -> None:
     assert frontend.version_carte().isdigit()
+
+
+def test_cablage_des_minuteurs_de_la_carte() -> None:
+    """A translation pass once rewrote this block from an older copy: the cross stopped stopping."""
+    javascript = (Path(frontend.__file__).parent / frontend.FICHIER).read_text(encoding="utf-8")
+    lancement = javascript.split("_lancerMinuteur(secondes, libelle) {")[1].split("\n    }")[0]
+    # The number of the timer comes back in the answer, and is needed to stop it afterwards.
+    assert '"start_timer"' in lancement
+    assert "return_response: true" in lancement
+    assert "minuteur.numero = " in lancement
+    arret = javascript.split("button[data-arreter]")[1].split("\n        );")[0]
+    assert '"stop_timer"' in arret
+    assert "arrete.numero ? { timer: arrete.numero } : { name: arrete.libelle }" in arret
 
 
 async def test_enregistrement_ignore_sans_serveur_http(hass: HomeAssistant) -> None:

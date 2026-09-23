@@ -467,13 +467,24 @@ const AvecFiche = (Base) =>
     }
 
     _lancerMinuteur(secondes, libelle) {
-      // Timer on the Home Assistant side (voice device, timer entity, event) in addition to the card.
+      const minuteur = { id: Date.now() + Math.random(), libelle, fin: Date.now() + secondes * 1000, sonne: false };
+      // Timer on the Home Assistant side (sensor, timer entity, voice device, event) in addition
+      // to the card. The answer gives the timer number, needed to stop it from the cross.
       const donnees = { seconds: secondes, name: libelle };
       if (this._entree) donnees.config_entry_id = this._entree;
       this._hass
-        .callService("nextcloud_cookbook_menu", "start_timer", donnees)
+        .callWS({
+          type: "call_service",
+          domain: "nextcloud_cookbook_menu",
+          service: "start_timer",
+          service_data: donnees,
+          return_response: true,
+        })
+        .then((reponse) => {
+          minuteur.numero = reponse && reponse.response && reponse.response.timer;
+        })
         .catch(() => {});
-      this._minuteurs.push({ id: Date.now() + Math.random(), libelle, fin: Date.now() + secondes * 1000, sonne: false });
+      this._minuteurs.push(minuteur);
       if (!this._tic) this._tic = setInterval(() => this._rendreMinuteurs(), 1000);
       this._rendreMinuteurs();
     }
@@ -501,8 +512,9 @@ const AvecFiche = (Base) =>
           bouton.addEventListener("click", (e) => {
             e.stopPropagation();
             const arrete = this._minuteurs.find((m) => String(m.id) === bouton.dataset.arreter);
-            if (arrete && arrete.numero) {
-              const donnees = { timer: arrete.numero };
+            if (arrete) {
+              // By number when the answer arrived, by name otherwise: the timer must not stay in HA.
+              const donnees = arrete.numero ? { timer: arrete.numero } : { name: arrete.libelle };
               if (this._entree) donnees.config_entry_id = this._entree;
               this._hass.callService("nextcloud_cookbook_menu", "stop_timer", donnees).catch(() => {});
             }

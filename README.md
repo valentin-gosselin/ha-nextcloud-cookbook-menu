@@ -125,7 +125,7 @@ The first time, the card asks you to check the pantry: everything is considered 
 | `nextcloud_cookbook_menu.search_recipes` | `query`, `limit` | recipes with a similarity score |
 | `nextcloud_cookbook_menu.out_of_stock` | `product` | |
 | `nextcloud_cookbook_menu.start_timer` | `seconds`, `name` | timer number, timer entity used |
-| `nextcloud_cookbook_menu.stop_timer` | `timer` (optional, all of them when omitted) | |
+| `nextcloud_cookbook_menu.stop_timer` | `timer` or `name` (optional, all of them when omitted) | |
 
 `config_entry_id` is optional when a single account is configured. Weekdays can be written in French or English ("jeudi", "thursday", "mercredi prochain").
 

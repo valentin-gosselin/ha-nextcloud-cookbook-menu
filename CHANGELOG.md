@@ -3,6 +3,11 @@
 All notable changes to this project are recorded here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [SemVer](https://semver.org/).
 
+## [1.3.1] - 2026-09-23
+
+### Fixed
+- Stopping a timer from the card left it running in Home Assistant: the card no longer received the timer number when starting it, so it could not stop it. It now stops by number, or by name when the number is unknown. `stop_timer` takes a `name` field.
+
 ## [1.3.0] - 2026-09-23
 
 ### Added
